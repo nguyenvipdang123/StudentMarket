@@ -1,0 +1,25 @@
+.admin-sepay-details { padding: 0 24px 18px; color: #647c70; font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+.admin-sepay-details p { margin: 0 0 6px; }
+.admin-sepay-feedback { margin: 0 24px 18px; padding: 12px 16px; border: 1px solid #c8decb; border-radius: 10px; background: #edf6ed; color: #275d49; font-size: 13px; }
+.admin-sepay-feedback.error { background: #fff0ea; color: #9f4837; border-color: #eed3c6; }
+.admin-sepay-table small { display: block; margin-top: 6px; line-height: 1.5; }
+.admin-sepay-table td { vertical-align: top; }
+.admin-sepay-reason { max-width: 320px; white-space: pre-line; overflow-wrap: anywhere; }
+.admin-sepay-status { display: inline-block; padding: 5px 9px; border-radius: 20px; background: #eff2ed; white-space: nowrap; }
+.admin-sepay-status.review { color: #896314; background: #fff3d6; }
+.admin-sepay-status.applied { color: #275d49; background: #e7f2e7; }
+.admin-sepay-approve { background: #275d49; color: #fff; border: 1px solid #275d49; border-radius: 9px; padding: 10px 14px; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.admin-sepay-approve:disabled { opacity: .55; cursor: wait; }
+.admin-sepay-review { padding: 20px; border: 1px solid #cbdccb; border-radius: 12px; background: #f5f8f0; color: #20352e; white-space: normal; }
+.admin-sepay-review h3 { margin: 0 0 10px; font-size: 18px; }
+.admin-sepay-review p { margin: 0 0 14px; line-height: 1.7; }
+.admin-sepay-review dl { display: flex; gap: 18px 32px; flex-wrap: wrap; margin: 0 0 20px; }
+.admin-sepay-review dt { font-size: 11px; color: #738177; margin-bottom: 6px; }
+.admin-sepay-review dd { margin: 0; font-size: 12px; }
+.admin-sepay-review > label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 12px; }
+.admin-sepay-review textarea { display: block; width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #cfddcf; border-radius: 9px; background: #fffef8; color: #20352e; font: inherit; resize: vertical; }
+.admin-sepay-review > .admin-sepay-confirm { display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; line-height: 1.7; font-weight: 400; }
+.admin-sepay-confirm input { margin-top: 4px; accent-color: #275d49; }
+.admin-sepay-review-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.admin-sepay-review-actions button:not(.admin-sepay-approve) { padding: 10px 16px; background: #fffef8; border: 1px solid #d2dfd1; color: #365e44; border-radius: 9px; cursor: pointer; }
+@media (max-width: 760px) { .admin-sepay-details { padding: 0 16px 16px; } .admin-sepay-feedback { margin: 0 16px 16px; } .admin-sepay-review { padding: 16px; min-width: 260px; } }

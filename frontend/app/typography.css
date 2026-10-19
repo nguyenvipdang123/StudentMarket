@@ -1,0 +1,51 @@
+@font-face { font-family: "Plus Jakarta Sans"; src: url("/fonts/plus-jakarta-300.ttf") format("truetype"); font-style: normal; font-weight: 300; font-display: swap; }
+@font-face { font-family: "Plus Jakarta Sans"; src: url("/fonts/plus-jakarta-400.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: "Plus Jakarta Sans"; src: url("/fonts/plus-jakarta-500.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
+@font-face { font-family: "Plus Jakarta Sans"; src: url("/fonts/plus-jakarta-600.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
+@font-face { font-family: "Plus Jakarta Sans"; src: url("/fonts/plus-jakarta-700.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: "Plus Jakarta Sans"; src: url("/fonts/plus-jakarta-800.ttf") format("truetype"); font-style: normal; font-weight: 800; font-display: swap; }
+/* Keep Vietnamese diacritics together by using full font support and natural spacing. */
+@font-face {
+  font-family: "SangTay Serif";
+  src: url("/fonts/dm-serif-display.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+body {
+  font-family: "Plus Jakarta Sans", "Segoe UI", Arial, sans-serif;
+}
+
+.hero h1,
+.how-intro h2,
+.bottom-cta h2,
+.section-heading h2,
+.detail-content h2,
+.form-header h2,
+.empty-state h3 {
+  font-family: "SangTay Serif", Cambria, "Times New Roman", serif;
+  letter-spacing: normal;
+}
+
+.hero h1 {
+  font-size: clamp(46px, 4.7vw, 66px);
+  line-height: 1.17;
+}
+
+.hero-stat strong {
+  font-family: "Plus Jakarta Sans", "Segoe UI", Arial, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.hero-note,
+.hero-sticker span:first-child {
+  font-family: "SangTay Serif", Cambria, "Times New Roman", serif;
+  letter-spacing: normal;
+}
+
+@media (max-width: 560px) {
+  .hero h1 { font-size: clamp(39px, 10.8vw, 45px); }
+  .hero-stat strong { font-size: 16px; }
+}

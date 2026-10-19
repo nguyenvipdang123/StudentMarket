@@ -1,0 +1,28 @@
+{
+  "name": "student-market",
+  "private": true,
+  "scripts": {
+    "clean": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/clean.ps1",
+    "clean:all": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/clean.ps1 -Dependencies",
+    "dev": "node scripts/dev.mjs",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:chat": "node scripts/dev.mjs chat",
+    "worker:ai": "npm --prefix frontend run worker:ai",
+    "build": "npm --prefix frontend run build",
+    "build:render": "npm --prefix frontend run build:render",
+    "start:render": "npm --prefix frontend run start:render",
+    "worker:render": "npm --prefix frontend run worker:render",
+    "deploy:package": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-render.ps1",
+    "lint": "npm --prefix frontend run lint",
+    "db:migrate": "npm --prefix frontend run db:migrate",
+    "backup": "npm --prefix frontend run backup",
+    "backup:verify": "npm --prefix frontend run backup:verify --",
+    "restore": "npm --prefix frontend run restore --",
+    "test:backup": "npm --prefix frontend run test:backup",
+    "test:e2e": "npm --prefix frontend run test:e2e --",
+    "test:e2e:install": "npm --prefix frontend run test:e2e:install",
+    "test:e2e:report": "npm --prefix frontend run test:e2e:report",
+    "test": "npm --prefix frontend run test:integration"
+  }
+}
+

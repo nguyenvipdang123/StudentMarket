@@ -1,0 +1,191 @@
+/* ---- Region / University Picker Dialog ---- */
+.region-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(520px, calc(100vw - 28px));
+  max-height: min(700px, calc(100dvh - 28px));
+  padding: 0;
+  border: 1px solid rgba(200,228,210,0.5);
+  border-radius: 22px;
+  background: rgba(255,253,250,0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #163828;
+  box-shadow:
+    0 30px 90px rgba(8,28,18,0.3),
+    0 10px 30px rgba(8,28,18,0.14),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+  animation: regionDialogSlide 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes regionDialogSlide {
+  from { opacity: 0; transform: translateY(30px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.region-dialog::backdrop {
+  background: rgba(7,23,17,0.68);
+  backdrop-filter: blur(6px);
+}
+
+.region-dialog-content { position: relative; padding: 34px 33px; }
+
+.region-dialog-close {
+  position: absolute;
+  top: 16px; right: 18px;
+  width: 32px; height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: #e8f0e8;
+  color: #2e5246;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.region-dialog-close:hover {
+  background: #dce8dc;
+  transform: scale(1.12) rotate(90deg);
+}
+
+.region-dialog-kicker {
+  color: #2e7a58;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.region-dialog h2 {
+  margin: 10px 0 8px;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(26px, 5vw, 34px);
+  line-height: 1.14;
+  letter-spacing: -0.035em;
+  color: #163828;
+}
+
+.region-dialog p { margin: 0 0 26px; color: #4e7065; font-size: 13.5px; line-height: 1.65; }
+
+.region-search-label { display: block; margin-bottom: 7px; font-size: 12px; font-weight: 700; color: #3a5844; }
+
+.region-search-input {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px;
+  border: 1.5px solid #c4d6c8;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.9);
+  color: #163828;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.region-search-input:focus {
+  border-color: var(--green);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(31,92,64,0.1);
+}
+
+.region-search-input:focus-visible,
+.region-option:focus-visible,
+.region-apply:focus-visible,
+.region-dialog-close:focus-visible { outline: 2px solid #1d6a4a; outline-offset: 2px; }
+
+.region-options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  max-height: 246px;
+  overflow-y: auto;
+  margin: 16px 0 20px;
+  padding: 2px 4px 2px 2px;
+  scrollbar-width: thin;
+  scrollbar-color: #c0d8c8 transparent;
+}
+
+.region-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 13px;
+  border: 1.5px solid #d8e6d8;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.8);
+  color: #245040;
+  text-align: left;
+  font-size: 12.5px;
+  line-height: 1.5;
+  white-space: normal;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.university-code {
+  flex-shrink: 0;
+  color: #587068;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.region-option:hover {
+  border-color: #6aac88;
+  background: linear-gradient(135deg, #ecf5ee, #e6f2ea);
+  transform: translateX(3px);
+}
+
+.region-option.active {
+  border-color: #1c6044;
+  background: linear-gradient(135deg, #dceed8, #d6eade);
+  color: #124830;
+  font-weight: 700;
+}
+
+.region-no-results { grid-column: 1 / -1; padding: 22px; color: #5e7868; text-align: center; font-size: 13px; }
+
+.region-apply {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--green) 0%, var(--green-mid) 100%);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(31,92,64,0.28);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.region-apply:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(31,92,64,0.34);
+}
+
+.region-dialog small {
+  display: block;
+  margin-top: 12px;
+  color: #6a8078;
+  text-align: center;
+  font-size: 11px;
+}
+
+@media (max-width: 560px) {
+  .region-dialog-content { padding: 26px 20px; }
+  .region-options { max-height: 200px; }
+  .region-option { font-size: 11.5px; }
+}

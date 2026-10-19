@@ -1,0 +1,114 @@
+/* Seller Profile V2: Figma 36:6300 (desktop), 36:6303 (mobile). */
+.seller-profile {
+  --seller-sage: #eff5ef;
+  display: flex; flex-direction: column; gap: 24px;
+  width: min(1280px, calc(100% - 160px)); padding: 40px 0; min-height: 0;
+}
+.seller-profile p, .seller-profile h3 { margin: 0; }
+.seller-page-intro { display: flex; flex-direction: column; gap: 8px; }
+.seller-page-intro .figma-breadcrumb { margin: 0; line-height: 18px; }
+.seller-profile .seller-page-intro h1, .seller-profile .seller-section-heading h2 { font-size: 28px; line-height: 36px; margin: 0; }
+.seller-profile-header { padding: 32px; border: 1px solid var(--line); border-radius: 24px; background: var(--white); display: flex; flex-direction: column; gap: 24px; }
+.seller-profile-top { display: grid; grid-template-columns: minmax(0, 1fr) 280px; align-items: center; gap: 32px; }
+.seller-information { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.seller-identity { display: flex; gap: 24px; align-items: center; }
+.seller-avatar { width: 88px; height: 88px; flex: 0 0 auto; border-radius: 24px; display: grid; place-items: center; background: var(--seller-sage); color: var(--green); font-size: 36px; font-weight: 800; }
+.seller-identity-text { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.seller-profile .seller-identity h2 { font-size: 40px; line-height: 48px; margin: 0; overflow-wrap: anywhere; }
+.seller-university, .seller-verified { display: flex; align-items: flex-start; gap: 8px; }
+.seller-university { font-size: 12px; line-height: 18px; color: var(--muted); }
+.seller-verified { gap: 4px; color: var(--green); font-size: 11px; line-height: 16px; font-weight: 600; }
+.seller-description, .seller-safety p { font-size: 14px; line-height: 22px; color: var(--ink-light); }
+.seller-contact { display: flex; flex-direction: column; gap: 12px; }
+.seller-community-illustration { width: 280px; height: 118px; object-fit: cover; border-radius: 16px; }
+.seller-message { width: 100%; height: 48px; }
+.seller-no-listings { font-size: 12px; line-height: 18px; color: var(--muted); }
+.seller-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; padding: 16px; border-radius: 16px; background: var(--cream); }
+.seller-facts > div { display: flex; flex-direction: column; gap: 4px; align-items: center; text-align: center; min-width: 0; }
+.seller-facts strong { font-size: 24px; line-height: 32px; font-weight: 800; color: var(--green); overflow-wrap: anywhere; }
+.seller-facts small { font-size: 12px; line-height: 18px; color: var(--muted); }
+.seller-content-layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); align-items: start; gap: 32px; }
+.seller-trust { display: flex; flex-direction: column; gap: 20px; }
+.seller-desktop-rating { position: relative; }
+.seller-rating-link { position: absolute; inset: 0; border: 0; border-radius: 16px; background: transparent; }
+.seller-rating-link:hover { box-shadow: var(--figma-shadow); }
+.seller-rating-summary { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--white); }
+.seller-rating-summary h3, .seller-safety h3, .seller-review h3 { align-self: stretch; font-size: 13px; line-height: 20px; font-weight: 700; }
+.seller-rating-value { font-size: 44px; line-height: 52px; font-weight: 800; color: var(--green); }
+.seller-stars { color: var(--green); font-size: 13px; line-height: 20px; font-weight: 700; letter-spacing: 1px; }
+.seller-rating-summary p, .seller-rating-bars { font-size: 12px; line-height: 18px; color: var(--muted); }
+.seller-rating-summary p { text-align: center; }
+.seller-rating-bars { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.seller-rating-bars > div { display: grid; grid-template-columns: 30px minmax(0, 132px) 24px; justify-content: space-between; align-items: center; gap: 8px; }
+.seller-rating-bars > div > span:last-child { text-align: right; }
+.seller-rating-bars progress { appearance: none; border: 0; height: 6px; width: 100%; overflow: hidden; border-radius: 8px; background: var(--cream-2); }
+.seller-rating-bars progress::-webkit-progress-bar { background: var(--cream-2); border-radius: 8px; }
+.seller-rating-bars progress::-webkit-progress-value { background: var(--green); border-radius: 8px; }
+.seller-rating-bars progress::-moz-progress-bar { background: var(--green); border-radius: 8px; }
+.seller-safety { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 20px; border-radius: 16px; background: var(--seller-sage); }
+.seller-safety h3 { color: var(--green); }
+.seller-listings-and-reviews, .seller-tab-panel { min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+.seller-tabs { display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--cream-2); }
+.seller-tabs button { flex: 1; min-width: 0; min-height: 44px; padding: 8px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 12px; line-height: 20px; font-weight: 700; }
+.seller-tabs button[aria-selected="true"] { background: var(--green); color: var(--white); }
+.seller-tabs button:hover:not([aria-selected="true"]) { background: var(--seller-sage); color: var(--green); }
+.seller-section-heading { display: flex; flex-direction: column; gap: 8px; }
+.seller-section-heading p { color: var(--muted); font-size: 12px; line-height: 18px; }
+.seller-product-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 292px)); justify-content: space-between; align-items: stretch; gap: 24px; }
+.figma-product-card.seller-product-card { height: auto; border-radius: 16px; border-color: var(--line); box-shadow: none; display: flex; flex-direction: column; }
+.seller-product-card .figma-card-image { height: 190px; flex: 0 0 auto; }
+.seller-product-card .figma-card-save { width: 32px; height: 32px; top: 12px; right: 12px; box-shadow: none; }
+.seller-product-card .figma-card-body { height: auto; flex: 1; padding: 16px; gap: 12px; }
+.seller-product-card .figma-card-meta .figma-badge { padding: 0; background: transparent; font-size: 11px; line-height: 16px; font-weight: 600; white-space: normal; }
+.seller-product-card .figma-card-title { padding: 0; min-height: 20px; font-size: 13px; line-height: 20px; color: var(--ink); overflow-wrap: anywhere; }
+.seller-product-card .figma-card-price { margin: 0; font-size: 24px; line-height: 32px; letter-spacing: normal; overflow-wrap: anywhere; }
+.seller-product-posted { color: var(--muted); font-size: 12px; line-height: 18px; }
+.seller-product-sold .figma-card-price, .seller-product-sold .figma-card-meta .figma-badge { color: var(--muted); }
+.seller-product-card .figma-card-actions { padding: 0; }
+.seller-product-card .figma-card-actions .soft { min-height: 44px; padding: 8px; border: 0; background: var(--seller-sage); font-size: 11px; line-height: 16px; font-weight: 600; }
+.seller-review-list { display: flex; flex-direction: column; gap: 24px; }
+.seller-review { display: flex; flex-direction: column; gap: 16px; background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; }
+.seller-reviewer { display: flex; align-items: center; gap: 12px; }
+.seller-reviewer > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.seller-review-avatar { display: grid; place-items: center; width: 40px; height: 40px; flex: 0 0 auto; background: var(--seller-sage); border-radius: 16px; color: var(--green); font-size: 13px; font-weight: 700; }
+.seller-review time, .seller-review small { color: var(--muted); font-size: 12px; line-height: 18px; }
+.seller-review p { color: var(--ink); font-size: 14px; line-height: 22px; overflow-wrap: anywhere; }
+.seller-review h3, .seller-review small { overflow-wrap: anywhere; }
+.seller-mobile-rating { display: none; }
+.seller-profile-icon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 16px; height: 16px; vertical-align: middle; }
+.seller-profile-icon > img { display: block; max-width: none; }
+.seller-profile-icon-message { width: 20px; height: 20px; }
+.seller-profile-icon-safety { width: 24px; height: 24px; }
+
+@media (max-width: 1100px) {
+  .seller-profile { width: calc(100% - 64px); }
+  .seller-content-layout { grid-template-columns: 240px minmax(0, 1fr); gap: 24px; }
+  .seller-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  /* The shared mobile navigation extends below its header box. Keep the breadcrumb clear. */
+  .seller-profile { width: calc(100% - 48px); padding: 56px 0 24px; }
+  .seller-profile-header { padding: 20px; }
+  .seller-profile-top { display: flex; flex-direction: column; align-items: stretch; gap: 20px; }
+  .seller-identity { gap: 16px; }
+  .seller-avatar { width: 64px; height: 64px; font-size: 28px; }
+  .seller-profile .seller-identity h2 { font-family: "Plus Jakarta Sans", sans-serif; font-weight: 700; font-size: 24px; line-height: 32px; }
+  .seller-community-illustration { display: none; }
+  .seller-facts { gap: 8px; padding: 12px; }
+  .seller-facts strong { font-size: 16px; line-height: 24px; }
+  .seller-facts small { font-size: 10px; line-height: 16px; }
+  .seller-content-layout { display: flex; flex-direction: column; gap: 24px; }
+  .seller-listings-and-reviews { width: 100%; order: 0; }
+  .seller-trust { width: 100%; order: 1; }
+  .seller-desktop-rating { display: none; }
+  .seller-mobile-rating { display: block; }
+  .seller-tabs button { font-size: 12px; padding: 8px 4px; }
+  .seller-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; }
+  .seller-product-card .figma-card-image { height: 128px; }
+  .seller-product-card .figma-card-save { top: 12px; right: 12px; }
+  .seller-product-card .figma-card-body { padding: 12px; gap: 8px; }
+  .seller-product-card .figma-card-price { font-size: 18px; line-height: 26px; }
+  .seller-product-card .figma-card-title { font-size: 12px; line-height: 18px; }
+  .seller-product-posted { font-size: 10px; line-height: 18px; }
+  .seller-review { padding: 20px; }
+}

@@ -1,0 +1,152 @@
+# Deploy this file from the extracted StudentMarket-render folder as repository root.
+# These paid resources incur charges only after you create/sync the Blueprint in Render.
+databases:
+  - name: studentmarket-db
+    region: singapore
+    plan: 0.1c-256mb
+    databaseName: student_market
+    user: student_market
+    postgresMajorVersion: "16"
+    diskSizeGB: 1
+    storageAutoscalingEnabled: false
+    ipAllowList: []
+
+services:
+  - type: web
+    name: studentmarket-web
+    runtime: node
+    region: singapore
+    plan: 0.5c-512mb
+    numInstances: 1
+    autoDeployTrigger: "off"
+    buildCommand: npm --prefix frontend ci --include=dev && npm run build:render
+    preDeployCommand: npm run db:migrate
+    startCommand: npm run start:render
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.20.0
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: PG_POOL_MAX
+        value: "5"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: studentmarket-db
+          property: connectionString
+      - key: PG_SSL_MODE
+        value: disable
+      - key: APP_ORIGIN
+        sync: false
+      - key: NEXT_PUBLIC_CHAT_WS_URL
+        sync: false
+      - key: CHAT_TICKET_SECRET
+        generateValue: true
+      - key: MEDIA_STORAGE_PROVIDER
+        value: supabase
+      - key: MEDIA_STORAGE_READ_LOCAL_FALLBACK
+        value: "false"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: SUPABASE_PRODUCT_BUCKET
+        value: studentmarket-products
+      - key: SUPABASE_CARD_BUCKET
+        value: studentmarket-cards
+      - key: SUPABASE_CHAT_BUCKET
+        value: studentmarket-chat
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODERATION_MODEL
+        value: gemini-3.1-flash-lite
+      - key: SEPAY_ENABLED
+        value: "false"
+      - key: PDF_CHAT_APP_URL
+        value: ""
+      - key: PDF_CHAT_GRAPH_URL
+        value: ""
+
+  - type: web
+    name: studentmarket-chat
+    runtime: python
+    region: singapore
+    plan: 0.5c-512mb
+    numInstances: 1
+    autoDeployTrigger: "off"
+    buildCommand: pip install --no-cache-dir -r fastapi_chat/requirements.txt
+    startCommand: python -m uvicorn fastapi_chat.main:app --host 0.0.0.0 --port $PORT --workers 1 --ws-max-size 20000 --no-access-log --log-level warning
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: PG_POOL_MAX
+        value: "5"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: studentmarket-db
+          property: connectionString
+      - key: PG_SSL_MODE
+        value: disable
+      - key: APP_ORIGIN
+        fromService:
+          type: web
+          name: studentmarket-web
+          envVarKey: APP_ORIGIN
+      - key: CHAT_TICKET_SECRET
+        fromService:
+          type: web
+          name: studentmarket-web
+          envVarKey: CHAT_TICKET_SECRET
+
+  - type: worker
+    name: studentmarket-ai
+    runtime: node
+    region: singapore
+    plan: 0.5c-512mb
+    numInstances: 1
+    autoDeployTrigger: "off"
+    buildCommand: npm --prefix frontend ci --omit=dev
+    startCommand: npm run worker:render
+    envVars:
+      - key: NODE_VERSION
+        value: 22.20.0
+      - key: NODE_ENV
+        value: production
+      - key: PG_POOL_MAX
+        value: "5"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: studentmarket-db
+          property: connectionString
+      - key: PG_SSL_MODE
+        value: disable
+      - key: GEMINI_API_KEY
+        fromService:
+          type: web
+          name: studentmarket-web
+          envVarKey: GEMINI_API_KEY
+      - key: GEMINI_MODERATION_MODEL
+        value: gemini-3.1-flash-lite
+      - key: MEDIA_STORAGE_PROVIDER
+        value: supabase
+      - key: MEDIA_STORAGE_READ_LOCAL_FALLBACK
+        value: "false"
+      - key: SUPABASE_URL
+        fromService:
+          type: web
+          name: studentmarket-web
+          envVarKey: SUPABASE_URL
+      - key: SUPABASE_SECRET_KEY
+        fromService:
+          type: web
+          name: studentmarket-web
+          envVarKey: SUPABASE_SECRET_KEY
+      - key: SUPABASE_PRODUCT_BUCKET
+        value: studentmarket-products
+      - key: SUPABASE_CARD_BUCKET
+        value: studentmarket-cards
+      - key: SUPABASE_CHAT_BUCKET
+        value: studentmarket-chat

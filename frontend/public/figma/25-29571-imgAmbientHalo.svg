@@ -1,0 +1,9 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="445" height="445" viewBox="0 0 445 445" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle id="Ambient halo" cx="222.5" cy="222.5" r="222.5" fill="url(#paint0_radial_0_17)"/>
+<defs>
+<radialGradient id="paint0_radial_0_17" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(222.5 222.5) scale(222.5)">
+<stop stop-color="#C9DAC7"/>
+<stop offset="1" stop-color="#EAF0E5" stop-opacity="0"/>
+</radialGradient>
+</defs>
+</svg>

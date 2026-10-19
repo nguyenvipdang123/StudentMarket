@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="520" viewBox="0 0 800 520" role="img" aria-label="Ảnh minh họa danh mục Thời trang">
+<rect width="800" height="520" fill="#f7e9ed"/><circle cx="699" cy="83" r="120" fill="#ffffff" opacity=".32"/><circle cx="111" cy="423" r="156" fill="#ffffff" opacity=".28"/>
+<path d="M399 139c-18 0-25 11-25 22 0 12 9 17 25 21v23" fill="none" stroke="#9d6077" stroke-width="9"/><path d="M399 205 249 284c-8 4-4 16 5 16h292c9 0 13-12 5-16z" fill="#fff" stroke="#9d6077" stroke-width="9"/><circle cx="399" cy="205" r="6" fill="#9d6077"/>
+<text x="400" y="403" fill="#9d6077" text-anchor="middle" font-size="38" font-weight="700" font-family="Arial, sans-serif">Thời trang</text>
+<text x="400" y="441" fill="#9d6077" text-anchor="middle" font-size="18" font-family="Arial, sans-serif">SANGTAY · TIN ĐĂNG MẪU</text>
+</svg>
