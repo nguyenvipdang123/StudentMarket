@@ -37,7 +37,7 @@
     "auth:migrate": "node scripts/migrate-auth-to-postgres.mjs",
     "test:integration": "node scripts/integration-test.mjs",
     "test:search": "node --experimental-strip-types --test scripts/listing-search.test.mjs scripts/listing-query.test.mjs",
-    "test:assistant": "node --experimental-strip-types --test scripts/assistant-products.test.mjs",
+    "test:assistant": "node --experimental-strip-types --test scripts/assistant-products.test.mjs scripts/assistant-gemini.test.mjs",
     "test:e2e": "node scripts/test-e2e.mjs test",
     "test:e2e:install": "node scripts/test-e2e.mjs install",
     "test:e2e:report": "node scripts/test-e2e.mjs report",

@@ -89,11 +89,11 @@ Thêm trong Environment của website service, sau đó redeploy:
 
 ## 7. Chatbot và chi phí
 
-**Có trong gói:** tìm sản phẩm thật bằng PostgreSQL và FAQ tức thì đã chuyển vào website. Không cần thêm service cho hai chức năng này.
+**Có trong gói:** tìm sản phẩm thật bằng PostgreSQL, FAQ tức thì và hỏi đáp Gemini trực tiếp trong website. Khi chưa cấu hình hai URL PDF, câu hỏi ngoài FAQ/tìm đồ dùng `ASSISTANT_GEMINI_API_KEY` hoặc `GEMINI_API_KEY` đang có, với model `ASSISTANT_GEMINI_MODEL` (mặc định `gemini-3.1-flash-lite`). Có thể đặt khóa riêng cho chatbot để tách quota với AI Admin. Khóa chỉ dùng phía server. Không cần thêm service Render cho nhánh này; lượt gọi Gemini vẫn chịu quota/chi phí của project Google tương ứng.
 
 **Cần kết nối riêng:** AI hỏi tài liệu PDF thuộc project bên cạnh `ai-pdf-chatbot-langchain`, chưa đóng trong Blueprint. Cần backend chatbot production, rồi cấu hình `PDF_CHAT_APP_URL`, `PDF_CHAT_GRAPH_URL`. Hợp đồng dùng `/api/status`, `/api/chat` và `/threads`; chỉ điền Gemini key chưa tạo ra các endpoint này. Không dùng localhost/ngrok từ máy cá nhân nếu muốn website độc lập máy bạn.
 
-Project PDF local đang dùng `langgraph dev` và `next dev`; không đưa các lệnh dev đó lên Render rồi gọi là production. Chưa kết nối PDF thì trợ lý báo rõ giới hạn cho câu hỏi ngoài FAQ/tìm sản phẩm, không treo đợi localhost. AI duyệt tin Admin vẫn hoạt động bằng worker riêng.
+Project PDF local đang dùng `langgraph dev` và `next dev`; không đưa các lệnh dev đó lên Render rồi gọi là production. Gemini trực tiếp không đọc được PDF chưa kết nối; có thể trả lời nội dung người dùng dán vào chat. AI duyệt tin Admin vẫn hoạt động bằng worker riêng.
 
 ## 8. Kiểm tra và vận hành
 

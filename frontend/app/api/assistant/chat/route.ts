@@ -3,10 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { productIntent, type ProductContext } from "@/lib/assistant-product-intent";
 import { findAssistantProducts } from "@/lib/assistant-product-search";
 import { findFaq } from "@/lib/assistant-faq";
+import { answerWithGemini, AssistantAiError, rememberAssistantTurn, type AssistantTurn } from "@/lib/assistant-gemini";
 
 export const runtime = "nodejs";
 const sessionCookie = "sangtay_assistant";
-const sessions = new Map<string, { threadId?: string; expires: number; busy: boolean; products?: ProductContext }>();
+const sessions = new Map<string, { threadId?: string; expires: number; busy: boolean; products?: ProductContext; history?: AssistantTurn[] }>();
 const requests = new Map<string, { count: number; expires: number }>();
 const hour = 60 * 60 * 1000;
 const graphUrl = process.env.PDF_CHAT_GRAPH_URL || (process.env.NODE_ENV==='production'?'':"http://127.0.0.1:2024");
@@ -69,19 +70,26 @@ export async function POST(request: NextRequest) {
     session.expires = now + hour;
     const intent = productIntent(message, session.products, preferredSchool);
     if (intent?.type === "clarify") {
+      session.history = rememberAssistantTurn(session.history, message, intent.text);
       session.busy = false;
       return localReply("assistant/partial", { text: intent.text }, request, newToken);
     }
     if (intent?.type === "search") {
       const found = await findAssistantProducts(intent.search, intent.more);
       session.products = found.context;
+      session.history = rememberAssistantTurn(session.history, message, found.answer.text);
       session.busy = false;
       return localReply("assistant/products", found.answer, request, newToken);
     }
     session.products = undefined;
     const faq=findFaq(message);
-    if(faq) {session.busy=false;return localReply('assistant/partial',{text:faq.answer},request,newToken);}
-    if(!graphUrl || !chatbotUrl) {session.busy=false;return error('Trợ lý hiện hỗ trợ tìm sản phẩm và hướng dẫn nhanh. Chức năng hỏi tài liệu PDF chưa được kết nối trên máy chủ này.',503);}
+    if(faq) {session.history=rememberAssistantTurn(session.history,message,faq.answer);session.busy=false;return localReply('assistant/partial',{text:faq.answer},request,newToken);}
+    if(!graphUrl || !chatbotUrl) {
+      const text = await answerWithGemini(message, session.history, { signal });
+      session.history = rememberAssistantTurn(session.history, message, text);
+      session.busy = false;
+      return localReply("assistant/partial", { text }, request, newToken);
+    }
     const status = await fetch(`${chatbotUrl}/api/status`, { cache: "no-store", signal });
     if (!status.ok || !(await status.json()).ready) { session.busy = false; return error("Trợ lý đang được cấu hình. Vui lòng thử lại sau.", 503); }
     if (!session.threadId) {
@@ -113,8 +121,9 @@ export async function POST(request: NextRequest) {
     signal.addEventListener("abort", () => { currentSession.busy = false; }, { once: true });
     const response = new NextResponse(body, { headers: { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-store, no-transform", "X-Accel-Buffering": "no" } });
     return withSession(response, request, newToken);
-  } catch {
+  } catch (exception) {
     if (session) session.busy = false;
+    if (exception instanceof AssistantAiError) return error(exception.message, exception.status);
     return error("Trợ lý chưa kết nối được. Bạn vui lòng thử lại sau.", 503);
   }
 }
