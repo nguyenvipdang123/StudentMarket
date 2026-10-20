@@ -1,6 +1,6 @@
 /* Native images preserve Figma asset geometry. */
 /* eslint-disable @next/next/no-img-element */
-import Link from "next/link";
+import Link from "@/components/TransitionLink";
 import Icon from "./FigmaIcon";
 import { CardSkeletons, EmptyState, PageIntro, SafetyNote } from "./FigmaStates";
 import { formatPrice } from "@/lib/storage";

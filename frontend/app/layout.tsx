@@ -11,7 +11,9 @@ import "./interface.css";
 import "./figma.css";
 import "./figma-motion.css";
 import "./assistant.css";
+import "./page-transitions.css";
 import AssistantWidget from "@/components/AssistantWidget";
+import PageTransition from "@/components/PageTransition";
 
 export const metadata: Metadata = {
   title: "SangTay | Chợ đồ cũ dành cho sinh viên",
@@ -28,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preload" href="/fonts/dm-serif-display.ttf" as="font" type="font/ttf" crossOrigin="anonymous" />
         <link rel="preload" href="/fonts/plus-jakarta-400.ttf" as="font" type="font/ttf" crossOrigin="anonymous" />
       </head>
-      <body>{children}<AssistantWidget /></body>
+      <body><PageTransition>{children}</PageTransition><AssistantWidget /></body>
     </html>
   );
 }

@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { FormEvent, Suspense, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/TransitionLink";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";

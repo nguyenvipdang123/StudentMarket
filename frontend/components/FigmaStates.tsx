@@ -1,6 +1,6 @@
 /* Native images preserve Figma asset geometry. */
 /* eslint-disable @next/next/no-img-element */
-import Link from "next/link";
+import Link from "@/components/TransitionLink";
 import type { ReactNode } from "react";
 import Icon from "./FigmaIcon";
 export function EmptyState({ title, children, action, href, onAction }: { title: string; children?: ReactNode; action?: string; href?: string; onAction?: () => void }) {
@@ -8,4 +8,4 @@ export function EmptyState({ title, children, action, href, onAction }: { title:
 }
 export function SafetyNote({ children }: { children: ReactNode }) { return <div className="figma-safety"><Icon name="shield" /><p>{children}</p></div>; }
 export function PageIntro({ title, children }: { title: string; children?: ReactNode }) { return <div className="figma-page-intro"><span className="section-kicker">SANGTAY · CỘNG ĐỒNG SINH VIÊN</span><h1>{title}</h1>{children && <p>{children}</p>}</div>; }
-export function CardSkeletons({ count = 4 }: { count?: number }) { return <div className="figma-card-grid" aria-label="Đang tải món đồ" aria-busy="true">{Array.from({length:count},(_,i)=><div className="listing-skeleton" key={i}><div className="skeleton-image"/><div className="skeleton-body"><i/><i/><i/></div></div>)}</div>; }
+export function CardSkeletons({ count = 4, threeColumns = false }: { count?: number; threeColumns?: boolean }) { return <div className={`figma-card-grid${threeColumns ? " three-columns" : ""}`} aria-label="Đang tải món đồ" aria-busy="true">{Array.from({length:count},(_,i)=><div className="listing-skeleton" key={i}><div className="skeleton-image"/><div className="skeleton-body"><i/><i/><i/></div></div>)}</div>; }

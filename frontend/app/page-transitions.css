@@ -1,0 +1,32 @@
+/* Navigation feedback follows actual Next.js pending state, with no forced wait. */
+.page-transition { min-height: 100dvh; }
+.wait-indicator { display: inline-flex; align-items: center; justify-content: center; gap: 10px; color: #315c47; font-size: 13px; font-weight: 600; line-height: 1.6; }
+.wait-spinner { display: inline-block; width: 18px; height: 18px; flex: 0 0 18px; border: 2px solid #d7e7da; border-top-color: #246347; border-radius: 50%; animation: wait-spin .8s linear infinite; }
+.navigation-wait { pointer-events: none; position: fixed; inset: 0; z-index: 9500; opacity: 0; animation: wait-appear .15s ease-out .14s forwards; }
+.navigation-wait-track { position: absolute; inset: 0 0 auto; height: 3px; overflow: hidden; background: #dbe9dd; }
+.navigation-wait-track > span { display: block; width: 35%; height: 100%; border-radius: 20px; background: linear-gradient(90deg, #80b28c, #225e44); animation: wait-progress 1.25s ease-in-out infinite; }
+.navigation-wait-pill { position: absolute; bottom: max(24px, env(safe-area-inset-bottom)); left: 50%; translate: -50% 0; width: max-content; max-width: calc(100vw - 32px); padding: 13px 20px; border: 1px solid #d9e5da; border-radius: 100px; background: #fffef9; box-shadow: 0 8px 32px #193f2c1a; }
+.route-loading { min-height: 100dvh; padding: 36px 20px 80px; background: radial-gradient(ellipse at 50% 40%, #e9f1e4, transparent 65%), #f7f8f5; }
+.route-loading-brand { max-width: 1200px; margin: 0 auto; color: #234c39; font-size: 26px; font-weight: 800; letter-spacing: -1.3px; }
+.route-loading-brand > span { color: #d19265; }
+.route-loading-card { width: min(440px, 100%); margin: clamp(48px, 13vh, 130px) auto 0; padding: 36px 28px 28px; border: 1px solid #dfe8dc; border-radius: 28px; background: #fffef9; text-align: center; box-shadow: 0 16px 60px #2b4b2f08; }
+.route-loading-symbol { display: inline-grid; place-items: center; width: 60px; height: 60px; border-radius: 20px; background: #edf4e8; color: #2b6246; font-size: 30px; }
+.route-loading-card h1 { margin: 20px 0 10px; font-family: "SangTay Serif", Georgia, serif; color: #234c39; font-size: 30px; font-weight: 400; }
+.route-loading-card p { margin: 0 0 24px; color: #728176; font-size: 13px; line-height: 1.7; }
+.route-loading-preview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 30px; }
+.route-loading-preview i { height: 68px; border-radius: 12px; background: #edf1e8; }
+.listing-skeleton, .route-loading-preview i { position: relative; overflow: hidden; }
+.listing-skeleton { animation: none; }
+.listing-skeleton::after, .route-loading-preview i::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, #ffffff9c 50%, transparent 70%); transform: translateX(-100%); animation: wait-shimmer 1.6s ease-in-out infinite; }
+.section-loading { display: grid; gap: 16px; }
+.section-loading > .wait-indicator { justify-self: start; }
+@keyframes wait-spin { to { transform: rotate(360deg); } }
+@keyframes wait-progress { from { transform: translateX(-110%); } to { transform: translateX(390%); } }
+@keyframes wait-appear { to { opacity: 1; } }
+@keyframes wait-shimmer { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .navigation-wait { opacity: 1; }
+  .navigation-wait, .navigation-wait-track > span, .wait-spinner, .listing-skeleton::after, .route-loading-preview i::after { animation: none; }
+  .listing-skeleton::after, .route-loading-preview i::after { display: none; }
+  .navigation-wait-track > span { width: 100%; }
+}

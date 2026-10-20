@@ -2,7 +2,7 @@
 /* Native images preserve Figma asset geometry and authenticated image URLs. */
 /* eslint-disable @next/next/no-img-element */
 import { useState, useEffect, type FormEvent, type ChangeEvent, type RefObject } from "react";
-import Link from "next/link";
+import Link from "@/components/TransitionLink";
 import type { Conversation, Viewer } from "@/lib/types";
 import Icon from "./FigmaIcon";
 import { CardSkeletons, EmptyState, PageIntro, SafetyNote } from "./FigmaStates";

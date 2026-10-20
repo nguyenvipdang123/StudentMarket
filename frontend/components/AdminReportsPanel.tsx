@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/TransitionLink";
 import { FormEvent, useEffect, useState } from "react";
 import { reportReasons, reportStatuses } from "@/lib/reporting";
 

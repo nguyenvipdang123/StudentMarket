@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from "@/components/TransitionLink";
 import type { Viewer } from '@/lib/types';
 import { meetingTime, reservationLabels, type Reservation } from '@/lib/reservation-types';
 import { MeetingMapLinks } from './LocationMap';

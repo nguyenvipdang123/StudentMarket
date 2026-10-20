@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 import { use, useCallback, useEffect, useState, type KeyboardEvent } from "react";
-import Link from "next/link";
+import Link from "@/components/TransitionLink";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MarketplaceCard from "@/components/MarketplaceCard";

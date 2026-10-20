@@ -1,6 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
-import Link from "next/link";
+import Link from "@/components/TransitionLink";
 import { useEffect, useRef, useState } from "react";
 import { observeProductReveal } from "@/lib/product-scroll-reveal";
 import type { Listing } from "@/lib/types";

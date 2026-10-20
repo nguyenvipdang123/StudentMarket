@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { usePathname } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/TransitionLink";
 import { assistantAnswer, type AssistantAnswer } from "@/lib/assistant-answer";
 import { UNIVERSITY_STORAGE_KEY } from "@/lib/universities";
 import { formatPrice } from "@/lib/storage";

@@ -1,6 +1,6 @@
 "use client";
 import {useCallback,useEffect,useState} from 'react';
-import Link from 'next/link';
+import Link from "@/components/TransitionLink";
 import type {Viewer} from '@/lib/types';
 import type {NeedFilters,SavedSearch} from '@/lib/saved-search-types';
 import {formatPrice} from '@/lib/storage';

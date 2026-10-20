@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/TransitionLink";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 

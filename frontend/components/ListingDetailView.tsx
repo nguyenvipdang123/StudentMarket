@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/TransitionLink";
 import type { Listing, Viewer } from "@/lib/types";
 import { formatPrice } from "@/lib/storage";
 import Icon from "./FigmaIcon";
