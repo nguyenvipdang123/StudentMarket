@@ -45,6 +45,8 @@
     "test:dashboard": "node --experimental-strip-types --test scripts/admin-dashboard.test.mjs"
   },
   "dependencies": {
+    "@splinetool/react-spline": "^4.1.0",
+    "@splinetool/runtime": "2.0.95",
     "gsap": "^3.15.0",
     "jose": "^6.2.12",
     "next": "16.3.6",

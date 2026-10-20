@@ -13,6 +13,8 @@ export const test = base.extend<{ browserGuards: void }>({
     page.on("pageerror", error => errors.push(error.message));
     await context.addInitScript(() => {
       if (localStorage.getItem("sangtay_search_university_v1") === null) localStorage.setItem("sangtay_search_university_v1", "");
+      // General UI tests keep the optional GPU widget collapsed; its own tests open it explicitly.
+      sessionStorage.setItem("sangtay_robot_collapsed", "1");
     });
     await context.route("**/*", route => {
       const url = route.request().url();
