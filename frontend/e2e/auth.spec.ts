@@ -1,5 +1,27 @@
 import { test, expect, seed, login, cards } from "./fixtures";
 
+test("Google trả lỗi phải mở đăng nhập và hiển thị lý do, đóng hộp thoại xóa lỗi khỏi URL", async ({ page }) => {
+  await page.goto("/explore?authError=school_google&q=laptop");
+  const dialog = page.getByRole("dialog", { name: "Đăng nhập", exact: true });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText(/Vui lòng dùng tài khoản Google Workspace của trường/)).toBeVisible();
+  await dialog.getByRole("button", { name: "Đóng", exact: true }).click();
+  await expect(page).not.toHaveURL(/authError=/);
+  await expect(page).toHaveURL(/q=laptop/);
+  await page.reload();
+  await expect(page.getByRole("dialog", { name: "Đăng nhập", exact: true })).toHaveCount(0);
+});
+
+test("Google xác thực xong phải mở form hoàn tất tài khoản, không tự tạo phiên từ URL", async ({ page }) => {
+  await page.goto("/explore?auth=google-complete");
+  const dialog = page.getByRole("dialog", { name: "Hoàn tất tài khoản Google", exact: true });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel(/^Mã sinh viên/)).toBeVisible();
+  expect((await (await page.request.get("/api/auth/me")).json()).user).toBeNull();
+  const result = await page.request.post("/api/auth/google/complete", { headers: { Origin: new URL(page.url()).origin }, data: { fullName: "Không có phiên Google", studentId: "NO-GOOGLE", university: "ĐH Công nghệ Đồng Nai" } });
+  expect(result.status()).toBe(401);
+});
+
 test("đăng nhập sai báo lỗi, đăng nhập đúng tạo phiên và đăng xuất được", async ({ page }, info) => {
   const account = seed.accounts[info.project.name];
   await page.goto("/explore?auth=login");

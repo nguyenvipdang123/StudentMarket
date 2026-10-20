@@ -7,6 +7,22 @@ import AuthDialog, { AuthMode } from "./AuthDialog";
 import { Viewer } from "@/lib/types";
 import NotificationBell from "./NotificationBell";
 
+const authErrors: Record<string, string> = {
+  google_config: "Đăng nhập Google chưa được cấu hình trên máy chủ. Vui lòng đăng nhập bằng email hoặc liên hệ quản trị viên.",
+  google: "Không thể hoàn tất đăng nhập Google. Vui lòng thử lại và cho phép truy cập email trường.",
+  school_google: "Vui lòng dùng tài khoản Google Workspace của trường có email .edu hoặc .edu.vn. Gmail cá nhân không được hỗ trợ.",
+  email_exists: "Email này đã được đăng ký. Vui lòng đăng nhập bằng mật khẩu hoặc chọn Quên mật khẩu; tài khoản chưa được liên kết với Google.",
+  account_status: "Tài khoản chưa được duyệt hoặc đang bị khóa. Vui lòng liên hệ quản trị viên.",
+  admin_access: "Vui lòng đăng nhập bằng tài khoản có quyền quản trị.",
+  verification: "Liên kết xác thực không hợp lệ hoặc đã hết hạn. Vui lòng nhận lại mã xác thực email.",
+};
+
+function clearAuthParameters() {
+  const url = new URL(window.location.href);
+  for (const key of ["auth", "authError", "google"]) url.searchParams.delete(key);
+  window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -63,7 +79,23 @@ export default function Navbar() {
     };
   }, []);
 
-  useEffect(()=>{const timer=setTimeout(()=>{const mode=new URLSearchParams(window.location.search).get("auth");if(mode==="login"||mode==="register"||mode==="forgot"||mode==="verify")setAuthMode(mode);},0);return ()=>clearTimeout(timer);},[pathname]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(window.location.search);
+      const authError = params.get("authError");
+      if (authError) {
+        setAuthNotice(authErrors[authError] || "Không thể đăng nhập. Vui lòng thử lại.");
+        setAuthMode("login");
+        return;
+      }
+      const mode = params.get("auth");
+      if (mode === "login" || mode === "register" || mode === "forgot" || mode === "verify" || mode === "google-complete") {
+        setAuthNotice("");
+        setAuthMode(mode);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [pathname]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -373,10 +405,12 @@ export default function Navbar() {
           initialMode={authMode}
           notice={authNotice}
           onClose={() => {
+            clearAuthParameters();
             setAuthMode(null);
             setAuthNotice("");
           }}
           onAuthenticated={account => {
+            clearAuthParameters();
             setViewer(account);
             window.dispatchEvent(new Event("sangtay_auth_changed"));
             window.dispatchEvent(new Event("sangtay_saved_changed"));
