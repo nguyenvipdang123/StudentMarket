@@ -12,6 +12,7 @@ import "./figma.css";
 import "./figma-motion.css";
 import "./assistant.css";
 import "./page-transitions.css";
+import "./footer-crowd.css";
 import AssistantWidget from "@/components/AssistantWidget";
 import PageTransition from "@/components/PageTransition";
 

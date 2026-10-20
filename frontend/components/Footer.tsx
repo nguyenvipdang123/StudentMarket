@@ -1,8 +1,9 @@
 import Link from "@/components/TransitionLink";
+import FooterCrowd from "./FooterCrowd";
 
 export default function Footer() {
   return (
-    <footer className="footer">
+    <><footer className="footer">
       <div className="container footer-main">
         <div>
           <Link className="brand footer-brand" href="/explore">
@@ -48,6 +49,6 @@ export default function Footer() {
         <span>© 2026 SangTay. Sàn trao đổi P2P làm bằng sự tử tế dành cho sinh viên.</span>
         <span>Trao đồ cũ · Gửi niềm vui ♡</span>
       </div>
-    </footer>
+    </footer><FooterCrowd /></>
   );
 }

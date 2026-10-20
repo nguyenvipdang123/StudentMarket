@@ -45,6 +45,7 @@
     "test:dashboard": "node --experimental-strip-types --test scripts/admin-dashboard.test.mjs"
   },
   "dependencies": {
+    "gsap": "^3.15.0",
     "jose": "^6.2.12",
     "next": "16.3.6",
     "nodemailer": "^10.0.10",
@@ -65,5 +66,7 @@
     "tailwindcss": "^4",
     "typescript": "^5"
   },
-  "engines": { "node": ">=22.20.0 <23" }
+  "engines": {
+    "node": ">=22.20.0 <23"
+  }
 }
