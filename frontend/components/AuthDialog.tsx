@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { SOUTHERN_UNIVERSITIES } from "@/lib/universities";
 import { isEducationEmail } from "@/lib/education-email";
 import EmailCodeFlow from "./EmailCodeFlow";
+import { useTurnstile } from './TurnstileChallenge';
 
 export type AuthMode = "login" | "register" | "google-complete" | "forgot" | "verify";
 export type Viewer = {
@@ -30,6 +31,7 @@ export default function AuthDialog({ initialMode, notice, onClose, onAuthenticat
   initialMode: AuthMode; notice?: string; onClose: () => void; onAuthenticated: (viewer: Viewer) => void;
 }) {
   const [mode, setMode] = useState<AuthMode>(initialMode);
+  const bot = useTurnstile('register');
   const [email, setEmail] = useState("");
   const [school, setSchool] = useState("");
   const [customSchool, setCustomSchool] = useState("");
@@ -49,6 +51,7 @@ export default function AuthDialog({ initialMode, notice, onClose, onAuthenticat
   }, []);
 
   function switchMode(nextMode: AuthMode) {
+    bot.reset();
     setMode(nextMode); setErrorMessage(""); setResendMessage(""); setSuccessMessage("");
   }
 
@@ -74,19 +77,20 @@ export default function AuthDialog({ initialMode, notice, onClose, onAuthenticat
   }
 
   async function submitRegister(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setErrorMessage("");
+    event.preventDefault(); if (busy || !bot.ready) return; setBusy(true); setErrorMessage("");
     const form = new FormData(event.currentTarget);
     if (String(form.get("password")) !== String(form.get("confirmPassword"))) {
       setErrorMessage("Xác nhận mật khẩu không khớp."); setBusy(false); return;
     }
     form.set("university", schoolName);
+    form.set('turnstileToken', bot.token);
     try {
       const response = await fetch("/api/auth/register", { method: "POST", body: form });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Không thể đăng ký.");
       setEmail(data.email || email); setCodeSent(true); switchMode("verify");
     } catch (error) { setErrorMessage(error instanceof Error ? error.message : "Không thể đăng ký."); }
-    finally { setBusy(false); }
+    finally { setBusy(false); bot.reset(); }
   }
 
   async function submitGoogleComplete(event: FormEvent<HTMLFormElement>) {
@@ -136,7 +140,8 @@ export default function AuthDialog({ initialMode, notice, onClose, onAuthenticat
           <label>Xác nhận mật khẩu <span>*</span><input name="confirmPassword" type="password" minLength={8} required autoComplete="new-password" placeholder="Nhập lại mật khẩu" /></label>
           <label className="full">Ảnh thẻ sinh viên {!isEducation && <span>*</span>}<input name="studentCard" type="file" accept="image/jpeg,image/png,image/webp" required={!isEducation} /><small>{isEducation ? "Không bắt buộc với email .edu/.edu.vn; tài khoản tự được duyệt sau khi nhập mã xác thực email." : "Bắt buộc với email ngoài miền .edu/.edu.vn. JPG, PNG, WebP, tối đa 5 MB; xác thực email bằng mã trước khi Admin xét duyệt."}</small></label>
           <p className="auth-rule full">Mỗi email và mã sinh viên chỉ đăng ký một lần. Tài khoản cần xác minh trước khi đăng tin hoặc nhắn người bán.</p>
-          <button className="auth-submit full" type="submit" disabled={busy}>{busy ? "Đang đăng ký..." : "Tạo tài khoản"}</button>
+          {bot.widget}
+          <button className="auth-submit full" type="submit" disabled={busy || !bot.ready}>{busy ? "Đang đăng ký..." : "Tạo tài khoản"}</button>
         </form>}
         {mode === "google-complete" && <form className="auth-form auth-register-form" onSubmit={submitGoogleComplete}>
           <label className="full">Họ và tên <span>*</span><input name="fullName" minLength={2} maxLength={100} required autoComplete="name" placeholder="Tên hiển thị của bạn" /></label>

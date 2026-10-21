@@ -2,13 +2,16 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { digest, error, getAccountByEmail, isValidEmail, sameOrigin, smtpConfigured } from "@/lib/auth";
 import { allowEmailRequest, EmailCodeError, issueEmailCode } from "@/lib/email-codes";
+import { checkTurnstile } from "@/lib/turnstile";
 
 export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   if (!sameOrigin(request)) return error("Yêu cầu không hợp lệ.", 403);
-  let email: string;
-  try { email = String((await request.json()).email || "").trim().toLowerCase(); }
+  let email: string, token: unknown;
+  try { const body = await request.json(); email = String(body.email || "").trim().toLowerCase(); token = body.turnstileToken; }
   catch { return error("Dữ liệu không hợp lệ."); }
+  const bot = await checkTurnstile(token, 'reset_password');
+  if (bot) return error(bot.error, bot.status);
   if (!isValidEmail(email)) return error("Vui lòng nhập đúng địa chỉ email.");
   if (!smtpConfigured()) return error("Hệ thống chưa cấu hình SMTP để gửi mã.", 503);
   try {

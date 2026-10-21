@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import { seedE2E } from "./helpers/e2e-seed.mjs";
 import { startMockAssistant } from "./helpers/mock-assistant.mjs";
 import { startMockListingAdvice } from './helpers/mock-listing-advice.mjs';
+import { startMockTurnstile } from './helpers/mock-turnstile.mjs';
 
 const frontend = resolve(dirname(fileURLToPath(import.meta.url)), ".."); process.chdir(frontend);
 const root = resolve(frontend, ".."), reports = join(root, ".backups/e2e");
@@ -43,7 +44,7 @@ async function test() {
   const database = "student_market_e2e_" + randomBytes(6).toString("hex");
   const settings = { host: process.env.PG_HOST || "localhost", port: Number(process.env.PG_PORT || 5432), user: process.env.PG_USER || "postgres", password: process.env.PG_PASSWORD, connectionTimeoutMillis: 5000 };
   const admin = new pg.Client({ ...settings, database: "postgres" });
-  let db, created = false, app, assistant, mail, advice;
+  let db, created = false, app, assistant, mail, advice, turnstile;
   let code = 1;
   const serverLog = createWriteStream(join(directory, "server.log"), { mode: 0o600 });
   try {
@@ -61,6 +62,8 @@ async function test() {
     const fixtures = await seedE2E(db);
     assistant = await startMockAssistant(); assistant.setReady(true);
     advice = await startMockListingAdvice();
+    const testTurnstile=process.env.STUDENTMARKET_TEST_TURNSTILE==='1';
+    if(testTurnstile)turnstile=await startMockTurnstile();
     const mails = [];
     mail = httpServer(async (request, response) => {
       if (request.method === "POST") { let raw = ""; for await (const chunk of request) raw += chunk; mails.push(JSON.parse(raw)); response.end("{}"); return; }
@@ -73,6 +76,7 @@ async function test() {
     const preload = join(directory, "mock-mail.mjs");
     await writeFile(preload, `import mailer from ${JSON.stringify(pathToFileURL(join(frontend, "node_modules/nodemailer/dist/esm/nodemailer.js")).href)};mailer.createTransport=()=>({sendMail:async message=>{const response=await fetch(${JSON.stringify(mailOrigin)},{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(message)});if(!response.ok)throw Error('test mail failed');return {accepted:[message.to]};}});`, { mode: 0o600 });
     await writeFile(preload, `const originalAdviceFetch=globalThis.fetch;globalThis.fetch=(input,init)=>String(input).startsWith('https://generativelanguage.googleapis.com/v1beta/models/')?originalAdviceFetch(${JSON.stringify(advice.origin)},init):originalAdviceFetch(input,init);`, {flag:'a'});
+    if(turnstile)await writeFile(preload, `const originalTurnstileFetch=globalThis.fetch;globalThis.fetch=(input,init)=>String(input)==='https://challenges.cloudflare.com/turnstile/v0/siteverify'?originalTurnstileFetch(${JSON.stringify(turnstile.origin)},init):originalTurnstileFetch(input,init);`, {flag:'a'});
     const probe = createServer(); await new Promise(resolvePromise => probe.listen(0, "127.0.0.1", resolvePromise)); const port = probe.address().port; await new Promise(resolvePromise => probe.close(resolvePromise));
     const origin = "http://127.0.0.1:" + port;
     const fixturePath = join(directory, "fixtures.json");
@@ -80,6 +84,7 @@ async function test() {
     const env = { ...process.env, ...browserEnvironment,
       PG_HOST: settings.host, PG_PORT: String(settings.port), PG_USER: settings.user, PG_PASSWORD: settings.password || "", PG_DATABASE: database,
       STUDENTMARKET_E2E_BUILD: "1", STUDENTMARKET_E2E_DATABASE: database, STUDENTMARKET_E2E_BASE_URL: origin, STUDENTMARKET_E2E_RUN_DIR: directory, STUDENTMARKET_E2E_FIXTURES: fixturePath,
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: testTurnstile?'e2e-turnstile-sitekey':'', TURNSTILE_SECRET_KEY: testTurnstile?'e2e-turnstile-secret':'',
       NODE_ENV: "production", NODE_OPTIONS: "--import=" + pathToFileURL(preload).href,
       APP_ORIGIN: origin, MEDIA_STORAGE_PROVIDER: "local", MEDIA_STORAGE_READ_LOCAL_FALLBACK: "false", PRODUCT_IMAGE_DIR: join(directory, "media/products"), STUDENT_CARD_DIR: join(directory, "media/cards"), CHAT_ATTACHMENT_DIR: join(directory, "media/chat"),
       SUPABASE_URL: "", SUPABASE_SECRET_KEY: "", SUPABASE_SERVICE_ROLE_KEY: "", GEMINI_API_KEY: "", SEPAY_ENABLED: "false", SEPAY_WEBHOOK_SECRET: randomBytes(32).toString("hex"),
@@ -120,6 +125,7 @@ async function test() {
     if (mail) await new Promise(resolvePromise => mail.close(resolvePromise));
     await assistant?.close(); serverLog.end();
     await advice?.close();
+    await turnstile?.close();
     for (const file of [join(directory, "summary.json"), join(reports, "latest.json")]) {
       try { const summary = JSON.parse(await readFile(file, "utf8")); if (summary.database === database) { summary.databaseRemoved = created; await writeFile(file, JSON.stringify(summary, null, 2), { mode: 0o600 }); } } catch { /* Failed setup may not have a report yet. */ }
     }

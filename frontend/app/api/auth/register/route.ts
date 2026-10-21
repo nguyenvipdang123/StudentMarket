@@ -7,6 +7,7 @@ import {
 } from "@/lib/auth";
 import { allowEmailRequest, issueEmailCode } from "@/lib/email-codes";
 import { saveMedia, removeMedia, MediaStorageError } from "@/lib/media-storage";
+import { checkTurnstile } from "@/lib/turnstile";
 
 export const runtime = "nodejs";
 
@@ -23,6 +24,8 @@ export async function POST(request: NextRequest) {
 
   let form: FormData;
   try { form = await request.formData(); } catch { return error("Dữ liệu đăng ký không hợp lệ."); }
+  const bot = await checkTurnstile(form.get('turnstileToken'), 'register');
+  if (bot) return error(bot.error, bot.status);
   const fullName = String(form.get("fullName") || "").trim().replace(/\s+/g, " ");
   const email = String(form.get("email") || "").trim().toLowerCase();
   const studentId = String(form.get("studentId") || "").trim().toUpperCase();

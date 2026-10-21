@@ -42,7 +42,8 @@
     "test:e2e:install": "node scripts/test-e2e.mjs install",
     "test:e2e:report": "node scripts/test-e2e.mjs report",
     "test:maps": "node --experimental-strip-types --test scripts/google-maps.test.mjs",
-    "test:dashboard": "node --experimental-strip-types --test scripts/admin-dashboard.test.mjs"
+    "test:dashboard": "node --experimental-strip-types --test scripts/admin-dashboard.test.mjs",
+    "test:turnstile": "node --experimental-strip-types --test scripts/turnstile.test.mjs"
   },
   "dependencies": {
     "@splinetool/react-spline": "^4.1.0",

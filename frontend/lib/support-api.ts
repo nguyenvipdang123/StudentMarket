@@ -3,6 +3,7 @@ import {requireAuth,type AuthenticatedUser} from './auth-pg';
 import {query,transaction} from './db';
 import {ApiError,apiError,isUUID} from './api-error';
 import {supportCategories,supportStatuses} from './support-types';
+import {checkTurnstile} from './turnstile';
 
 const headers={'Cache-Control':'private, no-store'};
 const columns=`t.id,t.subject,t.category,t.status,t.version,t.created_at AS "createdAt",t.updated_at AS "updatedAt",u.full_name AS "ownerName"`;
@@ -36,6 +37,7 @@ export async function supportList(request:NextRequest,admin=false){
 }
 export async function supportCreate(request:NextRequest){
   try{const {user,response}=await identity(request,false);if(response)return response;const body=await bodyOf(request);
+    const bot=await checkTurnstile(body.turnstileToken,'support_create');if(bot)throw new ApiError(bot.error,bot.status);
     const subject=text(body.subject,5,160),content=text(body.content,20,4000),category=body.category;
     if(typeof category!=='string'||!Object.hasOwn(supportCategories,category))throw new ApiError('Chọn nhóm vấn đề cần hỗ trợ.');
     const id=await transaction(async client=>{
