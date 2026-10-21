@@ -98,6 +98,18 @@ https://marital-dominoes-balmy.ngrok-free.dev/api/payments/sepay/webhook
 
 ## 3. Migration và bật thanh toán
 
+### Triển khai trên Render
+
+Trong **studentmarket-web → Environment**, điền các biến `SEPAY_*` ở mục 1 bằng cấu hình ngân hàng và secret khớp với SePay. Cấu hình trong `.env.local` trên máy không tự được đưa lên Render.
+
+Với domain `sangtay.shop`, URL nhận webhook là `https://sangtay.shop/api/payments/sepay/webhook`. Sau khi kiểm tra tài khoản nhận tiền và webhook, đặt `SEPAY_ENABLED=true`, chọn **Save and deploy** hoặc **Save, rebuild, and deploy**, rồi chờ bản triển khai báo **Live**.
+
+Mở `/api/payments/sepay/status` trên domain đang dùng: `{"configured":true}` xác nhận cấu hình đã đầy đủ và bật. Trạng thái này chưa chứng minh ngân hàng đã gửi được giao dịch; cần kiểm tra nhật ký webhook SePay khi có khoản chuyển tiền thật. Nếu trả `false`, Admin có thể xem danh sách biến thiếu ở **Doanh thu & đẩy tin → Thanh toán SePay**.
+
+`SEPAY_ENABLED` trong Blueprint dùng `sync: false` để giữ giá trị quản lý tại Environment khi đồng bộ lại. Với Blueprint mới, nhập `false` nếu chưa hoàn tất cấu hình; chỉ bật khi ngân hàng và webhook đã sẵn sàng. Không đưa thông tin tài khoản hoặc secret vào `render.yaml`.
+
+### Chạy trên máy
+
 ```powershell
 npm run db:migrate
 ```
