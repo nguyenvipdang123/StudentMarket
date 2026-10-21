@@ -1,5 +1,6 @@
 import { redactListingText } from './ai-moderation-policy.ts';
 import { adviceFields,type ListingAdvice } from './listing-advice-types.ts';
+import {setTimeout as delay} from 'node:timers/promises';
 
 export class ListingAdviceError extends Error {status:number;constructor(message:string,status=400){super(message);this.status=status;}}
 export type AdviceInput={title:string;description:string;category:string;condition:string;kind:'Sell'|'Exchange'|'Gift';price:number|null;hasMeetingArea:boolean};
@@ -49,17 +50,33 @@ export async function suggestListing(input:AdviceInput,images:AdviceImage[],opti
   const {key,model}=adviceConfig(options.env);
   if(!key)throw new ListingAdviceError('AI góp ý chưa được cấu hình. Bạn vẫn có thể tiếp tục đăng tin.',503);
   if(!/^gemini-[a-zA-Z0-9._-]+$/.test(model))throw new ListingAdviceError('Cấu hình AI góp ý chưa hợp lệ. Vui lòng liên hệ Admin.',503);
-  const signal=AbortSignal.any([AbortSignal.timeout(25000),...(options.signal?[options.signal]:[])]);
+  // One deadline covers both attempts, the response body and the backoff.
+  const signal=AbortSignal.any([AbortSignal.timeout(45000),...(options.signal?[options.signal]:[])]);
   try {
-    const response=await (options.fetcher||fetch)(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{
-      method:'POST',signal,redirect:'error',cache:'no-store',headers:{'Content-Type':'application/json','x-goog-api-key':key},
-      body:JSON.stringify({systemInstruction:{parts:[{text:instruction}]},contents:[{role:'user',parts:[{text:JSON.stringify({...input,imageCount:images.length})},...images.map(image=>({inlineData:image}))]}],
-        generationConfig:{temperature:0.2,maxOutputTokens:1400,...(model.startsWith('gemini-3')?{thinkingConfig:{thinkingLevel:'minimal'}}:{}),responseMimeType:'application/json',responseJsonSchema:{
-          type:'object',properties:{summary:{type:'string'},suggestedTitle:{type:'string'},imagesChecked:{type:'integer'},issues:{type:'array',maxItems:6,items:{type:'object',properties:{field:{type:'string',enum:adviceFields},photoIndex:{type:'integer'},message:{type:'string'},suggestion:{type:'string'}},required:['field','photoIndex','message','suggestion']}}},required:['summary','suggestedTitle','imagesChecked','issues'],
-        }},
-      }),
+    const body=JSON.stringify({systemInstruction:{parts:[{text:instruction}]},contents:[{role:'user',parts:[{text:JSON.stringify({...input,imageCount:images.length})},...images.map(image=>({inlineData:image}))]}],
+      generationConfig:{temperature:0.2,maxOutputTokens:1400,...(model.startsWith('gemini-3')?{thinkingConfig:{thinkingLevel:'minimal'}}:{}),responseMimeType:'application/json',responseJsonSchema:{
+        type:'object',properties:{summary:{type:'string'},suggestedTitle:{type:'string'},imagesChecked:{type:'integer'},issues:{type:'array',maxItems:6,items:{type:'object',properties:{field:{type:'string',enum:adviceFields},photoIndex:{type:'integer'},message:{type:'string'},suggestion:{type:'string'}},required:['field','photoIndex','message','suggestion']}}},required:['summary','suggestedTitle','imagesChecked','issues'],
+      }},
     });
-    if(!response.ok){await response.body?.cancel().catch(()=>{});throw new ListingAdviceError(response.status===429?'AI đang hết lượt xử lý. Bạn thử lại sau hoặc tiếp tục đăng tin.':'AI tạm thời chưa góp ý được. Bạn thử lại sau nhé.',503);}
+    let response:Response;
+    for(let attempt=0;;attempt++){
+      signal.throwIfAborted();
+      response=await (options.fetcher||fetch)(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{
+        method:'POST',signal,redirect:'error',cache:'no-store',headers:{'Content-Type':'application/json','x-goog-api-key':key},
+        body,
+      });
+      if(response.ok)break;
+      await response.body?.cancel().catch(()=>{});
+      if(attempt===0&&[500,502,503,504].includes(response.status)){
+        await delay(1000+Math.floor(Math.random()*500),undefined,{signal});
+        continue;
+      }
+      // Do not log provider bodies, credentials, drafts or image data.
+      console.warn('Listing advice provider failed.',{status:response.status,model});
+      throw new ListingAdviceError(response.status===429?'AI đang hết lượt xử lý. Bạn thử lại sau hoặc tiếp tục đăng tin.':
+        [500,502,503,504].includes(response.status)?'AI đang quá tải nên chưa góp ý được. Bạn thử lại sau ít phút; bản nháp và ảnh vẫn được giữ nguyên.':
+        'AI tạm thời chưa góp ý được. Bạn thử lại sau nhé.',503);
+    }
     const payload=await response.json();signal.throwIfAborted();const candidate=payload.candidates?.[0];
     if(payload.promptFeedback?.blockReason||candidate?.finishReason!=='STOP')throw new ListingAdviceError('AI chưa hoàn tất góp ý. Bạn thử lại sau nhé.',503);
     const text=candidate.content?.parts?.filter((part:{text?:string;thought?:boolean})=>typeof part.text==='string'&&!part.thought).map((part:{text:string})=>part.text).join('')||'';

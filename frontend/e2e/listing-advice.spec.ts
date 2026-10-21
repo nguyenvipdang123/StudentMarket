@@ -39,6 +39,21 @@ test('AI góp ý: xem ảnh, góp ý cũ, người bán chọn sửa tiêu đề
   expect((await db.query('SELECT COUNT(*)::int n FROM listing_ai_reviews WHERE listing_id=$1',[row.id])).rows[0].n).toBe(0);
 });
 
+test('AI góp ý: tự phục hồi sau một lần nhà cung cấp quá tải',async({page},info)=>{
+  await login(page,seed.accounts[info.project.name]);await page.goto('/create-listing');
+  await page.getByRole('button',{name:'Tiếp tục',exact:true}).click();
+  const title='UPSTREAM_ONCE Đèn bàn '+info.project.name;
+  await page.getByLabel('Tên món đồ *',{exact:true}).fill(title);
+  await page.getByLabel(/^Mô tả món đồ/).fill('Đèn còn sử dụng tốt, có dây nguồn.');
+  const panel=page.getByRole('region',{name:'AI góp ý tin đăng',exact:true});
+  await panel.getByRole('button',{name:'Nhờ AI góp ý',exact:true}).click();
+  await expect(panel.getByText('Có vài điểm giúp tin rõ ràng hơn.',{exact:true})).toBeVisible();
+  await expect(panel.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByLabel('Tên món đồ *',{exact:true})).toHaveValue(title);
+  const calls=(await (await page.request.get(seed.adviceOrigin)).json()).calls.filter((call:{input:{title:string}})=>call.input.title===title);
+  expect(calls).toHaveLength(2);
+});
+
 test('AI góp ý: lỗi dịch vụ không cản đăng tin, hủy khi chờ và không áp dụng kết quả lỗi',async({page},info)=>{
   await login(page,seed.accounts[info.project.name]);await page.goto('/create-listing');await page.getByRole('button',{name:'Tiếp tục',exact:true}).click();
   await page.getByLabel('Tên món đồ *',{exact:true}).fill('CHẬM Đèn bàn');await page.getByLabel(/^Mô tả món đồ/).fill('Đèn còn dùng được, có thể xem trực tiếp.');

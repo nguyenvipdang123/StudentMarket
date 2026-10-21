@@ -35,3 +35,41 @@ test('safe failures for missing key, provider quota, truncated JSON and cancella
   await assert.rejects(()=>suggestListing(adviceInput(draft),[],{env,fetcher:async()=>new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{text:'bad json'}]}}]}))}),/chưa hợp lệ/);
   const controller=new AbortController();controller.abort();await assert.rejects(()=>suggestListing(adviceInput(draft),[],{env,signal:controller.signal,fetcher:async(_url,init)=>{init.signal.throwIfAborted();return response(verdict(0));}}),/chưa phản hồi kịp/);
 });
+
+test('transient provider overload retries once with the same redacted payload and shared deadline',async()=>{
+  for(const status of [500,502,503,504]){
+    const requests=[];let released=false;
+    const advice=await suggestListing(adviceInput(draft),[{mimeType:'image/jpeg',data:'test-only'}],{env,fetcher:async(_url,init)=>{
+      requests.push(init);
+      if(requests.length===1)return new Response(new ReadableStream({cancel(){released=true;}}),{status});
+      assert.equal(released,true);return response(verdict());
+    }});
+    assert.equal(advice.imagesChecked,1);assert.equal(requests.length,2);
+    assert.equal(requests[0].body,requests[1].body);assert.equal(requests[0].signal,requests[1].signal);
+    assert.ok(!requests[1].body.includes('0901234567'));assert.ok(!requests[1].body.includes(draft.location));
+  }
+});
+
+test('persistent overload stops after two attempts and returns a useful sanitized message',async()=>{
+  let calls=0;
+  await assert.rejects(()=>suggestListing(adviceInput(draft),[],{env,fetcher:async()=>{calls++;return new Response('private provider body',{status:503});}}),error=>{
+    assert.equal(error.status,503);assert.match(error.message,/quá tải/);assert.ok(!error.message.includes('private provider body'));return true;
+  });
+  assert.equal(calls,2);
+});
+
+test('client and configuration errors are not retried',async()=>{
+  for(const status of [400,401,403,404,429]){
+    let calls=0;
+    await assert.rejects(()=>suggestListing(adviceInput(draft),[],{env,fetcher:async()=>{calls++;return new Response('private provider body',{status});}}));
+    assert.equal(calls,1);
+  }
+});
+
+test('cancellation during backoff prevents a second provider call',async()=>{
+  const controller=new AbortController();let calls=0;
+  await assert.rejects(()=>suggestListing(adviceInput(draft),[],{env,signal:controller.signal,fetcher:async()=>{
+    calls++;setTimeout(()=>controller.abort(),10);return new Response('{}',{status:503});
+  }}),/chưa phản hồi kịp/);
+  assert.equal(calls,1);
+});

@@ -19,7 +19,7 @@ Chỉ khi bấm góp ý, bản nháp và tối đa 8 ảnh xem trước được
 
 Server che số điện thoại/email trong văn bản, chỉ gửi việc có/không có khu vực hẹn gặp thay vì địa chỉ cụ thể. Không gửi thông tin tài khoản và không lưu ảnh góp ý hoặc kết quả vào database. Nội dung chữ xuất hiện trong ảnh vẫn có thể được Gemini nhìn thấy.
 
-Giới hạn mỗi tài khoản là 3 lần/phút, 10 lần/giờ; mỗi tiến trình web xử lý tối đa 3 yêu cầu cùng lúc. Hạn mức tài khoản lưu trong bảng `login_attempts` với tiền tố riêng `listing-advice:`. Yêu cầu bị lỗi hoặc hủy sau khi tới server cũng có thể tính vào hạn mức. Mỗi lần gọi nhà cung cấp có thời hạn 25 giây và không tự thử lại. **Dừng góp ý** hủy việc chờ ở trình duyệt; yêu cầu đã gửi nhà cung cấp có thể vẫn được tính phí.
+Giới hạn mỗi tài khoản là 3 lần/phút, 10 lần/giờ; mỗi tiến trình web xử lý tối đa 3 yêu cầu cùng lúc. Hạn mức tài khoản lưu trong bảng `login_attempts` với tiền tố riêng `listing-advice:`. Yêu cầu bị lỗi hoặc hủy sau khi tới server cũng có thể tính vào hạn mức. Tổng thời hạn xử lý là 45 giây, gồm cả đọc phản hồi và tối đa một lần thử lại sau 1–1,5 giây khi nhà cung cấp trả HTTP 500/502/503/504. Không tự thử lại khi hết hạn mức (429), sai cấu hình, lỗi mạng hoặc phản hồi không hợp lệ. Một lần bấm vẫn chỉ tính một lượt góp ý của tài khoản. **Dừng góp ý** hủy cả việc chờ thử lại; yêu cầu đã gửi nhà cung cấp có thể vẫn được tính phí. Khi lỗi tạm thời vẫn tiếp diễn, API trả `Retry-After: 60`; giao diện báo rõ AI đang quá tải và không thay đổi bản nháp/ảnh.
 
 ## Kiểm thử
 

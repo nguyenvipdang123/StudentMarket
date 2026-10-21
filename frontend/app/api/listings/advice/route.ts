@@ -39,6 +39,6 @@ export async function POST(request:NextRequest){
     if(!input.title&&!input.description&&!images.length)throw new ListingAdviceError('Thêm tiêu đề, mô tả hoặc ảnh trước khi nhờ AI góp ý.');
     const advice=await suggestListing(input,images,{signal:request.signal});
     return NextResponse.json({advice},{headers:{'Cache-Control':'private, no-store'}});
-  }catch(error){if(error instanceof ListingAdviceError)return NextResponse.json({error:error.message},{status:error.status,headers:{'Cache-Control':'no-store'}});return apiError(error);}
+  }catch(error){if(error instanceof ListingAdviceError)return NextResponse.json({error:error.message},{status:error.status,headers:{'Cache-Control':'no-store',...(error.status===503?{'Retry-After':'60'}:{})}});return apiError(error);}
   finally{activeRequests--;}
 }
