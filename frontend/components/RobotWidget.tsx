@@ -60,7 +60,7 @@ export default function RobotWidget() {
   return <div ref={hostRef} className={`robot-widget${collapsed ? " is-collapsed" : ""}`} data-status={status} data-paused={paused} aria-label="Robot 3D SangTay">
     {collapsed ? <button className="robot-open" type="button" onClick={() => toggleCollapsed(false)} aria-label="Hiện robot 3D"><RobotSymbol /></button> : <>
       <div className={`robot-stage${paused ? " is-paused" : ""}`} aria-hidden="true">
-        <Scene scene="/scenes/robot.splinecode" className="robot-spline" paused={paused} onLoad={loaded} onError={failed} />
+        <Scene scene="/scenes/robot.splinecode?v=arms-2" className="robot-spline" paused={paused} onLoad={loaded} onError={failed} />
       </div>
       <div className="robot-controls">
         <button type="button" onClick={() => toggleCollapsed(true)} aria-label="Thu gọn robot 3D" title="Thu gọn robot"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8" /></svg></button>

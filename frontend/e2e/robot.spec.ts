@@ -32,7 +32,7 @@ test("robot Spline tải thật, tạm dừng/thu gọn được và không ch�
 });
 
 test("scene lỗi có dự phòng, có thể thu gọn và website vẫn tìm sản phẩm được", async ({ page }) => {
-  await page.route("**/scenes/robot.splinecode", route => route.fulfill({ status: 503, body: "unavailable" }));
+  await page.route("**/scenes/robot.splinecode*", route => route.fulfill({ status: 503, body: "unavailable" }));
   await browse(page);
   await page.getByRole("button", { name: "Hiện robot 3D", exact: true }).click();
   await expect(page.locator(".robot-widget")).toHaveAttribute("data-status", "error", { timeout: 30000 });
