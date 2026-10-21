@@ -4,6 +4,7 @@ import Link from "@/components/TransitionLink";
 import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatPrice } from "@/lib/storage";
+import { dashboardMoney } from "@/lib/admin-dashboard";
 import AdminChatPanel from "@/components/AdminChatPanel";
 import AdminReportsPanel from "@/components/AdminReportsPanel";
 import AdminAiModerationPanel from "@/components/AdminAiModerationPanel";
@@ -797,9 +798,9 @@ export default function AdminDashboard({
           <div>
             <AdminSePayPanel onApproved={loadRevenue} />
             <div className="admin-stats">
-              <div><span>Tổng doanh thu (PAID)</span><strong style={{ color: "#ea580c" }}>{formatPrice(revenueData?.totalRevenue || 0)}</strong></div>
-              <div><span>Doanh thu hôm nay</span><strong style={{ color: "#166534" }}>{formatPrice(revenueData?.todayRevenue || 0)}</strong></div>
-              <div><span>Doanh thu tháng</span><strong>{formatPrice(revenueData?.monthRevenue || 0)}</strong></div>
+              <div><span>Tổng doanh thu (PAID)</span><strong style={{ color: "#ea580c" }}>{dashboardMoney(revenueData?.totalRevenue || 0)}</strong></div>
+              <div><span>Doanh thu hôm nay</span><strong style={{ color: "#166534" }}>{dashboardMoney(revenueData?.todayRevenue || 0)}</strong></div>
+              <div><span>Doanh thu tháng</span><strong>{dashboardMoney(revenueData?.monthRevenue || 0)}</strong></div>
               <div><span>Đơn thành công</span><strong style={{ color: "#2563eb" }}>{revenueData?.paidOrdersCount || 0}</strong></div>
             </div>
 
@@ -814,7 +815,7 @@ export default function AdminDashboard({
                     <div style={{ fontSize: "12px", color: "#6b7280", margin: "4px 0 12px" }}>Giá: {formatPrice(pkg.packagePrice)}</div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                       <span style={{ fontSize: "11px", color: "#4b5563" }}>Đã bán: <strong>{pkg.ordersCount}</strong></span>
-                      <span style={{ fontSize: "16px", fontWeight: 800, color: "#ea580c" }}>{formatPrice(pkg.totalRevenue)}</span>
+                      <span style={{ fontSize: "16px", fontWeight: 800, color: "#ea580c" }}>{dashboardMoney(pkg.totalRevenue)}</span>
                     </div>
                   </div>
                 ))}
