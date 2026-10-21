@@ -33,7 +33,7 @@ Nút **Xem trong Khám phá** mang theo từ khóa và bộ lọc; trang Khám p
 
 ### Hỏi đáp Gemini khi không chạy dịch vụ PDF
 
-Khi `PDF_CHAT_APP_URL` hoặc `PDF_CHAT_GRAPH_URL` không có giá trị, câu hỏi ngoài tìm sản phẩm/FAQ dùng Gemini trực tiếp với `ASSISTANT_GEMINI_API_KEY` (ưu tiên), rồi `GEMINI_API_KEY` hoặc `GOOGLE_API_KEY`. `ASSISTANT_GEMINI_MODEL` mặc định `gemini-3.1-flash-lite`; khóa nằm ở server. Không cần thay khóa AI duyệt tin để sửa chatbot.
+Khi `PDF_CHAT_APP_URL` hoặc `PDF_CHAT_GRAPH_URL` không có giá trị, câu hỏi ngoài tìm sản phẩm/FAQ dùng Gemini trực tiếp với `ASSISTANT_GEMINI_API_KEY` (ưu tiên), rồi `GEMINI_API_KEY` hoặc `GOOGLE_API_KEY`. `ASSISTANT_GEMINI_MODEL` mặc định `gemini-3.5-flash-lite`; khóa nằm ở server. Model chatbot, góp ý và kiểm duyệt dùng ba biến riêng, không kế thừa model của nhau. Không cần thay khóa AI duyệt tin để sửa chatbot. Câu “Món nào rẻ nhất” lấy tin từ catalogue theo giá tăng dần, giữ trường và bộ lọc trước đó nếu có; không cần gọi Gemini.
 
 Gemini trả text theo luồng SSE, hiển thị dần trong khung chat. Giới hạn tổng thời gian là 75 giây cho cả kết nối và đọc câu trả lời; gửi heartbeat mỗi 15 giây khi chờ. Chỉ thử lại một lần với lỗi mạng hoặc HTTP 500/502/503/504 trước khi có nội dung; không tự thử lại khi hết quota, người dùng ngắt kết nối hoặc đã nhận một phần câu trả lời. Ngữ cảnh chỉ lưu 6 lượt gần nhất, mỗi lượt tối đa 800 ký tự và chỉ ghi câu trả lời hoàn tất.
 

@@ -26,8 +26,13 @@ export function productIntent(message: string, previous?: ProductContext, prefer
     || /^(?:(?:toi|minh|em) )?(?:(?:muon|can) )?dang ban\b/.test(text)
     || /^(?:co the (?:trao doi do|tang do)(?: khong)?|tim (?:san pham|do) o dau)$/.test(text)) return null;
   const more = /^(?:cho (?:toi|minh) )?(?:xem them|tim them|them san pham|con (?:mon|mau|san pham) nao khac|mon khac|mau khac)(?: (?:khong|nhe|voi))?$/.test(text);
-  const cheaper = /^(?:co (?:mon|mau) )?(?:re hon|gia thap hon|re nhat)(?: (?:khong|nhe|voi))?$/.test(text);
+  const cheapest = /^(?:co )?(?:(?:mon do|mon|mau|san pham)(?: nao)? )?re nhat(?: (?:khong|nhe|voi))?$/.test(text);
+  const cheaper = /^(?:co (?:mon|mau) )?(?:re hon|gia thap hon)(?: (?:khong|nhe|voi))?$/.test(text);
   const criteriaOnly = /^(?:o |tai |gan |truong |duoi |toi da |khong qua |tren |tu |khoang |tam |gia |chi |nhu moi|moi 100|moi nhat|moi dang|da qua su dung|tat ca truong|khong gioi han truong)/.test(text);
+  // Catalogue facts never need a generative model, even as the first question.
+  if (cheapest) return { type: "search", search: previous
+    ? { ...previous.search, sort: "price-asc", page: 1 }
+    : { q: "", category: "Tất cả", sort: "price-asc", kind: "all", condition: "", school: preferredSchool, minPrice: "", maxPrice: "", page: 1 }, more: false };
   if (more || cheaper) {
     if (!previous) return { type: "clarify", text: "Bạn muốn tìm món đồ nào? Ví dụ: “Tìm laptop dưới 5 triệu ở DNTU”." };
     if (more) return { type: "search", search: { ...previous.search, page: previous.search.page + 1 }, more: true };

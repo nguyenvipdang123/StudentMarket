@@ -10,7 +10,7 @@ export class AssistantAiError extends Error {
 export function assistantAiConfig(env: NodeJS.ProcessEnv = process.env) {
   return {
     key: (env.ASSISTANT_GEMINI_API_KEY || env.GEMINI_API_KEY || env.GOOGLE_API_KEY || "").trim(),
-    model: (env.ASSISTANT_GEMINI_MODEL || "gemini-3.1-flash-lite").trim(),
+    model: (env.ASSISTANT_GEMINI_MODEL || "gemini-3.5-flash-lite").trim(),
   };
 }
 

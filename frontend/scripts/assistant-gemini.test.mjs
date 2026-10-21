@@ -1,10 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {answerWithGemini, assistantAiConfig, AssistantAiError, rememberAssistantTurn, streamGeminiAnswer} from '../lib/assistant-gemini.ts';
+import {adviceConfig} from '../lib/listing-advice.ts';
+import {moderationModel} from '../lib/ai-moderation-provider.ts';
 
 const env={ASSISTANT_GEMINI_API_KEY:'test-key-not-a-real-credential',ASSISTANT_GEMINI_MODEL:'gemini-3.1-flash-lite'};
 const payload=text=>({candidates:[{finishReason:'STOP',content:{parts:[{text}]}}]});
 const response = (...chunks) => new Response(chunks.map(chunk => `data: ${JSON.stringify(chunk)}\r\n\r\n`).join(''), {headers:{'Content-Type':'text/event-stream'}});
+
+test('three AI model settings are independent, including when only the moderation setting changes',()=>{
+  const shared={GEMINI_API_KEY:'shared-test',ASSISTANT_GEMINI_API_KEY:'chat-test',LISTING_ADVICE_GEMINI_API_KEY:'advice-test'};
+  for(const setting of ['ASSISTANT_GEMINI_MODEL','LISTING_ADVICE_GEMINI_MODEL','GEMINI_MODERATION_MODEL']){
+    const configured={...shared,[setting]:'gemini-test-override'};
+    assert.equal(assistantAiConfig(configured).model,setting==='ASSISTANT_GEMINI_MODEL'?'gemini-test-override':'gemini-3.5-flash-lite');
+    assert.equal(adviceConfig(configured).model,setting==='LISTING_ADVICE_GEMINI_MODEL'?'gemini-test-override':'gemini-3.5-flash-lite');
+    assert.equal(moderationModel(configured),setting==='GEMINI_MODERATION_MODEL'?'gemini-test-override':'gemini-3.5-flash-lite');
+    assert.equal(assistantAiConfig(configured).key,'chat-test');assert.equal(adviceConfig(configured).key,'advice-test');
+  }
+});
 
 test('direct Gemini answers carry bounded context, keep the key server-side and hide thought parts',async()=>{
   const history=rememberAssistantTurn([], 'Tôi muốn mua laptop cũ','Bạn cần dùng để học hay chơi game?');

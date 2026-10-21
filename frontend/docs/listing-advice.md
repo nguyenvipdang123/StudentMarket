@@ -9,7 +9,7 @@ Mỗi góp ý có **Sửa mục này** để quay về bước tương ứng. **
 API chạy trong `studentmarket-web`, không cần worker hoặc migration mới. Trên Render, dùng **Environment** của dịch vụ web rồi triển khai lại:
 
 - `LISTING_ADVICE_GEMINI_API_KEY`: tùy chọn; nếu trống dùng `GEMINI_API_KEY`, sau đó `GOOGLE_API_KEY`.
-- `LISTING_ADVICE_GEMINI_MODEL`: tùy chọn; nếu trống dùng `GEMINI_MODERATION_MODEL`, sau đó `gemini-3.1-flash-lite`.
+- `LISTING_ADVICE_GEMINI_MODEL`: tùy chọn; mặc định `gemini-3.5-flash-lite`, độc lập với model kiểm duyệt và chatbot.
 
 Các khóa chỉ nằm trên server. Không dùng tiền tố `NEXT_PUBLIC_`. Nếu dịch vụ web đã có `GEMINI_API_KEY` để kiểm duyệt, tính năng dùng lại khóa đó; có thể cấu hình khóa riêng để quản lý hạn mức. Một lần bấm tạo một yêu cầu Gemini, có thể phát sinh chi phí theo tài khoản Google.
 

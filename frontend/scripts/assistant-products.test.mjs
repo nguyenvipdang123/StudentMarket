@@ -26,6 +26,16 @@ test("free exchange, category, condition and sorting are expressed as validated 
   assert.equal(search("Tìm đồ phòng trọ").category, "Nội thất");
   assert.equal(search("Tìm sách mới nhất").sort, "newest");
 });
+
+test("cheapest questions use the catalogue directly and preserve existing scope instead of searching below its minimum", () => {
+  for(const question of ['Món nào rẻ nhất','Món nào rẻ nhất?','Sản phẩm nào rẻ nhất','Có món rẻ nhất không','Rẻ nhất']){
+    const intent=productIntent(question,undefined,'ĐH Công nghệ Đồng Nai');
+    assert.equal(intent.type,'search');assert.equal(intent.search.q,'');assert.equal(intent.search.sort,'price-asc');assert.equal(intent.search.school,'ĐH Công nghệ Đồng Nai');
+  }
+  const previous={search:{...search('Tìm laptop dưới 5 triệu ở DNTU'),page:3},minimumPrice:0};
+  const result=productIntent('Món nào rẻ nhất',previous);
+  assert.equal(result.type,'search');assert.deepEqual(result.search,{...previous.search,sort:'price-asc',page:1});
+});
 test("follow-ups preserve item/school, change bounds, page and price without trusting client history", () => {
   const context = { search: search("Tìm laptop dưới 5 triệu ở DNTU"), minimumPrice: 2000000 };
   const next = productIntent("Xem thêm", context); assert.equal(next.search.page, 2); assert.equal(next.search.q, "laptop");

@@ -34,6 +34,20 @@ test("chatbot không bịa thẻ sản phẩm khi không có tin đúng ngân s�
   await expect(dialog.getByRole("link", { name: "Xem trong Khám phá →" })).toBeVisible();
 });
 
+test("chatbot tìm món rẻ nhất sau lời chào bằng dữ liệu thật, không gọi Gemini", async ({page})=>{
+  await browse(page);await page.getByRole('button',{name:'Mở trợ lý SangTay',exact:true}).click();
+  const dialog=page.getByRole('dialog',{name:'Trợ lý SangTay',exact:true});
+  const ask=async(message:string)=>{await dialog.getByLabel('Câu hỏi cho trợ lý').fill(message);await dialog.getByRole('button',{name:'Gửi câu hỏi'}).click();};
+  await ask('Chào');await expect(dialog.locator('.assistant-message.assistant').last()).toContainText('Chào');
+  const reply=page.waitForResponse(response=>response.url().endsWith('/api/assistant/chat'));
+  await ask('Món nào rẻ nhất');
+  const body=await (await reply).text();
+  expect(body).toContain('assistant/products');expect(body).not.toContain(': connected');
+  await expect(dialog.locator('.assistant-products li')).toHaveCount(4);
+  await expect(dialog.getByRole('alert')).toHaveCount(0);
+  await expect(dialog.getByRole('link',{name:'Xem trong Khám phá →'})).toHaveAttribute('href',/sort=price-asc/);
+});
+
 test("lỗi khi đang trả lời giữ phần đã nhận, báo lý do và cho phép gửi lại", async ({ page }) => {
   let failed = false;
   await page.route("**/api/assistant/chat", route => {

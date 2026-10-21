@@ -7,7 +7,7 @@ export type AdviceInput={title:string;description:string;category:string;conditi
 export type AdviceImage={mimeType:string;data:string};
 export function adviceConfig(env:NodeJS.ProcessEnv=process.env){return {
   key:(env.LISTING_ADVICE_GEMINI_API_KEY||env.GEMINI_API_KEY||env.GOOGLE_API_KEY||'').trim(),
-  model:(env.LISTING_ADVICE_GEMINI_MODEL||env.GEMINI_MODERATION_MODEL||'gemini-3.1-flash-lite').trim(),
+  model:(env.LISTING_ADVICE_GEMINI_MODEL||'gemini-3.5-flash-lite').trim(),
 };}
 export function adviceInput(body:Record<string,unknown>):AdviceInput {
   for(const [field,max] of [['title',200],['description',10000],['category',40],['condition',40],['kind',10],['price',20],['location',200]] as const){
