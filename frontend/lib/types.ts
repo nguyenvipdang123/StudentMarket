@@ -81,6 +81,8 @@ export type Conversation = {
 };
 
 export type ReviewItem = {
+  transactionId?: string | null;
+  verifiedTransaction?: boolean;
   id: string;
   reviewerId: string | number;
   reviewerName: string;

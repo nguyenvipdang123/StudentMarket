@@ -13,7 +13,7 @@ import "./seller-profile.css";
 type Profile = {
   seller: { id: string; fullName: string; university: string; joinedAt: string; verified: boolean };
   products: Listing[];
-  reviews: { id: string; rating: number; content: string; reviewerName: string; listingTitle: string; createdAt: string }[];
+  reviews: { id: string; rating: number; content: string; reviewerName: string; listingTitle: string; createdAt: string;verifiedTransaction:boolean }[];
 };
 type SellerTab = "Active" | "Sold" | "Reviews";
 const tabs: { id: SellerTab; name: string }[] = [
@@ -26,7 +26,7 @@ function RatingSummary({ reviews, score }: { reviews: Profile["reviews"]; score:
     <h3>Đánh giá từ cộng đồng</h3>
     <strong className="seller-rating-value">{score?.replace(".", ",") || "—"}</strong>
     <span className="seller-stars" aria-label={score ? score + " trên 5 sao" : "Chưa có đánh giá"}>{"★".repeat(stars)}{"☆".repeat(5 - stars)}</span>
-    <p>{reviews.length ? reviews.length + " đánh giá từ giao dịch" : "Chưa có đánh giá từ giao dịch"}</p>
+    <p>{reviews.length ? `${reviews.length} đánh giá · ${reviews.filter(r=>r.verifiedTransaction).length} từ giao dịch đã xác nhận` : "Chưa có đánh giá từ giao dịch"}</p>
     <div className="seller-rating-bars">{[5, 4, 3, 2, 1].map(n => {
       const count = reviews.filter(r => r.rating === n).length;
       return <div key={n}><span>{n} ★</span><progress aria-label={n + " sao: " + count + " đánh giá"} value={count} max={reviews.length || 1} /><span>{count}</span></div>;
@@ -149,7 +149,7 @@ export default function SellerPage({ params }: { params: Promise<{ id: string }>
               {data.reviews.length ? <div className="seller-review-list">{data.reviews.map(r => <article key={r.id} className="seller-review">
                 <div className="seller-reviewer"><span className="seller-review-avatar" aria-hidden="true">{r.reviewerName.charAt(0).toUpperCase()}</span><div><h3>{r.reviewerName}</h3><time dateTime={r.createdAt}>{new Date(r.createdAt).toLocaleDateString("vi-VN")}</time></div></div>
                 <span className="seller-stars" aria-label={r.rating + " trên 5 sao"}>{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>
-                <p>{r.content}</p><small>Món đồ: {r.listingTitle}</small>
+                <p>{r.content}</p><small>Món đồ: {r.listingTitle}</small>{r.verifiedTransaction&&<p className="seller-verified"><SellerProfileIcon name="verified"/>Giao dịch đã được hai bên xác nhận</p>}
               </article>)}</div> : <EmptyState title="Chưa có đánh giá">Đánh giá sẽ xuất hiện sau khi người mua và người bán hoàn tất giao dịch.</EmptyState>}
             </> : visibleProducts.length ? <div className="seller-product-grid">{visibleProducts.map(item => <MarketplaceCard key={item.id} item={item} variant="seller" saved={saved.includes(item.id)} onSave={save} />)}</div> : <EmptyState title={tab === "Sold" ? "Chưa có món đồ đã bán" : "Chưa có tin đang bán"}>Ghé lại sau để xem tin đăng mới.</EmptyState>}
           </section>

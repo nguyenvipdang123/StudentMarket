@@ -30,6 +30,10 @@ CREATE TABLE IF NOT EXISTS reservation_events (
 );
 CREATE INDEX IF NOT EXISTS idx_reservation_event_recipient ON reservation_events(recipient_id,created_at DESC);
 
+-- A sale keeps the exact appointment it originated from; older sales remain valid.
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS reservation_id UUID REFERENCES listing_reservations(id) ON DELETE SET NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_transaction_reservation ON transactions(reservation_id) WHERE reservation_id IS NOT NULL;
+
 -- Invalidate agreements permanently when an edited/hidden/moderated product leaves the public catalogue.
 CREATE OR REPLACE FUNCTION invalidate_listing_reservations() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN

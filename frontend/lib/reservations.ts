@@ -19,14 +19,17 @@ const effective = `CASE WHEN r.status IN ('PENDING','CONFIRMED') AND
   THEN 'EXPIRED' ELSE r.status END`;
 export async function listReservations(userId: string, listingId?: string) {
   if (listingId && !isUUID(listingId)) throw new ApiError('Mã tin không hợp lệ.');
-  const rows = await query(`SELECT r.*,p.title,b.full_name AS buyer_name,s.full_name AS seller_name,${effective} AS effective_status
+  const rows = await query(`SELECT r.*,p.title,b.full_name AS buyer_name,s.full_name AS seller_name,${effective} AS effective_status,
+      t.id AS transaction_id,t.status AS transaction_status,(r.meeting_at<=NOW()) AS can_confirm_delivery
     FROM listing_reservations r JOIN products p ON p.id=r.listing_id
     JOIN users b ON b.id=r.buyer_id JOIN users s ON s.id=r.seller_id
+    LEFT JOIN transactions t ON t.reservation_id=r.id
     WHERE (r.buyer_id=$1 OR r.seller_id=$1) ${listingId ? 'AND r.listing_id=$2' : ''}
     ORDER BY CASE WHEN ${effective} IN ('PENDING','CONFIRMED') THEN 0 ELSE 1 END,r.meeting_at,r.id LIMIT 100`, listingId ? [userId,listingId] : [userId]);
   return rows.map(r => ({ id:r.id,listingId:r.listing_id,listingTitle:r.title,buyerId:r.buyer_id,sellerId:r.seller_id,
     buyerName:r.buyer_name,sellerName:r.seller_name,conversationId:r.conversation_id,meetingAt:r.meeting_at.toISOString(),
-    expiresAt:r.expires_at.toISOString(),location:r.location,note:r.note,status:r.effective_status,isSeller:r.seller_id===userId }) as Reservation);
+    expiresAt:r.expires_at.toISOString(),location:r.location,note:r.note,status:r.effective_status,isSeller:r.seller_id===userId,
+    transactionId:r.transaction_id || null,transactionStatus:r.transaction_status || null,canConfirmDelivery:r.can_confirm_delivery }) as Reservation);
 }
 export async function heldUntil(listingId: string) {
   const rows = await query(`SELECT r.expires_at FROM listing_reservations r JOIN products p ON p.id=r.listing_id

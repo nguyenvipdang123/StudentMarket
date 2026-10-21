@@ -7,13 +7,25 @@
 3. Chọn thời gian theo **giờ Việt Nam**, địa điểm công cộng và ghi chú; gửi yêu cầu.
 4. Đợi người bán xác nhận. Gửi yêu cầu chưa đồng nghĩa với giữ được món đồ.
 5. Theo dõi tại **Giao dịch của tôi** (`/transactions`) hoặc trong cuộc trò chuyện. Dùng **Nhắn đối tác** và **Chỉ đường** để chuẩn bị gặp.
-6. Sau khi người bán ghi nhận giao đồ, vào phần **Xác nhận nhận hàng & đánh giá**, bấm **Tôi đã nhận hàng** khi đã nhận và kiểm tra món đồ.
+6. Sau khi người bán ghi nhận giao đồ, vào phần **Xác nhận nhận hàng & đánh giá**, bấm **Tôi đã nhận hàng** khi đã nhận và kiểm tra món đồ, rồi bấm **Xác nhận đã nhận hàng**.
+7. Khi cả hai đã xác nhận, giao dịch chuyển sang **Hoàn tất**. Mỗi bên có thể đánh giá đối tác một lần; sau khi gửi, biểu mẫu được thay bằng liên kết xem đánh giá đã lưu.
 
 ## Người bán
 
 Vào **Giao dịch của tôi → Tôi bán** hoặc mở trang sản phẩm/cuộc trò chuyện để xem yêu cầu. Chọn **Xác nhận & giữ chỗ** hoặc **Từ chối**. Khi xác nhận một người, các yêu cầu còn chờ cho cùng món đồ được từ chối và gửi thông báo.
 
-Khi đã giao đồ, bấm **Đã giao cho người mua**, đọc thông tin và **Đồng ý xác nhận**. Hệ thống dùng luồng giao dịch sẵn có: đánh dấu tin đã bán, tạo giao dịch chờ người mua xác nhận; chỉ giao dịch hoàn tất mới cho đánh giá. Không có bước thu tiền đặt cọc hay thanh toán SePay cho việc giữ chỗ.
+Từ giờ hẹn đã thống nhất, khi đã giao đồ, bấm **Đã giao cho người mua**, đọc thông tin và **Đồng ý xác nhận**. Hệ thống đánh dấu tin đã bán, tạo giao dịch chờ người mua xác nhận và liên kết đúng lịch hẹn bằng `transactions.reservation_id`. Hai mốc xác nhận cùng thời gian được hiển thị trên thẻ giao dịch; chỉ khi người mua xác nhận nhận hàng thì giao dịch mới hoàn tất. Không có bước thu tiền đặt cọc hay thanh toán SePay cho việc giữ chỗ.
+
+## Xác nhận hoàn tất và đánh giá đáng tin cậy
+
+- Người bán ghi nhận giao đồ trước; người mua xác nhận đã nhận hàng sau. Không tự xác nhận thay đối tác hoặc tự hoàn tất khi hết thời gian.
+- Server dùng giờ PostgreSQL để chặn xác nhận giao đồ trước giờ hẹn. Giữ chỗ vẫn hết hạn 2 giờ sau lịch hẹn nếu người bán chưa ghi nhận giao đồ. Sau khi đã giao, người mua có thể quay lại xác nhận trong **Giao dịch của tôi**.
+- Người mua có thể chọn **Tôi không mua món này**, đọc cảnh báo rồi xác nhận: giao dịch bị hủy, tin mở lại và đánh giá không được mở. Việc này không chuyển tiền hay hoàn tiền.
+- Khi giao dịch theo lịch hẹn được hoàn tất hoặc người mua không xác nhận, chuông thông báo cập nhật cho cả hai bên.
+- API đánh giá nhận `transactionId`, suy ra món đồ và đối tác từ dữ liệu server. Chỉ hai bên của giao dịch có cả hai thời điểm xác nhận và trạng thái `COMPLETED` mới được đánh giá. Mỗi người chỉ có một đánh giá cho mỗi giao dịch, kể cả khi gửi đồng thời.
+- Hồ sơ người bán, **Đánh giá từ tôi** và trang đánh giá hiển thị nhãn **Giao dịch đã được hai bên xác nhận** cho đánh giá đáp ứng các điều kiện trên. Đánh giá cũ không liên kết giao dịch được giữ lại nhưng không mang nhãn này.
+- Gửi xác nhận nhận hàng lặp lại không tạo thêm sự kiện hay giao dịch. Sau khi hoàn tất/hủy, không thể chuyển sang quyết định ngược lại.
+- Trang giao dịch đồng bộ mỗi 20 giây, khi quay lại cửa sổ hoặc bấm **Làm mới giao dịch**.
 
 ## Thời hạn và quyền riêng tư
 
@@ -36,7 +48,7 @@ Máy hiện tại đã chạy migration. Với bản mã nguồn chuyển sang m
 npm run db:migrate
 ```
 
-Migration `scripts/reservations-schema.sql` tạo `listing_reservations`, `reservation_events`, index và trigger; có thể chạy lại qua lệnh trên. PostgreSQL dùng khóa hàng sản phẩm cho mọi thao tác tạo/xác nhận/hủy/giao đồ để ngăn giữ chỗ trùng khi có yêu cầu đồng thời.
+Migration `scripts/reservations-schema.sql` tạo `listing_reservations`, `reservation_events`, index và trigger, đồng thời thêm khóa liên kết `transactions.reservation_id`; có thể chạy lại qua lệnh trên. Chạy migration trước khi khởi động bản mã mới; trên Render bước `preDeployCommand: npm run db:migrate` đã thực hiện việc này. Giao dịch cũ được giữ nguyên. PostgreSQL dùng khóa hàng sản phẩm trước khóa giao dịch để ngăn giữ chỗ trùng và xung đột khi có yêu cầu đồng thời.
 
 | API | Chức năng |
 | --- | --- |
@@ -44,6 +56,8 @@ Migration `scripts/reservations-schema.sql` tạo `listing_reservations`, `reser
 | `GET /api/reservations?listingId=UUID` | Lịch của chính mình với sản phẩm đó và thời hạn giữ chỗ công khai |
 | `POST /api/reservations` | `{ listingId, meetingAt, location, note }`; `meetingAt` ISO có múi giờ |
 | `PATCH /api/reservations/UUID` | `{ action: "accept" / "reject" / "cancel" / "complete" }` |
+| `POST /api/transactions/UUID/confirm` | Người mua gửi `{ confirm: true }` khi nhận hàng, hoặc `{ confirm: false }` khi không mua |
+| `POST /api/reviews` | `{ transactionId: UUID, rating: 1..5, content: "..." }`; kiểm tra quyền và điều kiện hai bên hoàn tất |
 
 Chỉ sinh viên đã xác minh được dùng API; ID người mua/người bán được lấy từ phiên và sản phẩm, không nhận từ trình duyệt. API ghi kiểm tra cùng origin như các API nghiệp vụ hiện có.
 

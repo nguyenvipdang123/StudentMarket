@@ -17,11 +17,14 @@ export async function GET(request: NextRequest) {
   const rows = await query(
     `SELECT t.*, 
             p.title AS listing_title, p.price AS listing_price,
-            s.full_name AS seller_name, b.full_name AS buyer_name
+            s.full_name AS seller_name, b.full_name AS buyer_name,
+            rv.id AS my_review_id,r.meeting_at,r.location AS meeting_location
      FROM transactions t
      JOIN products p ON p.id = t.listing_id
      JOIN users s ON s.id = t.seller_id
      JOIN users b ON b.id = t.buyer_id
+     LEFT JOIN listing_reservations r ON r.id=t.reservation_id
+     LEFT JOIN reviews rv ON rv.transaction_id=t.id AND rv.reviewer_id=$1
      WHERE t.seller_id = $1 OR t.buyer_id = $1
      ORDER BY t.created_at DESC`,
     [pgUserId]
@@ -45,6 +48,10 @@ export async function GET(request: NextRequest) {
       buyerConfirmedAt: r.buyer_confirmed_at?.toISOString() || null,
       completedAt: r.completed_at?.toISOString() || null,
       createdAt: r.created_at?.toISOString() || "",
+      reservationId: r.reservation_id || null,
+      meetingAt: r.meeting_at?.toISOString() || null,
+      meetingLocation: r.meeting_location || null,
+      myReviewId: r.my_review_id || null,
     })),
   });
 }

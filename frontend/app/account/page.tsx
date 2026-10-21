@@ -531,6 +531,7 @@ function AccountContent() {
                           </div>
 
                           <p className="review-content-text">“{rev.content}”</p>
+                          {rev.verifiedTransaction&&<p className="review-product-tag">✓ Giao dịch đã được hai bên xác nhận</p>}
 
                           <span className="review-date">
                             Đã đánh giá vào: {new Intl.DateTimeFormat("vi-VN", { dateStyle: "long" }).format(new Date(rev.createdAt))}

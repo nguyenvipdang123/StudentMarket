@@ -109,6 +109,7 @@ export default function ReviewsPage() {
                     <span style={{ color: "#e67e22" }}>{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>
                   </div>
                   <p style={{ margin: "4px 0 8px", color: "#3e4f45" }}>{r.content}</p>
+                  {r.verifiedTransaction&&<p>✓ Giao dịch đã được hai bên xác nhận</p>}
                   <span style={{ fontSize: "12px", color: "#8a9c90" }}>Gửi tới {r.targetUserName}</span>
                 </div>
               ))}

@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from "@/components/TransitionLink";
 import type { Viewer } from '@/lib/types';
-import { meetingTime, reservationLabels, type Reservation } from '@/lib/reservation-types';
+import { meetingTime, reservationStatusLabel, type Reservation } from '@/lib/reservation-types';
 import { MeetingMapLinks } from './LocationMap';
 import styles from './ReservationsPanel.module.css';
 
@@ -27,8 +27,8 @@ export default function ReservationsPanel({viewer,listingId,sellerId,location=''
   useEffect(()=>{
     let disposed=false;
     const refresh=()=>{if(!disposed && document.visibilityState==='visible') void load();};
-    void Promise.resolve().then(refresh);const timer=setInterval(refresh,20000);window.addEventListener('focus',refresh);
-    return ()=>{disposed=true;clearInterval(timer);window.removeEventListener('focus',refresh);};
+    void Promise.resolve().then(refresh);const timer=setInterval(refresh,20000);window.addEventListener('focus',refresh);window.addEventListener('sangtay_reservations_changed',refresh);
+    return ()=>{disposed=true;clearInterval(timer);window.removeEventListener('focus',refresh);window.removeEventListener('sangtay_reservations_changed',refresh);};
   },[load]);
   async function create(event:React.FormEvent<HTMLFormElement>) {
     event.preventDefault();setBusy('create');setError('');setNotice('');
@@ -50,7 +50,7 @@ export default function ReservationsPanel({viewer,listingId,sellerId,location=''
       window.dispatchEvent(new Event('sangtay_reservations_changed'));
     } catch(e){await load();setError(e instanceof Error?e.message:'Không cập nhật được lịch hẹn.');} finally{setBusy('');}
   }
-  const active=(r:Reservation)=>r.status==='PENDING'||r.status==='CONFIRMED';
+  const active=(r:Reservation)=>r.status==='PENDING'||r.status==='CONFIRMED'||r.transactionStatus==='SELLER_CONFIRMED';
   const mine=items.some(active);
   const shown=board?items.filter(r=>filter==='all'||filter==='active'&&active(r)||filter==='buying'&&!r.isSeller||filter==='selling'&&r.isSeller):items.slice(0,5);
   return <section className={styles.panel} aria-label="Giữ chỗ và lịch hẹn">
@@ -72,17 +72,19 @@ export default function ReservationsPanel({viewer,listingId,sellerId,location=''
         </form>}
         {!shown.length&&<p className={styles.empty}>{own?'Chưa có yêu cầu giữ chỗ cho món đồ này.':board?'Chưa có lịch hẹn trong mục này.':'Lịch hẹn của bạn sẽ xuất hiện ở đây.'}</p>}
         <div className={styles.list}>{shown.map(r=><article key={r.id} className={styles.card} aria-label={'Lịch hẹn '+r.listingTitle}>
-          <div className={styles.cardHeader}><Link href={'/listing/'+r.listingId}>{r.listingTitle}</Link><span className={styles.badge} data-status={r.status}>{reservationLabels[r.status]}</span></div>
+          <div className={styles.cardHeader}><Link href={'/listing/'+r.listingId}>{r.listingTitle}</Link><span className={styles.badge} data-status={r.status}>{reservationStatusLabel(r)}</span></div>
           <p>{r.isSeller?'Người mua: '+r.buyerName:'Người bán: '+r.sellerName}</p>
           <strong>Gặp lúc {meetingTime(r.meetingAt)} (giờ Việt Nam)</strong><p>{r.location}</p>{r.note&&<p className={styles.note}>{r.note}</p>}
-          {active(r)&&<small>{r.status==='PENDING'?'Chờ xác nhận đến ':'Giữ chỗ đến '}{meetingTime(r.expiresAt)}</small>}
+          {(r.status==='PENDING'||r.status==='CONFIRMED')&&<small>{r.status==='PENDING'?'Chờ xác nhận đến ':'Giữ chỗ đến '}{meetingTime(r.expiresAt)}</small>}
           <MeetingMapLinks location={r.location}/>
           <div className={styles.actions}>
             <Link className="figma-button" href={'/messages?listingId='+r.listingId}>Nhắn đối tác</Link>
             {r.isSeller&&r.status==='PENDING'&&<><button className="figma-button primary" disabled={!!busy} onClick={()=>void act(r.id,'accept')}>Xác nhận & giữ chỗ</button><button className="figma-button" disabled={!!busy} onClick={()=>void act(r.id,'reject')}>Từ chối</button></>}
-            {active(r)&&<button className="figma-button" disabled={!!busy} onClick={()=>setConfirming({id:r.id,action:'cancel'})}>{r.status==='PENDING'?'Hủy yêu cầu':'Hủy lịch'}</button>}
-            {r.isSeller&&r.status==='CONFIRMED'&&<button className="figma-button primary" disabled={!!busy} onClick={()=>setConfirming({id:r.id,action:'complete'})}>Đã giao cho người mua</button>}
+            {(r.status==='PENDING'||r.status==='CONFIRMED')&&<button className="figma-button" disabled={!!busy} onClick={()=>setConfirming({id:r.id,action:'cancel'})}>{r.status==='PENDING'?'Hủy yêu cầu':'Hủy lịch'}</button>}
+            {r.isSeller&&r.status==='CONFIRMED'&&<button className="figma-button primary" disabled={!!busy||!r.canConfirmDelivery} onClick={()=>setConfirming({id:r.id,action:'complete'})}>Đã giao cho người mua</button>}
+            {r.transactionId&&<Link className="figma-button primary" href={'/transactions#transaction-'+r.transactionId}>{r.transactionStatus==='COMPLETED'?'Xem giao dịch & đánh giá':'Xem xác nhận giao dịch'}</Link>}
           </div>
+          {r.isSeller&&r.status==='CONFIRMED'&&!r.canConfirmDelivery&&<small>Bạn có thể xác nhận giao đồ từ giờ hẹn đã thống nhất.</small>}
           {confirming?.id===r.id&&<div className={styles.confirm} role="alert"><p>{confirming.action==='complete'?'Chỉ xác nhận khi đã giao đồ. Tin sẽ được đánh dấu đã bán và người mua cần xác nhận nhận hàng trong mục giao dịch.':'Hủy lịch này và bỏ giữ chỗ để người khác có thể đặt lại?'}</p><div className={styles.actions}><button className="figma-button primary" disabled={!!busy} onClick={()=>void act(r.id,confirming.action)}>Đồng ý xác nhận</button><button className="figma-button" disabled={!!busy} onClick={()=>setConfirming(null)}>Quay lại</button></div></div>}
         </article>)}</div>
         {!board&&<Link className={styles.more} href="/transactions">Xem tất cả lịch hẹn & giao dịch →</Link>}
