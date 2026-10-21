@@ -61,7 +61,7 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODERATION_MODEL
-        value: gemini-3.1-flash-lite
+        value: gemini-3.5-flash-lite
       - key: SEPAY_ENABLED
         # Keep the payment switch managed in the service's Environment settings.
         sync: false
@@ -130,7 +130,7 @@ services:
           name: studentmarket-web
           envVarKey: GEMINI_API_KEY
       - key: GEMINI_MODERATION_MODEL
-        value: gemini-3.1-flash-lite
+        value: gemini-3.5-flash-lite
       - key: MEDIA_STORAGE_PROVIDER
         value: supabase
       - key: MEDIA_STORAGE_READ_LOCAL_FALLBACK
