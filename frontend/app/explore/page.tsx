@@ -17,6 +17,7 @@ import { Category, Listing, Viewer } from "@/lib/types";
 
 import { ListingKindFilter, ListingSort } from "@/lib/listing-search";
 import { useProductSearch } from "@/lib/use-product-search";
+import { defaultExploreFilters, readExploreFilters, writeExploreFilters, type ExploreFilters } from "@/lib/explore-url-state";
 import { findUniversity, SOUTHERN_UNIVERSITIES, UNIVERSITY_STORAGE_KEY } from "@/lib/universities";
 
 const categories: { name: Category; icon: string; hint: string }[] = [
@@ -62,37 +63,45 @@ function SearchQuerySync({ onChange }: { onChange: (value: string) => void }) {
 
 export default function ExplorePage() {
   const router = useRouter();
-  const [category, setCategory] = useState<Category>("Tất cả");
+  const [filters, setFilters] = useState<ExploreFilters>(defaultExploreFilters);
+  const currentFilters = useRef<ExploreFilters>(defaultExploreFilters);
+  const writtenQuery = useRef<string | null>(null);
+  const { category, search, sort, kind, condition, school, minPrice, maxPrice, page } = filters;
+  function updateFilters(patch: Partial<ExploreFilters>, push = false) {
+    const next = { ...currentFilters.current, ...patch, page: patch.page ?? 1 };
+    currentFilters.current = next;
+    setFilters(next);
+    const params = writeExploreFilters(next, new URLSearchParams(window.location.search));
+    writtenQuery.current = params.toString();
+    const url = window.location.pathname + "?" + params.toString() + window.location.hash;
+    if (url !== window.location.pathname + window.location.search + window.location.hash) {
+      window.history[push ? "pushState" : "replaceState"](null, "", url);
+    }
+  }
+  const setCategory = (category: Category) => updateFilters({ category });
+  const setSearch = (search: string) => updateFilters({ search });
+  const setSort = (sort: ListingSort) => updateFilters({ sort });
+  const setKind = (kind: ListingKindFilter) => updateFilters({ kind });
+  const setCondition = (condition: string) => updateFilters({ condition });
+  const setSchool = (school: string) => updateFilters({ school });
+  const setMinPrice = (minPrice: string) => updateFilters({ minPrice });
+  const setMaxPrice = (maxPrice: string) => updateFilters({ maxPrice });
   const [query, setQuery] = useState("");
-  const [search, setSearch] = useState("");
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const searchWrapRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [sort, setSort] = useState<ListingSort>("featured");
-  const [kind, setKind] = useState<ListingKindFilter>("all");
-  const [condition, setCondition] = useState("");
-  const [school, setSchool] = useState("");
   const [draftSchool, setDraftSchool] = useState("");
   const [schoolPickerOpen, setSchoolPickerOpen] = useState(false);
   const [hasSchoolPreference, setHasSchoolPreference] = useState(false);
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [savedIds, setSavedIds] = useState<string[]>([]);
 
   const [viewer, setViewer] = useState<Viewer | null>(null);
   const [toast, setToast] = useState("");
-  const [pageSelection, setPageSelection] = useState({ filters: "", page: 1 });
   const [locationQuery, setLocationQuery] = useState<string | null>(null);
   const filterParameters = new URLSearchParams({ category, q: search, sort, kind, condition, school, minPrice, maxPrice }).toString();
-  const page = pageSelection.filters === filterParameters ? pageSelection.page : 1;
   const invalidPriceRange = minPrice !== "" && maxPrice !== "" && Number(minPrice) > Number(maxPrice);
   const { products: visibleListings, pagination, loading: isLoading, error: loadError, retry: retryListings } = useProductSearch(invalidPriceRange ? null : filterParameters + "&page=" + page);
-  useEffect(() => {
-    // Reset even when returning to a filter combination that was used earlier.
-    const timer = setTimeout(() => setPageSelection({ filters: filterParameters, page: 1 }), 0);
-    return () => clearTimeout(timer);
-  }, [filterParameters]);
 
   const refreshData = async () => {
     try {
@@ -141,32 +150,21 @@ export default function ExplorePage() {
 
   useEffect(() => {
     if (locationQuery === null) return;
+    if (locationQuery === writtenQuery.current) { writtenQuery.current = null; return; }
     const timer = window.setTimeout(() => {
       try {
         const params = new URLSearchParams(locationQuery);
-        const initialSearch = params.get("q");
-        if (initialSearch !== null && initialSearch.length <= 200) { setQuery(initialSearch); setSearch(initialSearch); }
-        const initialCategory = params.get("category");
-        if (categories.some(item => item.name === initialCategory)) setCategory(initialCategory as Category);
-        const initialSort = params.get("sort");
-        if (["featured", "newest", "price-asc", "price-desc"].includes(initialSort || "")) setSort(initialSort as ListingSort);
-        const initialKind = params.get("kind");
-        if (["all", "sell", "exchange"].includes(initialKind || "")) setKind(initialKind as ListingKindFilter);
-        const initialCondition = params.get("condition");
-        if (["", "Mới 100%", "Như mới", "Tốt", "Đã qua sử dụng"].includes(initialCondition || "")) setCondition(initialCondition || "");
-        for (const [key, setter] of [["minPrice", setMinPrice], ["maxPrice", setMaxPrice]] as const) {
-          const value = params.get(key); if (value !== null && /^(?:\d+(?:\.\d{1,2})?)?$/.test(value) && Number(value) <= 9999999999) setter(value);
-        }
-        if (params.has("school") && (params.get("school")?.length || 0) <= 200) {
-          const selectedSchool = params.get("school") || "";
-          setSchool(selectedSchool); setHasSchoolPreference(true);
-          window.localStorage.setItem(UNIVERSITY_STORAGE_KEY, selectedSchool); return;
-        }
         window.localStorage.removeItem("sangtay_search_province_v1");
         const saved = window.localStorage.getItem(UNIVERSITY_STORAGE_KEY);
         const university = saved ? findUniversity(saved) : undefined;
-        if (saved === "" || university) {
-          setSchool(university?.name || "");
+        const restored = readExploreFilters(params, university?.name || "");
+        currentFilters.current = restored;
+        setFilters(restored);
+        setQuery(restored.search);
+        if (params.has("school")) {
+          setHasSchoolPreference(true);
+          window.localStorage.setItem(UNIVERSITY_STORAGE_KEY, restored.school);
+        } else if (saved === "" || university) {
           setHasSchoolPreference(true);
         } else {
           if(!new URLSearchParams(window.location.search).get("auth"))setSchoolPickerOpen(true);
@@ -548,7 +546,7 @@ export default function ExplorePage() {
                 {visibleListings.map((item,index) => <MarketplaceCard motionId={figmaCardMotion.featured[index]} key={item.id} item={item} saved={savedIds.includes(String(item.id))} onSave={item => void handleToggleSave(item.id)} onContact={handleContactSeller} />)}
               </div>
               <ProductPagination pagination={pagination} onPage={next => {
-                setPageSelection({ filters: filterParameters, page: next });
+                updateFilters({ page: next }, true);
                 document.getElementById("marketplace-title")?.scrollIntoView({ behavior: "smooth", block: "start" });
               }} />
             </>

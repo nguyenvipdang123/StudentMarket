@@ -33,3 +33,24 @@ test("chatbot không bịa thẻ sản phẩm khi không có tin đúng ngân s�
   await expect(dialog.locator(".assistant-products li")).toHaveCount(0);
   await expect(dialog.getByRole("link", { name: "Xem trong Khám phá →" })).toBeVisible();
 });
+
+test("lỗi khi đang trả lời giữ phần đã nhận, báo lý do và cho phép gửi lại", async ({ page }) => {
+  let failed = false;
+  await page.route("**/api/assistant/chat", route => {
+    const frames = failed
+      ? [{ event: "assistant/partial", data: { text: "Đã trả lời lại thành công." } }]
+      : [{ event: "assistant/partial", data: { text: "Phần trả lời đã nhận." } }, { event: "assistant/error", data: { message: "Trợ lý phản hồi chậm. Bạn vui lòng gửi lại câu hỏi sau ít giây." } }];
+    failed = true;
+    return route.fulfill({ contentType: "text/event-stream", body: ": connected\n\n" + frames.map(frame => "data: " + JSON.stringify(frame) + "\n\n").join("") });
+  });
+  await browse(page); await page.getByRole("button", { name: "Mở trợ lý SangTay", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Trợ lý SangTay", exact: true });
+  await dialog.getByLabel("Câu hỏi cho trợ lý").fill("Giải thích Pomodoro");
+  await dialog.getByRole("button", { name: "Gửi câu hỏi" }).click();
+  await expect(dialog.getByRole("alert")).toContainText("Trợ lý phản hồi chậm");
+  await expect(dialog.locator(".assistant-message.assistant")).toContainText("Phần trả lời đã nhận.");
+  await expect(dialog.getByLabel("Câu hỏi cho trợ lý")).toHaveValue("Giải thích Pomodoro");
+  await dialog.getByRole("button", { name: "Gửi câu hỏi" }).click();
+  await expect(dialog.locator(".assistant-message.assistant").last()).toContainText("Đã trả lời lại thành công.");
+  await expect(dialog.getByRole("alert")).toHaveCount(0);
+});

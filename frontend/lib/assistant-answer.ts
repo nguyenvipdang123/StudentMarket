@@ -9,6 +9,10 @@ function validProduct(value: unknown): value is AssistantProduct {
 }
 /** Render text as text, and only accept bounded product cards with same-site navigation. */
 export function assistantAnswer(event: ChatEvent): AssistantAnswer | null {
+  if (event.event === "assistant/error") {
+    const message = (event.data as { message?: unknown } | null)?.message;
+    throw new Error(typeof message === "string" && message.length <= 300 ? message : "Trợ lý chưa trả lời được. Bạn vui lòng thử lại sau.");
+  }
   if (event.error || event.event === "error") throw new Error("Trợ lý chưa trả lời được. Bạn vui lòng thử lại sau.");
   if (event.event === "assistant/products" && event.data && typeof event.data === "object") {
     const data = event.data as AssistantAnswer;

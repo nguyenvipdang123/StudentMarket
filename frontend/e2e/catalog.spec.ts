@@ -93,3 +93,51 @@ test("mở chi tiết và hồ sơ người bán từ tin thật trong database 
   await expect(page).toHaveURL(new RegExp("/seller/" + seed.accounts.seller.userId));
   await expect(page.getByRole("heading", { name: "E2E seller", exact: true })).toBeVisible();
 });
+
+test("URL giữ số trang sau F5 và khôi phục khi Back/Forward", async ({ page }) => {
+  await browse(page);
+  const pagination = page.getByRole("navigation", { name: "Phân trang sản phẩm" });
+  await pagination.getByRole("button", { name: "Trang 2", exact: true }).click();
+  await expect(page).toHaveURL(/page=2/);
+  await expect(page.locator("#listing-results")).toHaveAttribute("aria-label", "Sản phẩm trang 2");
+  const titles = await cards(page).locator(".figma-card-title").allTextContents();
+  await page.reload();
+  await expect(page.locator("#listing-results")).toHaveAttribute("aria-label", "Sản phẩm trang 2");
+  await expect(cards(page).locator(".figma-card-title")).toHaveText(titles);
+  await pagination.getByRole("button", { name: "Trang 3", exact: true }).click();
+  await expect(cards(page)).toHaveCount(4);
+  await page.goBack();
+  await expect(page.locator("#listing-results")).toHaveAttribute("aria-label", "Sản phẩm trang 2");
+  await expect(cards(page).locator(".figma-card-title")).toHaveText(titles);
+  await page.goForward();
+  await expect(page.locator("#listing-results")).toHaveAttribute("aria-label", "Sản phẩm trang 3");
+  await expect(cards(page)).toHaveCount(4);
+});
+
+test("chia sẻ bộ lọc đầy đủ, tải lại và trở về từ chi tiết không mất điều kiện", async ({ page, context }) => {
+  await browse(page);
+  await page.getByLabel("Tìm kiếm món đồ").fill("e2e");
+  await page.getByLabel("Tìm kiếm món đồ").press("Enter");
+  await page.getByRole("group", { name: "Danh mục sản phẩm" }).getByRole("button", { name: "Học tập", exact: true }).click();
+  await page.getByRole("button", { name: /^Bộ lọc/ }).click();
+  await page.getByLabel("Giá từ (đ)", { exact: true }).fill("100000");
+  await page.getByLabel("Đến (đ)", { exact: true }).fill("150000");
+  await page.getByLabel("Sắp xếp sản phẩm").selectOption("price-desc");
+  await expect(cards(page)).toHaveCount(6);
+  const url = page.url(), params = new URL(url).searchParams;
+  expect(params.get("q")).toBe("e2e"); expect(params.get("category")).toBe("Học tập");
+  expect(params.get("minPrice")).toBe("100000"); expect(params.get("maxPrice")).toBe("150000"); expect(params.get("sort")).toBe("price-desc");
+  const titles = await cards(page).locator(".figma-card-title").allTextContents();
+  await page.reload();
+  await expect(cards(page).locator(".figma-card-title")).toHaveText(titles);
+  await expect(page.getByLabel("Tìm kiếm món đồ")).toHaveValue("e2e");
+  await cards(page).first().getByRole("link", { name: titles[0], exact: true }).click();
+  await expect(page).toHaveURL(/\/listing\//); await page.goBack();
+  await expect(cards(page).locator(".figma-card-title")).toHaveText(titles);
+  const shared = await context.newPage(); await shared.goto(url);
+  await expect(cards(shared).locator(".figma-card-title")).toHaveText(titles); await shared.close();
+  await page.getByRole("button", { name: /^Bộ lọc/ }).click();
+  await page.getByRole("button", { name: "Xóa bộ lọc", exact: true }).click();
+  await expect(cards(page)).toHaveCount(12);
+  expect(new URL(page.url()).searchParams.has("q")).toBe(false);
+});

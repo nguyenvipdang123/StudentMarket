@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { productIntent, type ProductContext } from "@/lib/assistant-product-intent";
 import { findAssistantProducts } from "@/lib/assistant-product-search";
 import { findFaq } from "@/lib/assistant-faq";
-import { answerWithGemini, AssistantAiError, rememberAssistantTurn, type AssistantTurn } from "@/lib/assistant-gemini";
+import { streamGeminiAnswer, AssistantAiError, rememberAssistantTurn, type AssistantTurn } from "@/lib/assistant-gemini";
 
 export const runtime = "nodejs";
 const sessionCookie = "sangtay_assistant";
@@ -85,10 +85,15 @@ export async function POST(request: NextRequest) {
     const faq=findFaq(message);
     if(faq) {session.history=rememberAssistantTurn(session.history,message,faq.answer);session.busy=false;return localReply('assistant/partial',{text:faq.answer},request,newToken);}
     if(!graphUrl || !chatbotUrl) {
-      const text = await answerWithGemini(message, session.history, { signal });
-      session.history = rememberAssistantTurn(session.history, message, text);
-      session.busy = false;
-      return localReply("assistant/partial", { text }, request, newToken);
+      const currentSession = session;
+      const body = streamGeminiAnswer(message, currentSession.history || [], {
+        signal,
+        onComplete: text => { currentSession.history = rememberAssistantTurn(currentSession.history, message, text); },
+        onSettled: () => { currentSession.busy = false; },
+      });
+      return withSession(new NextResponse(body, { headers: {
+        "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-store, no-transform", "X-Accel-Buffering": "no",
+      } }), request, newToken);
     }
     const status = await fetch(`${chatbotUrl}/api/status`, { cache: "no-store", signal });
     if (!status.ok || !(await status.json()).ready) { session.busy = false; return error("Trợ lý đang được cấu hình. Vui lòng thử lại sau.", 503); }

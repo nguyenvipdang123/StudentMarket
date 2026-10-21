@@ -1,5 +1,7 @@
 # Phân trang và tìm kiếm sản phẩm trên server
 
+Từ khóa, danh mục, hình thức, tình trạng, trường, khoảng giá, cách sắp xếp và số trang được giữ trong query string của URL. F5, mở liên kết ở tab khác hoặc quay lại từ chi tiết tin sẽ khôi phục cùng điều kiện. Chuyển trang có lịch sử Back/Forward; đổi bộ lọc đưa về trang 1. Tham số `school=` rỗng có nghĩa là tất cả trường, kể cả khi máy nhận liên kết đang lưu một trường khác. URL không chứa email hoặc thông tin tài khoản.
+
 Trang chủ và `/explore` lấy 12 sản phẩm mỗi trang từ PostgreSQL. Nút Trước/Sau, số trang và tổng số kết quả dùng metadata do API trả về. Khi đổi từ khóa/bộ lọc/sắp xếp, trang trở về 1. Nhập từ khóa rồi bấm Tìm kiếm hoặc Enter. Giá trị lọc được gửi sau 250 ms; các yêu cầu cũ được hủy để tránh hiển thị kết quả không còn phù hợp.
 
 Tìm kiếm không phân biệt hoa/thường và dấu tiếng Việt, gồm `đ/d`; hỗ trợ nhiều từ theo thứ tự bất kỳ trong tiêu đề, mô tả, địa điểm, danh mục, tên người bán và trường. Trường nhận tên đầy đủ, tên viết tắt và các bí danh trong danh sách trường hiện có. Giá trị `%`, `_`, dấu gạch chéo ngược trong từ khóa được tìm như ký tự thường.
@@ -58,6 +60,7 @@ Nếu trang yêu cầu vượt quá trang cuối, API trả trang cuối hiện 
 
 ```powershell
 npm --prefix frontend run test:search
+node --experimental-strip-types --test frontend/scripts/explore-url-state.test.mjs
 npm run build
 npm test
 ```
