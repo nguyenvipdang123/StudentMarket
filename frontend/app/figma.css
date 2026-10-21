@@ -185,10 +185,19 @@ body { background: var(--cream); }
 .figma-upload strong, .figma-upload small { width: 100%; color: var(--ink-light); }
 .figma-upload small { color: var(--muted); font-size: 12px; }
 .figma-upload-photos { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
-.figma-upload-photo { min-width: 0; }
-.figma-upload-photo img { width: 100%; height: 240px; object-fit: cover; border-radius: 16px; margin-bottom: 10px; }
-.figma-upload-photo .figma-row { justify-content: space-between; flex-wrap: wrap; }
-.figma-upload-photo .figma-row button { padding: 3px; border: 0; background: transparent; cursor: pointer; color: var(--green); }
+.figma-upload-photo { min-width: 0; padding: 10px; border: 1px solid var(--line); border-radius: 16px; background: white; }
+/* Only the preview gets photo dimensions; Figma icons are also img elements. */
+.figma-upload-photo > img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; background: var(--cream); }
+.figma-upload-photo-actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; min-width: 0; }
+.figma-upload-photo-actions .figma-icon { display: block; width: 20px; height: 20px; object-fit: contain; margin: 0; border-radius: 0; }
+.figma-upload-photo-grip { display: grid; place-items: center; width: 24px; flex: 0 0 24px; cursor: grab; opacity: .65; }
+.figma-upload-photo-actions button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: white; color: var(--green); cursor: pointer; }
+.figma-upload-photo-cover { min-width: 0; padding: 8px 10px; font-size: 12px; line-height: 1.5; font-weight: 700; }
+.figma-upload-photo-cover:disabled { border-color: transparent; background: var(--figma-sage); cursor: default; }
+.figma-upload-photo-remove { width: 44px; flex: 0 0 44px; margin-left: auto; }
+.figma-upload-photo-actions button:not(:disabled):hover { background: var(--figma-sage); }
+.figma-upload-photo-actions button:focus-visible { outline: 3px solid #e0965e; outline-offset: 2px; }
+.figma-upload-photo-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 8px; }
 .figma-owned-layout { display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 24px; }
 .figma-owned-card { padding: 24px; margin-bottom: 20px; border: 1px solid var(--line); border-radius: 20px; background: white; }
 .figma-owned-facts { display: flex; gap: 20px; margin-bottom: 16px; }
