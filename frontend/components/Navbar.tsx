@@ -198,6 +198,7 @@ export default function Navbar() {
               Tin nhắn
             </Link>
 
+            <Link href="/support" className={pathname==='/support'?'active':''} aria-current={pathname==='/support'?'page':undefined} onClick={()=>setMobileMenuOpen(false)}>Hỗ trợ</Link>
             {/* Mobile-only account shortcuts */}
             {!viewer ? (
               <div className="mobile-auth-links">

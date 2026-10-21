@@ -28,6 +28,7 @@ export default function Footer() {
             <strong>Khám phá</strong>
             <Link href="/explore">Tất cả sản phẩm</Link>
             <Link href="/how-it-works">Cách hoạt động</Link>
+            <Link href="/support">Trung tâm hỗ trợ</Link>
             <Link href="/saved">Tin đã lưu</Link>
           </div>
           <div>

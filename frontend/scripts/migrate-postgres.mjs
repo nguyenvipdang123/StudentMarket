@@ -14,6 +14,7 @@ const searchSql = await readFile(resolve(scriptDir, "listing-search-schema.sql")
 const reservationsSql = await readFile(resolve(scriptDir, "reservations-schema.sql"), "utf8");
 const savedSearchesSql = await readFile(resolve(scriptDir, "saved-searches-schema.sql"), "utf8");
 const promotionAnalyticsSql = await readFile(resolve(scriptDir, "promotion-analytics-schema.sql"), "utf8");
+const supportSql = await readFile(resolve(scriptDir, "support-schema.sql"), "utf8");
 try { process.loadEnvFile(resolve(scriptDir, "../.env.local")); } catch (e) { if (e.code !== "ENOENT") throw e; }
 if (!process.env.DATABASE_URL && !process.env.PG_PASSWORD) throw new Error("Configure DATABASE_URL or PG_* environment variables.");
 const client = new pg.Client(databaseConfig());
@@ -39,6 +40,7 @@ try {
   await client.query(reservationsSql);
   await client.query(savedSearchesSql);
   await client.query(promotionAnalyticsSql);
+  await client.query(supportSql);
   await client.query("COMMIT");
   console.log("SangTay PostgreSQL tables and columns are ready.");
 } catch (error) {

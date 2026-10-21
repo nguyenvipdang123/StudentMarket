@@ -10,6 +10,7 @@ import AdminReportsPanel from "@/components/AdminReportsPanel";
 import AdminAiModerationPanel from "@/components/AdminAiModerationPanel";
 import AdminSePayPanel from "@/components/AdminSePayPanel";
 import NotificationBell from "@/components/NotificationBell";
+import SupportTickets from '@/components/SupportTickets';
 import AdminOverview, { type AdminTab, type DashboardSource, type DashboardSources } from "@/components/AdminOverview";
 import FigmaIcon, { type FigmaIconName } from "@/components/FigmaIcon";
 
@@ -608,6 +609,7 @@ export default function AdminDashboard({
     { key: "MODERATION", label: "Kiểm duyệt tin", icon: "shield", count: sources.listings === "ready" ? modCounts.pending : undefined },
     { key: "ACCOUNTS", label: "Tài khoản sinh viên", icon: "graduation", count: sources.accounts === "ready" ? counts.pendingReview : undefined },
     { key: "REPORTS", label: "Báo cáo vi phạm", icon: "alert", count: sources.reports === "ready" ? reportPendingCount : undefined },
+    { key: "SUPPORT", label: "Phiếu hỗ trợ", icon: "chat" },
     { key: "CHATS", label: "Hội thoại", icon: "chat" },
     { key: "REVENUE", label: "Doanh thu & đẩy tin", icon: "money" },
     { key: "PACKAGES", label: "Gói dịch vụ", icon: "gift" },
@@ -619,6 +621,7 @@ export default function AdminDashboard({
     MODERATION: { title: "Kiểm duyệt tin đăng", description: "Kiểm tra nội dung trước khi cho phép hiển thị công khai trên sàn." },
     ACCOUNTS: { title: "Tài khoản sinh viên", description: "Xác minh hồ sơ, duyệt ảnh thẻ và quản lý trạng thái tài khoản." },
     REPORTS: { title: "Báo cáo vi phạm", description: "Xem bằng chứng, xử lý vi phạm và bảo vệ cộng đồng sinh viên." },
+    SUPPORT: { title: "Trung tâm hỗ trợ", description: "Theo dõi yêu cầu, phản hồi sinh viên và cập nhật tiến độ xử lý." },
     CHATS: { title: "Quản lý hội thoại", description: "Tra cứu trò chuyện giữa người mua và người bán." },
     REVENUE: { title: "Doanh thu & đẩy tin", description: "Theo dõi các đơn đã thanh toán và hiệu quả gói đẩy tin." },
     PACKAGES: { title: "Gói dịch vụ đẩy tin", description: "Quản lý giá, thời hạn và độ ưu tiên hiển thị." },
@@ -630,6 +633,8 @@ export default function AdminDashboard({
     if (tab === "MODERATION") { setModFilter("PENDING"); setModQuery(""); }
     if (tab === "ACCOUNTS") { setFilter("pending_review"); setQuery(""); }
     if (tab === "CHATS") setChatFocusId(null);
+    if (tab === 'SUPPORT') window.history.replaceState(window.history.state,'','/admin?tab=SUPPORT');
+    else if(activeTab==='SUPPORT') window.history.replaceState(window.history.state,'','/admin');
     setActiveTab(tab);
     setMenuOpen(false);
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -656,7 +661,7 @@ export default function AdminDashboard({
         <header className="dashboard-topbar">
           <button className="dashboard-menu-toggle" type="button" aria-label={menuOpen ? "Đóng menu quản trị" : "Mở menu quản trị"} aria-expanded={menuOpen} aria-controls="admin-sidebar" onClick={() => setMenuOpen(value => !value)}><FigmaIcon name="grid" size={21} /></button>
           <div className="dashboard-breadcrumb"><span>Quản trị</span><span aria-hidden="true">/</span><strong>{navigation.find(item => item.key === activeTab)?.label}</strong></div>
-          <div className="dashboard-topbar-right"><NotificationBell onNavigate={href => { if (href.includes("tab=ACCOUNTS")) navigate("ACCOUNTS"); else if (href.includes("tab=REPORTS")) navigate("REPORTS"); else navigate("MODERATION"); }} /><span className="dashboard-role-badge"><i />{role === "admin" ? "Quản trị viên" : "Nhân viên"}</span><span className="dashboard-avatar small">{adminName.trim().slice(0, 1).toLocaleUpperCase("vi-VN") || "A"}</span></div>
+          <div className="dashboard-topbar-right"><NotificationBell onNavigate={href => { if(href.includes('tab=SUPPORT')){window.location.assign(href);return;} if (href.includes("tab=ACCOUNTS")) navigate("ACCOUNTS"); else if (href.includes("tab=REPORTS")) navigate("REPORTS"); else navigate("MODERATION"); }} /><span className="dashboard-role-badge"><i />{role === "admin" ? "Quản trị viên" : "Nhân viên"}</span><span className="dashboard-avatar small">{adminName.trim().slice(0, 1).toLocaleUpperCase("vi-VN") || "A"}</span></div>
         </header>
         <main className="admin-container dashboard-main" id="admin-content" tabIndex={-1}>
           <div className="admin-heading dashboard-heading">
@@ -1031,6 +1036,7 @@ export default function AdminDashboard({
 
         {activeTab === "CHATS" && <AdminChatPanel refreshSignal={chatRefreshSignal} initialConversationId={chatFocusId} />}
         {activeTab === "REPORTS" && <AdminReportsPanel refreshSignal={reportRefreshSignal} onOpenChat={conversationId => { setChatFocusId(conversationId); setActiveTab("CHATS"); }} onReviewed={() => void loadReportCount()} />}
+        {activeTab === 'SUPPORT' && role==='admin' && <SupportTickets admin refreshSignal={reportRefreshSignal}/>}
 
         {selectedStudent && (
           <div className="admin-account-overlay" onClick={event => {

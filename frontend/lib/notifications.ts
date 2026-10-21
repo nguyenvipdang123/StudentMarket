@@ -26,6 +26,12 @@ function feed(user: AuthenticatedUser) {
     SELECT 'reservation:'||e.id::text,'reservation',e.title,e.body,'/transactions',e.created_at,FALSE
     FROM reservation_events e WHERE e.recipient_id=$1 AND e.created_at>NOW()-INTERVAL '30 days'
     UNION ALL
+    SELECT 'support-admin:'||m.id::text,'support','Phiếu hỗ trợ có cập nhật',LEFT(t.subject||' · '||COALESCE(NULLIF(m.content,''),'Admin vừa cập nhật trạng thái xử lý.'),300),
+      '/support?ticket='||t.id::text||'#phieu-ho-tro',m.created_at,FALSE
+    FROM support_messages m JOIN support_tickets t ON t.id=m.ticket_id
+    WHERE t.owner_id=$1 AND m.author_role='admin' AND m.created_at>NOW()-INTERVAL '30 days'
+      AND NOT EXISTS(SELECT 1 FROM support_messages newer WHERE newer.ticket_id=t.id AND newer.author_role='admin' AND newer.id>m.id)
+    UNION ALL
     SELECT 'product-alert:'||e.id::text,'product-alert',
       CASE e.kind WHEN 'NEW_MATCH' THEN 'Có món đồ phù hợp nhu cầu của bạn' ELSE 'Món đồ đã lưu vừa giảm giá' END,
       LEFT(p.title||CASE e.kind WHEN 'NEW_MATCH' THEN ' · '||COALESCE(e.search_name,'Nhu cầu đã lưu') ELSE
@@ -46,7 +52,13 @@ function feed(user: AuthenticatedUser) {
     UNION ALL
     SELECT 'pending-report:'||r.id::text,'report','Có báo cáo mới cần xử lý',LEFT(r.context_title,180),
       '/admin?tab=REPORTS',r.created_at,FALSE
-    FROM user_reports r WHERE r.status='PENDING' AND r.created_at>NOW()-INTERVAL '30 days'`;
+    FROM user_reports r WHERE r.status='PENDING' AND r.created_at>NOW()-INTERVAL '30 days'
+    UNION ALL
+    SELECT 'support-student:'||m.id::text,'support','Phiếu hỗ trợ cần xử lý',LEFT(t.subject,180),
+      '/admin?tab=SUPPORT&ticket='||t.id::text,m.created_at,FALSE
+    FROM support_messages m JOIN support_tickets t ON t.id=m.ticket_id
+    WHERE t.status<>'RESOLVED' AND m.author_role='student' AND m.created_at>NOW()-INTERVAL '30 days'
+      AND NOT EXISTS(SELECT 1 FROM support_messages newer WHERE newer.ticket_id=t.id AND newer.author_role='student' AND newer.id>m.id)`;
 }
 
 export async function listNotifications(user: AuthenticatedUser) {

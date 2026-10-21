@@ -13,6 +13,6 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   if (!account) redirect("/?auth=login&admin=1");
   if (account.role !== "admin" || account.status !== "verified") redirect("/?authError=admin_access");
   const tab = (await searchParams).tab;
-  const initialTab: AdminTab = tab === "ACCOUNTS" || tab === "REPORTS" ? tab : "OVERVIEW";
+  const initialTab: AdminTab = tab === "ACCOUNTS" || tab === "REPORTS" || tab === "SUPPORT" ? tab : "OVERVIEW";
   return <AdminDashboard adminName={account.full_name} initialTab={initialTab} />;
 }

@@ -6,7 +6,7 @@ import { dashboardMoney as formatPrice, listingTrend } from "@/lib/admin-dashboa
 
 export type DashboardSource = "accounts" | "listings" | "revenue" | "audit" | "reports";
 export type DashboardSources = Record<DashboardSource, "loading" | "ready" | "error">;
-export type AdminTab = "OVERVIEW" | "MODERATION" | "REVENUE" | "PACKAGES" | "STAFF" | "AUDIT" | "ACCOUNTS" | "CHATS" | "REPORTS";
+export type AdminTab = "OVERVIEW" | "MODERATION" | "REVENUE" | "PACKAGES" | "STAFF" | "AUDIT" | "ACCOUNTS" | "CHATS" | "REPORTS" | "SUPPORT";
 
 type OverviewProps = {
   listings: { id: string; title: string; sellerName: string; sellerSchool: string; moderationStatus: string; createdAt: string }[];
