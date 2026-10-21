@@ -6,6 +6,7 @@ export const seed = JSON.parse(readFileSync(process.env.STUDENTMARKET_E2E_FIXTUR
   accounts: Record<string, Account>;
   products: { id: string; title: string; price: number; public: boolean }[];
   mailOrigin: string;
+  adviceOrigin:string;
 };
 export const test = base.extend<{ browserGuards: void }>({
   browserGuards: [async ({ page, context, baseURL }, use) => {

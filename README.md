@@ -254,6 +254,7 @@ Kiểm thử worker trên database cô lập (cần build frontend trước): `n
 
 - **Thanh toán gói đẩy tin:** đã tích hợp SePay QR chuyển khoản, webhook HMAC-SHA256 và bảng đối soát trong Admin. Điền cấu hình `SEPAY_*`, tạo webhook và bật thanh toán theo [hướng dẫn SePay](frontend/docs/sepay.md). Chỉ webhook xác thực, khớp đơn/số tiền/tài khoản mới kích hoạt gói; không có nút tự đánh dấu đã thanh toán từ trình duyệt. Việc mua bán hàng giữa sinh viên vẫn thỏa thuận trực tiếp.
 - **Hiệu quả đẩy tin:** vào **Tin đăng của tôi → Xem hiệu quả**, chọn từng gói đã mua để so sánh lượt xem, người lưu và người nhắn tin trong hai khoảng trước/trong đẩy dài bằng nhau; xem giờ bắt đầu/hết hạn, lịch sử gói cũ và ghi chú nếu dữ liệu chưa đầy đủ. Xem [hướng dẫn thống kê đẩy tin](frontend/docs/promotion-analytics.md).
+- **Góp ý AI trước khi đăng:** trong **Đăng tin**, bấm **Nhờ AI góp ý** để xem gợi ý ảnh, tiêu đề và thông tin nên bổ sung; tự chọn sửa hoặc áp dụng tiêu đề. Xem [cấu hình và cách dùng](frontend/docs/listing-advice.md).
 
 - SMTP Gmail dùng để gửi mã xác thực đăng ký và mã đặt lại mật khẩu. Điền các biến sau vào `frontend/.env.local` rồi khởi động lại frontend:
 
