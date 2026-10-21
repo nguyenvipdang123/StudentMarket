@@ -112,7 +112,7 @@
 }
 .figma-product-card.product-scroll-reveal {
   --reveal-delay: 0ms;
-  transition: opacity 650ms ease var(--reveal-delay), translate 650ms cubic-bezier(.22,1,.36,1) var(--reveal-delay);
+  transition: opacity 650ms ease var(--reveal-delay), translate 650ms cubic-bezier(.22,1,.36,1) var(--reveal-delay), transform 240ms ease, border-color 240ms ease, box-shadow 240ms ease;
 }
 .product-scroll-reveal:nth-child(4n + 2) { --reveal-delay: 70ms; }
 .product-scroll-reveal:nth-child(4n + 3) { --reveal-delay: 140ms; }
