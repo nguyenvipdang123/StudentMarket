@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
             (SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id AND pi.is_primary = TRUE LIMIT 1) AS image,
             (SELECT COUNT(*) FROM favorites f WHERE f.product_id = p.id) AS likes,
             (SELECT COUNT(DISTINCT c.id) FROM conversations c WHERE c.product_id = p.id) AS chats,
+            EXISTS(SELECT 1 FROM listing_promotions history WHERE history.listing_id=p.id AND history.user_id=$1 AND history.payment_status='PAID' AND history.start_at IS NOT NULL) AS has_promotions,
             lp.id AS promotion_id,
             lp.status AS promotion_status,
             COALESCE(lp.package_name_snapshot,pp.name) AS promotion_name,
@@ -56,6 +57,7 @@ export async function GET(request: NextRequest) {
       school: r.seller_school,
       image: r.image || "/sample/khac.svg",
       description: r.description,
+      hasPromotions: r.has_promotions,
       promotion: r.promotion_status === "ACTIVE" ? {
         id: r.promotion_id,
         name: r.promotion_name,

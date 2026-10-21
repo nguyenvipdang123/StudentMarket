@@ -56,7 +56,7 @@ async function test() {
     db = new pg.Client({ ...settings, database }); await db.connect();
     await db.query(schema.split("\n").filter(line => !line.startsWith("\\")).join("\n"));
     await db.query("SET search_path TO public");
-    for (const name of ["auth", "postgres", "ai-moderation", "notifications", "sepay", "listing-search", "reservations", "saved-searches"]) await db.query(await readFile(join(frontend, "scripts", name + "-schema.sql"), "utf8"));
+    for (const name of ["auth", "postgres", "ai-moderation", "notifications", "sepay", "listing-search", "reservations", "saved-searches", "promotion-analytics"]) await db.query(await readFile(join(frontend, "scripts", name + "-schema.sql"), "utf8"));
     const fixtures = await seedE2E(db);
     assistant = await startMockAssistant(); assistant.setReady(true);
     const mails = [];

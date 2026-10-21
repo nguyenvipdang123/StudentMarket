@@ -7,6 +7,7 @@ import { formatPrice } from "@/lib/storage";
 import type { Viewer } from "@/lib/types";
 
 export type OwnedListing = {
+  hasPromotions?:boolean;
   id:string; title:string; price:number; status:string; moderationStatus:"PENDING"|"APPROVED"|"REJECTED"; rejectionReason?:string; condition:string; location:string; views:number; likes:number; chats:number; image:string; description:string; createdAt:string;
   promotion?:{id:string; name:string; priority:number; badge:string; startAt?:string|null;endAt?:string|null}|null;
 };
@@ -31,7 +32,8 @@ export default function MyListingBoard({viewer,listings,loading,error,filter,onF
           {item.status!=="Sold"&&<Link className="figma-button" href={"/my-listings/"+item.id+"/edit"}><Icon name="pencil"/>Sửa tin</Link>}
           <Link className="figma-button" href={"/listing/"+item.id}><Icon name="eye"/>Xem tin</Link>
           {item.status==="Active"&&item.moderationStatus==="APPROVED"&&<button className="figma-button primary" onClick={()=>onSold(item)}><Icon name="check"/>Đánh dấu đã bán</button>}
-          {item.promotion?<button className="figma-button" onClick={()=>onPerformance(item)}>Xem hiệu quả</button>:item.moderationStatus==="APPROVED"&&item.status==="Active"?<Link className="figma-button" href={"/my-listings/"+item.id+"/promote"}><Icon name="arrowUp"/>Đẩy tin</Link>:null}
+          {(item.promotion||item.hasPromotions)&&<button className="figma-button" onClick={()=>onPerformance(item)}>Xem hiệu quả</button>}
+          {!item.promotion&&item.moderationStatus==="APPROVED"&&item.status==="Active"&&<Link className="figma-button" href={"/my-listings/"+item.id+"/promote"}><Icon name="arrowUp"/>Đẩy tin</Link>}
         </div>
       </article>)}
     </div><aside><div className="figma-panel peach"><h2>Góc nhỏ của bạn</h2><p><strong>{listings.filter(i=>i.status==="Sold").length}</strong> món đồ đã sang tay<br/><strong>{listings.filter(i=>i.moderationStatus==="PENDING").length}</strong> tin đang chờ duyệt<br/><strong>{listings.reduce((n,i)=>n+(i.views||0),0)}</strong> lượt xem tin</p><SafetyNote>Ảnh rõ nét, mô tả trung thực và phản hồi nhanh giúp món đồ tìm được chủ mới.</SafetyNote><Link href="/messages" className="figma-button">Mở hộp thư<Icon name="chat"/></Link></div></aside></div>

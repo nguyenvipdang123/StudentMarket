@@ -6,8 +6,10 @@ import Footer from "@/components/Footer";
 import { Viewer } from "@/lib/types";
 import MyListingBoard, { OwnedFilter } from "@/components/MyListingBoard";
 import { EmptyState, PageIntro } from "@/components/FigmaStates";
+import PromotionPerformanceDialog from "@/components/PromotionPerformanceDialog";
 
 type MyListing = {
+  hasPromotions?:boolean;
   id: string;
   title: string;
   price: number;
@@ -45,13 +47,6 @@ export default function MyListingsPage() {
 
   // Performance Modal state
   const [perfItem, setPerfItem] = useState<MyListing | null>(null);
-  const [perfAnalytics, setPerfAnalytics] = useState<{
-    views: number;
-    uniqueViews: number;
-    favorites: number;
-    contacts: number;
-    clicks: number;
-  } | null>(null);
 
   // Mark Sold Modal state
   const [markSoldItem, setMarkSoldItem] = useState<MyListing | null>(null);
@@ -102,17 +97,6 @@ export default function MyListingsPage() {
     }
   }, [toast]);
 
-  const handleOpenPerf = async (item: MyListing) => {
-    setPerfItem(item);
-    setPerfAnalytics(null);
-    try {
-      const res = await fetch(`/api/my-listings/${item.id}/analytics`);
-      if (res.ok) {
-        const data = await res.json();
-        setPerfAnalytics(data.analytics);
-      }
-    } catch {}
-  };
 
   // Confirm Mark Sold
   const handleConfirmMarkSold = async () => {
@@ -166,7 +150,7 @@ export default function MyListingsPage() {
     <div className="site-shell">
       <Navbar />
       <main>
-        <MyListingBoard viewer={viewer} listings={listings} loading={loading} error={loadError} filter={statusFilter} onFilter={setStatusFilter} onRetry={()=>void fetchListings()} onSold={item=>{setMarkSoldItem(listings.find(i=>i.id===item.id)||null);setSoldViaSangTay(false);setBuyerIdentifier("");}} onPerformance={item=>{const original=listings.find(i=>i.id===item.id);if(original) void handleOpenPerf(original);}} remaining={formatRemainingTime}/>
+        <MyListingBoard viewer={viewer} listings={listings} loading={loading} error={loadError} filter={statusFilter} onFilter={setStatusFilter} onRetry={()=>void fetchListings()} onSold={item=>{setMarkSoldItem(listings.find(i=>i.id===item.id)||null);setSoldViaSangTay(false);setBuyerIdentifier("");}} onPerformance={item=>setPerfItem(listings.find(i=>i.id===item.id)||null)} remaining={formatRemainingTime}/>
 
         {/* MODAL: MARK AS SOLD (Section 32) */}
         {markSoldItem && (
@@ -285,140 +269,7 @@ export default function MyListingsPage() {
           </div>
         )}
 
-        {/* PERFORMANCE MODAL WITH REAL ANALYTICS */}
-        {perfItem && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: "rgba(0, 0, 0, 0.55)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 9999,
-              padding: "20px",
-            }}
-            onClick={() => setPerfItem(null)}
-          >
-            <div
-              style={{
-                background: "#ffffff",
-                borderRadius: "16px",
-                maxWidth: "500px",
-                width: "100%",
-                padding: "26px",
-                boxShadow: "0 20px 40px rgba(0, 0, 0, 0.2)",
-                position: "relative",
-              }}
-              onClick={e => e.stopPropagation()}
-            >
-              <button
-                type="button"
-                onClick={() => setPerfItem(null)}
-                style={{
-                  position: "absolute",
-                  top: "16px",
-                  right: "16px",
-                  background: "transparent",
-                  border: 0,
-                  fontSize: "20px",
-                  cursor: "pointer",
-                  color: "#6b7280",
-                }}
-              >
-                ✕
-              </button>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-                <div style={{ fontSize: "28px" }}>📊</div>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: "18px", color: "#111827" }}>Thống kê hiệu quả tin đăng</h3>
-                  <div style={{ fontSize: "12px", color: "#6b7280" }}>{perfItem.title}</div>
-                </div>
-              </div>
-
-              {perfItem.promotion && (
-                <div style={{
-                  background: "#fff7ed",
-                  border: "1px solid #fed7aa",
-                  borderRadius: "10px",
-                  padding: "12px 16px",
-                  marginBottom: "20px",
-                }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                    <span style={{ fontSize: "13px", fontWeight: 700, color: "#c2410c" }}>
-                      🔥 Gói: {perfItem.promotion?.name}
-                    </span>
-                    <span style={{ fontSize: "12px", color: "#ea580c", fontWeight: 700 }}>
-                      {formatRemainingTime(perfItem.promotion?.endAt)}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: "11px", color: "#7c2d12" }}>
-                    Hết hạn lúc: {perfItem.promotion?.endAt ? new Date(perfItem.promotion.endAt).toLocaleString("vi-VN") : "N/A"}
-                  </div>
-                </div>
-              )}
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px", marginBottom: "12px" }}>
-                <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "10px", padding: "12px", textAlign: "center" }}>
-                  <div style={{ fontSize: "11px", color: "#6b7280" }}>Lượt xem</div>
-                  <div style={{ fontSize: "20px", fontWeight: 800, color: "#111827" }}>
-                    {perfAnalytics ? perfAnalytics.views : perfItem.views || 0}
-                  </div>
-                </div>
-                <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "10px", padding: "12px", textAlign: "center" }}>
-                  <div style={{ fontSize: "11px", color: "#6b7280" }}>Người xem duy nhất</div>
-                  <div style={{ fontSize: "20px", fontWeight: 800, color: "#111827" }}>
-                    {perfAnalytics ? perfAnalytics.uniqueViews : "Chưa tải được"}
-                  </div>
-                </div>
-                <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "10px", padding: "12px", textAlign: "center" }}>
-                  <div style={{ fontSize: "11px", color: "#6b7280" }}>Lượt yêu thích</div>
-                  <div style={{ fontSize: "20px", fontWeight: 800, color: "#111827" }}>
-                    {perfAnalytics ? perfAnalytics.favorites : perfItem.likes || 0}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
-                <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "10px", padding: "12px", textAlign: "center" }}>
-                  <div style={{ fontSize: "11px", color: "#6b7280" }}>Hội thoại liên hệ</div>
-                  <div style={{ fontSize: "20px", fontWeight: 800, color: "#111827" }}>
-                    {perfAnalytics ? perfAnalytics.contacts : perfItem.chats || 0}
-                  </div>
-                </div>
-                <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "10px", padding: "12px", textAlign: "center" }}>
-                  <div style={{ fontSize: "11px", color: "#6b7280" }}>Lượt bấm vào tin</div>
-                  <div style={{ fontSize: "20px", fontWeight: 800, color: "#111827" }}>
-                    {perfAnalytics ? perfAnalytics.clicks : 0}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <button
-                  type="button"
-                  onClick={() => setPerfItem(null)}
-                  style={{
-                    padding: "8px 22px",
-                    borderRadius: "8px",
-                    border: 0,
-                    background: "var(--green)",
-                    color: "#ffffff",
-                    fontWeight: 700,
-                    fontSize: "13px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Đóng
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {perfItem&&<PromotionPerformanceDialog listingId={perfItem.id} title={perfItem.title} onClose={()=>setPerfItem(null)}/>}
 
         {toast && <div className="toast" role="status"><span>✓</span> {toast}</div>}
       </main>

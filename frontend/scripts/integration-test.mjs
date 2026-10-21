@@ -72,6 +72,7 @@ try{
   await testDb.query(await readFile("scripts/listing-search-schema.sql","utf8"));
   await testDb.query(await readFile("scripts/reservations-schema.sql","utf8"));
   await testDb.query(await readFile("scripts/saved-searches-schema.sql","utf8"));
+  await testDb.query(await readFile("scripts/promotion-analytics-schema.sql","utf8"));
   await testDb.query("INSERT INTO categories(id,name,slug) VALUES(1,'Học tập','hoc-tap'),(2,'Công nghệ','cong-nghe'),(3,'Nội thất','noi-that'),(4,'Thời trang','thoi-trang'),(5,'Khác','khac') ON CONFLICT(id) DO NOTHING");
   app=launch(process.execPath,["node_modules/next/dist/bin/next","start","-p",String(port),"-H","127.0.0.1"],{cwd:process.cwd(),env});
   await ready(origin+"/api/auth/me",app);
