@@ -13,6 +13,7 @@ type FavoriteItem = {
   productId: string;
   title: string;
   price: number;
+  freeGift: boolean;
   status: string;
   condition: string;
   location: string;
@@ -186,7 +187,7 @@ export default function SavedPage() {
                       <span>{item.status}</span>
                     </div>
                     <Link href={`/listing/${item.productId}`} className="product-title">{item.title}</Link>
-                    <div className="product-price">{formatPrice(item.price)}</div>
+                    <div className="product-price">{item.price === 0 && item.freeGift ? 'Tặng miễn phí' : formatPrice(item.price)}</div>
                     <button type="button" className="figma-button" aria-pressed={item.priceAlertEnabled} disabled={!!alertBusy} onClick={()=>void togglePrice(item)} style={{fontSize:11,margin:'12px 0',width:'100%'}}>{item.priceAlertEnabled?'Tắt báo giảm giá':'Bật báo giảm giá'}</button>
                     <div className="product-location">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

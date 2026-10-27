@@ -9,6 +9,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-pg";
 import { query } from "@/lib/db";
+import { mapFavoriteProduct } from '@/lib/favorite-product';
 
 export const runtime = "nodejs";
 
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
 
   const rows = await query(
     `SELECT f.id, f.product_id, f.created_at, f.price_alert_enabled,
-            p.title, p.price, p.status, p.condition, p.location,
+            p.title, p.price, p.description, p.status, p.condition, p.location,
             u.full_name AS seller_name, u.university AS seller_school,
             (SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id AND pi.is_primary = TRUE LIMIT 1) AS image
      FROM favorites f
@@ -30,21 +31,8 @@ export async function GET(request: NextRequest) {
   );
 
   return NextResponse.json({
-    favorites: rows.map(r => ({
-      id: r.id,
-      productId: r.product_id,
-      title: r.title,
-      price: Number(r.price),
-      status: r.status,
-      condition: r.condition,
-      location: r.location,
-      seller: r.seller_name,
-      school: r.seller_school,
-      image: r.image || "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=300",
-      savedAt: r.created_at,
-      priceAlertEnabled: r.price_alert_enabled,
-    })),
-  });
+    favorites: rows.map(mapFavoriteProduct),
+  }, { headers: { 'Cache-Control': 'private, no-store' } });
 }
 
 export async function POST(request: NextRequest) {
