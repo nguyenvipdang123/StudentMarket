@@ -58,6 +58,11 @@ function AppLayout() {
           options={{ title: "Tài khoản SangTay", presentation: "modal" }}
         />
         <Stack.Screen name="my-listings" options={{ title: "Tin của tôi" }} />
+        <Stack.Screen name="auth/register" options={{ title: "Đăng ký" }} />
+        <Stack.Screen name="auth/verify" options={{ title: "Xác minh OTP" }} />
+        <Stack.Screen name="auth/forgot" options={{ title: "Quên mật khẩu" }} />
+        <Stack.Screen name="auth/google" options={{ title: "Google trường" }} />
+        <Stack.Screen name="auth/google-profile" options={{ title: "Hồ sơ Google" }} />
         <Stack.Screen name="my-listings/[id]/edit" options={{ title: "Sửa tin" }} />
         <Stack.Screen name="my-listings/[id]/sold" options={{ title: "Đánh dấu đã bán", presentation: "modal" }} />
         <Stack.Screen name="contact/[listingId]" options={{ title: "Liên hệ người bán" }} />

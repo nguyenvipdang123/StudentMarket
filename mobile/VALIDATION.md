@@ -1,5 +1,13 @@
 # Kiểm tra bản mobile đầu tiên — 27/10/2026
 
+## Auth native — 29/10/2026
+
+- Đăng ký (ảnh thẻ nén), nhập/gửi lại OTP, quên mật khẩu và hồ sơ Google là native forms. Login/Tài khoản dẫn tới route app. Turnstile dùng trang challenge cùng origin trong WebView, không bỏ kiểm tra server. Không persist mật khẩu/OTP, cookie/Google verifier/pending token chỉ SecureStore; lỗi 401 của OTP/Google không hết phiên đang hợp lệ. Sau nhận session, lỗi kiểm tra identity retry identity thay vì dùng lại mã đã tiêu thụ.
+- Backend thêm config/challenge và start/authorize/claim/complete Google cho mobile; giữ callback HTTPS hiện có, kiểm S256, nonce, JWT signature/audience/issuer và Workspace trường. App nhận flow bằng proof ngẫu nhiên, hạn 10 phút, chỉ dùng một lần; browser bridge không chứa credentials. Hoàn tất hồ sơ web/mobile dùng transaction chống tiêu thụ token đồng thời. Migration auth thêm mobile_google_flows.
+- `npm run mobile:check`: TypeScript/lint sạch, **74 logic/static + 40 Jest đạt**. Thêm 2 pure logic tests và 12 Jest về form/retry, OTP/session, SecureStore isolation/expiry, Google native và Turnstile origin/cancel/retry. Android export đạt; frontend build/typecheck/lint đạt, **46 nhóm integration/PostgreSQL đạt**, trong đó 4 nhóm mới dùng mock OIDC/JWK/JWT RS256 và kiểm PKCE/nonce/domain/replay/concurrency/web regression.
+- Không gửi OTP/email thật, không đăng ký/ngồi đăng nhập Google thật hoặc chỉnh tài khoản production. Chưa xác minh Android/iOS UI, WebView Turnstile và cửa sổ Google thực tế. Probe GET `/api/auth/mobile/config` trên sangtay.shop trả **404**, nên backend mới chưa được deploy. Kết nối Render hiện không có; source push không tự triển khai vì Blueprint tắt auto-deploy. Hướng dẫn deploy trong AUTH.md. Không tạo APK/ZIP/release mới.
+- Computer Use đã khởi tạo lại được, nhưng dừng trước thao tác trình duyệt vì không xác định URL hiện tại đủ chắc chắn để áp dụng chính sách. Không tiếp tục điều khiển UI hoặc triển khai Render bằng phiên đó.
+
 ## Khoảng giá, tình trạng và giá giảm dần — 29/10/2026
 
 - Khám phá có bảng Bộ lọc mở/đóng: giá từ/đến (một đầu có thể trống, chấp nhận 0), các tình trạng hiện có và bốn kiểu sắp xếp. Tất cả kết hợp trường/danh mục/từ khóa; selector tính trong render trên raw catalogue, không lưu kết quả vào state hoặc gọi API theo bộ lọc. Mỗi lần đổi lọc/sort reset số mục hiển thị về 12.

@@ -29,7 +29,7 @@ Cập nhật sau yêu cầu sửa hai lỗi: `npm run mobile:check` đạt TypeS
 | Đã thêm | Sửa/ẩn/hiện/xóa tin và đánh dấu đã bán | Tin của tôi có thao tác chủ tin, hai route edit/sold, xác nhận và retry; ẩn/xóa cần triển khai backend mới |
 | Đã thêm | Lưu nháp tin và ảnh qua lần đóng app | Tự lưu và nút lưu offline theo tài khoản/API; ảnh nén lưu Documents; khôi phục, bỏ nháp có xác nhận, giữ khi gửi lỗi; cần xác minh đóng/mở Expo trên thiết bị thật |
 | Đã thêm | Lọc khoảng giá, tình trạng và giá giảm dần | Khám phá → Bộ lọc; kết hợp trường/danh mục/từ khóa, kiểm tra khoảng giá và xóa bộ lọc, dùng catalogue offline |
-| Vừa | Auth native đầy đủ | Đăng ký/Google/OTP/quên mật khẩu còn mở trình duyệt, phiên web riêng |
+| Đã thêm trong source | Auth native đầy đủ | Đăng ký/OTP/đặt lại mật khẩu và hồ sơ Google dùng form native; Google mở cửa sổ hệ thống rồi bàn giao SecureStore; cần deploy backend mới, xem AUTH.md |
 | Vừa | Gửi ảnh chat, push khi đóng app | App gửi văn bản/xem ảnh; polling khi mở; local price alert không theo dõi khi app đã đóng |
 | Sau | Admin, hỗ trợ, lịch hẹn/xác nhận giao dịch/đánh giá | Chưa có màn hình native tương ứng |
 | Sau | Đơn hàng/thu tiền/gói đẩy tin | Checkout chỉ tổng kết dự kiến và liên hệ; phù hợp yêu cầu checkout summary hiện có, không phải tích hợp thu tiền |
@@ -64,7 +64,7 @@ Kiểm thử native với fixture: login, restoreSession, GET có cookie đều 
 ## Chức năng chưa có trên mobile
 
 - Admin/staff: dashboard, kiểm duyệt, tài khoản, giao dịch, phiếu hỗ trợ.
-- Đăng ký, Google, OTP và quên mật khẩu native: hiện hướng sang trình duyệt.
+- Đăng ký, OTP và quên mật khẩu đã có native form. Google dùng cửa sổ xác thực hệ thống rồi nhận phiên/bổ sung hồ sơ trên app; backend mới đang chờ triển khai, chưa thử Google/OTP/Turnstile thật trên điện thoại.
 - Đã có chat văn bản native, lịch sử và trạng thái đã xem dùng chung website. Chưa gửi ảnh từ app, thông báo đẩy và chatbot/AI góp ý tin.
 - Quản lý tin đã bổ sung sửa/ẩn/hiện/xóa/đánh dấu đã bán và đổi ảnh bìa; đã lưu nháp nội dung/ảnh qua lần đóng app, chưa đổi thứ tự toàn bộ gallery.
 - Đã có giỏ và checkout tổng kết chi phí, kiểm tra availability; chưa có đặt đơn/thu tiền, gói đẩy tin, QR/thanh toán hoặc thống kê hiệu quả đẩy tin native.

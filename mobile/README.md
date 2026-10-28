@@ -16,6 +16,12 @@ Vào **Khám phá → Bộ lọc** để nhập giá từ/đến, chọn tình t
 
 Các điều kiện kết hợp với từ khóa, danh mục và trường; kết quả tính trong render trên catalogue hiện có, không lưu thành derived state hoặc gọi lại API mỗi lần chỉnh lọc. Dùng được offline với catalogue lưu gần nhất. **Xóa bộ lọc** đưa tìm kiếm, trường, danh mục, giá, tình trạng và sắp xếp về mặc định.
 
+## Đăng ký, OTP, Google và quên mật khẩu
+
+Các form đã có trên app: vào Tài khoản hoặc Đăng nhập để chọn. Đăng ký hỗ trợ chọn/nén ảnh thẻ, xác minh/gửi lại OTP; quên mật khẩu nhập OTP và mật khẩu mới ngay trên mobile. Google dùng cửa sổ hệ thống để xác thực, đóng cửa sổ quay về app rồi kiểm tra kết quả/bổ sung hồ sơ native. Cookie và mã bàn giao Google lưu bằng SecureStore, không yêu cầu nhập server secret vào app.
+
+**Cần deploy backend mới trước khi dùng với sangtay.shop**: API `/api/auth/mobile/config` phải trả JSON `version: 1`. Tại thời điểm sửa, API live vẫn 404 và kết nối Render của phiên làm việc chưa có. Xem [AUTH.md](AUTH.md) để triển khai và kiểm tra từng luồng; tests/bundle đã đạt không có nghĩa Google/SMTP/Turnstile thật đã được thử trên điện thoại.
+
 ## Chạy từ máy sạch bằng Expo Go
 
 Yêu cầu Git, **Node.js ≥22.20.0** và npm, cùng Expo Go tương thích SDK 58 trên Android/iOS. Không cần cài database, Python, Android Studio hoặc chạy backend trên máy nếu dùng điện thoại với API mặc định.

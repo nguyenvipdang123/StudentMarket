@@ -17,7 +17,7 @@ export async function compressPhoto(asset: ImagePickerAsset): Promise<Compressed
     } finally { image.release(); }
   } finally { context.release(); }
 }
-export async function appendPhotos(form: FormData, photos: CompressedPhoto[], field: "imageFiles" | "imageFile" = "imageFiles") {
+export async function appendPhotos(form: FormData, photos: CompressedPhoto[], field: "imageFiles" | "imageFile" | "studentCard" = "imageFiles") {
   for (const photo of photos) {
     if (Platform.OS === "web") form.append(field, await (await fetch(photo.uri)).blob(), photo.fileName);
     else form.append(field, { uri: photo.uri, name: photo.fileName, type: photo.mimeType } as unknown as Blob);

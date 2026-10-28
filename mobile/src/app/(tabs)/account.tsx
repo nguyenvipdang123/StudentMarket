@@ -97,6 +97,10 @@ export default function Account() {
               bạn.
             </Text>
             <Button title="Đăng nhập" onPress={() => router.push("/login")} />
+            <Button title="Đăng ký tài khoản" soft onPress={() => router.push("/auth/register")} />
+            <Button title="Xác minh email / OTP" soft onPress={() => router.push("/auth/verify")} />
+            <Button title="Tiếp tục với Google trường" soft onPress={() => router.push("/auth/google")} />
+            <Button title="Quên mật khẩu" soft onPress={() => router.push("/auth/forgot")} />
           </View>
         )}
         <View style={ui.panel}>

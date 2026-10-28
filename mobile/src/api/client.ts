@@ -60,8 +60,9 @@ async function transport<T>(path: string, options: RequestInit, timeout: number)
   const headers = new Headers(options.headers);
   const session = sessions.snapshot();
   const endpoint = path.split("?")[0];
-  const canExpireSession =
-    endpoint !== "/api/auth/login" && endpoint !== "/api/auth/logout";
+  const publicAuth = ["/api/auth/login", "/api/auth/logout", "/api/auth/register", "/api/auth/verify", "/api/auth/resend-verification", "/api/auth/forgot-password", "/api/auth/reset-password",
+    "/api/auth/mobile/config", "/api/auth/mobile/google/start", "/api/auth/mobile/google/claim", "/api/auth/mobile/google/complete"];
+  const canExpireSession = !publicAuth.includes(endpoint);
   headers.set("Accept", "application/json");
   if (session.cookie) headers.set("Cookie", session.cookie);
   const controller = new AbortController(),
@@ -112,7 +113,8 @@ async function transport<T>(path: string, options: RequestInit, timeout: number)
       await sessions.expire(session);
       throw new ApiError(expiredSessionMessage, 401);
     }
-    if (path === "/api/auth/login") {
+    if (endpoint === "/api/auth/login" || data.user && ["/api/auth/verify", "/api/auth/mobile/google/claim", "/api/auth/mobile/google/complete"].includes(endpoint)) {
+      if (!sessions.matches(session)) throw new ApiError("Phiên đăng nhập đã thay đổi. Vui lòng thử lại.", 409);
       const next = sessionCookie(response.headers.get("set-cookie"));
       if (!next)
         throw new ApiError(
@@ -147,12 +149,15 @@ export async function login(email: string, password: string) {
     password,
   });
   // Verify the saved native cookie works before showing a signed-in interface.
+  return { ...result.user, ...await authenticatedUser() };
+}
+export async function authenticatedUser() {
   const identity = await request<{ user: User | null }>("/api/auth/me");
   if (!identity.user) {
     await clearSession();
     throw new ApiError("Không thể xác nhận phiên đăng nhập.", 401);
   }
-  return { ...result.user, ...identity.user };
+  return identity.user;
 }
 export const message = (error: unknown) =>
   error instanceof Error ? error.message : "Có lỗi xảy ra. Bạn thử lại nhé.";

@@ -75,6 +75,12 @@ Mỗi thành viên ghi hoạt động AI thực tế của mình, kèm phần đ
 - Kết quả tính trong render trên catalogue hiện có, dùng được offline; không lưu derived state hoặc thay API backend. Giữ món tặng/trao đổi ở giá 0, báo khoảng ngược và hỗ trợ thoát empty state.
 - TypeScript/lint sạch, 72 logic/static + 28 Jest đạt; Android export đạt. 6 tests mới dùng dữ liệu giả, chưa xác minh UI/bàn phím trên thiết bị thật. Không tạo APK hay chỉnh bộ submission đã xóa.
 
+### 29/10/2026 — Đăng ký, OTP, Google và quên mật khẩu native
+
+- Người dùng yêu cầu các luồng Tài khoản không còn mở form website. AI thêm native routes/forms, chọn/nén thẻ sinh viên, nhập/gửi lại OTP/cooldown, đặt lại mật khẩu và Google onboarding; giữ xác minh server/Turnstile/giới hạn gửi và duyệt ảnh thẻ.
+- Google dùng cửa sổ hệ thống rồi nhận kết quả bằng verifier lưu SecureStore và handoff ngắn hạn một lần; giữ callback HTTPS hiện tại, không đưa session/token vào URL. Backend thêm migration bảng flow/config/challenge/Google native và transaction onboarding dùng chung web. SessionProvider nhận cookie OTP/Google qua SecureStore và kiểm identity; retry identity không tiêu thụ lại mã đã dùng.
+- Kiểm chứng dùng mock API/SMTP/OIDC + PostgreSQL local riêng: 74 logic/static + 40 Jest đạt; frontend build/typecheck/lint, 46 nhóm integration và Android export đạt. Chưa xác minh Google/SMTP/Turnstile thật trên điện thoại. API live mới probe 404, cần deploy Render theo AUTH.md; không có kết nối Render trong phiên. Không tạo APK hoặc chỉnh bộ submission đã nộp.
+
 ## Mẫu cho lần dùng AI tiếp theo
 
 | Ngày thực tế | Thành viên/công cụ | Prompt hoặc mục tiêu | Tệp/chức năng nhận từ AI | Giữ/bỏ/sửa gì | Tự kiểm chứng ra sao | Issue/PR/commit |

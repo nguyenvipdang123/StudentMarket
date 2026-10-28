@@ -5,10 +5,9 @@ import {
   ScrollView,
   Text,
   View,
-  Linking,
 } from "react-native";
 import { router } from "expo-router";
-import { API_URL, message, expiredSessionMessage } from "../api/client";
+import { message, expiredSessionMessage } from "../api/client";
 import { useSession } from "../providers/Session";
 import { Button, Field, Notice } from "../components/UI";
 import { useTheme } from "../theme";
@@ -38,14 +37,6 @@ export default function Login() {
       setBusy(false);
     }
   }
-  async function openWebsite(mode: "register" | "forgot") {
-    setError("");
-    try {
-      await Linking.openURL(`${API_URL}/explore?auth=${mode}`);
-    } catch {
-      setError("Không mở được trình duyệt. Bạn thử lại nhé.");
-    }
-  }
   return (
     <KeyboardAvoidingView
       style={ui.screen}
@@ -59,8 +50,7 @@ export default function Login() {
         <Text style={ui.title}>Chào mừng trở lại.</Text>
         <SessionNotice />
         <Text style={ui.body}>
-          Dùng tài khoản đã đăng ký trên website để lưu món đồ và đăng tin ngay
-          trên điện thoại.
+          Đăng nhập, tạo tài khoản hoặc xác minh email ngay trên điện thoại.
         </Text>
         <View style={ui.panel}>
           {expired && <Notice text={expiredSessionMessage} />}
@@ -97,25 +87,25 @@ export default function Login() {
             onPress={() => void submit()}
           />
           <Button
-            title="Quên mật khẩu trên website ↗"
+            title="Quên mật khẩu"
             soft
             disabled={busy}
-            onPress={() => void openWebsite("forgot")}
+            onPress={() => router.push("/auth/forgot")}
           />
         </View>
         <Text style={[ui.small, { color: colors.green }]}>
           Phiên đăng nhập được lưu an toàn trên thiết bị. Không lưu mật khẩu.
         </Text>
         <Button
-          title="Đăng ký tài khoản trên website ↗"
+          title="Đăng ký tài khoản"
           soft
           disabled={busy}
-          onPress={() => void openWebsite("register")}
+          onPress={() => router.push("/auth/register")}
         />
+        <Button title="Xác minh email / Gửi lại OTP" soft disabled={busy} onPress={() => router.push("/auth/verify")} />
+        <Button title="Tiếp tục với Google trường" soft disabled={busy} onPress={() => router.push("/auth/google")} />
         <Text style={ui.small}>
-          Đăng ký, khôi phục mật khẩu, xác minh email và Google hiện tiếp tục
-          trên trình duyệt. Sau khi xác minh, quay lại app để đăng nhập bằng
-          email và mật khẩu.
+          OTP và mật khẩu chỉ dùng cho yêu cầu hiện tại. Google xác thực qua cửa sổ bảo mật rồi tiếp tục trong app.
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>

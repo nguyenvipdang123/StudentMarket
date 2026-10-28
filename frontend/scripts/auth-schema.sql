@@ -254,3 +254,17 @@ CREATE TRIGGER email_verifications_identity_check BEFORE INSERT OR UPDATE OF acc
 DROP TRIGGER IF EXISTS account_email_codes_identity_check ON account_email_codes;
 CREATE TRIGGER account_email_codes_identity_check BEFORE INSERT OR UPDATE OF account_id ON account_email_codes
   FOR EACH ROW EXECUTE FUNCTION check_auth_reference();
+
+-- Short-lived browser-to-native OAuth handoff. The app holds the PKCE verifier;
+-- browser URLs contain no session cookie or Google/onboarding bearer token.
+CREATE TABLE IF NOT EXISTS mobile_google_flows (
+  id_hash TEXT PRIMARY KEY,
+  client_challenge TEXT NOT NULL,
+  oauth_state TEXT NOT NULL,
+  oauth_nonce TEXT NOT NULL,
+  oauth_verifier TEXT NOT NULL,
+  expires_at BIGINT NOT NULL,
+  outcome JSONB,
+  claimed_at BIGINT
+);
+CREATE INDEX IF NOT EXISTS mobile_google_flows_expiry ON mobile_google_flows(expires_at);

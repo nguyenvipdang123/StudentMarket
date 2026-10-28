@@ -12,6 +12,8 @@ import { testCatalogSearch } from "./helpers/test-catalog-search.mjs";
 import { startMockAssistant } from "./helpers/mock-assistant.mjs";
 import { testAssistantProducts } from "./helpers/test-assistant-products.mjs";
 import { testOwnedListings } from "./helpers/test-owned-listings.mjs";
+import { startMockGoogle } from "./helpers/mock-google.mjs";
+import { testMobileAuth } from "./helpers/test-mobile-auth.mjs";
 process.loadEnvFile(".env.local");
 const root=resolve("..");
 await mkdir(join(root,".backups"),{recursive:true});
@@ -28,6 +30,7 @@ const port=await freePort(), chatPort=await freePort();
 const origin="http://127.0.0.1:"+port;
 const mails=[];
 const assistantMock = await startMockAssistant();
+const googleMock = await startMockGoogle();
 let failNextMail=false;
 const mailServer=createMailServer(async(request,response)=>{
   let raw="";for await(const part of request)raw+=part;
@@ -41,6 +44,8 @@ const storageMock=process.env.TEST_MEDIA_STORAGE === "supabase" ? await startMoc
 await writeFile(mailPreload,`import mailer from ${JSON.stringify(pathToFileURL(resolve("node_modules/nodemailer/dist/esm/nodemailer.js")).href)};mailer.createTransport=()=>({sendMail:async message=>{const response=await fetch(${JSON.stringify("http://127.0.0.1:"+mailServer.address().port)},{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(message)});if(!response.ok)throw Error('test delivery failed');return {accepted:[message.to]};}});`);
 if(storageMock) await writeFile(mailPreload,`const actualFetch=globalThis.fetch;globalThis.fetch=(input,init)=>String(input).startsWith('https://storage-tests.invalid/')?actualFetch(String(input).replace('https://storage-tests.invalid',${JSON.stringify(storageMock.origin)}),init):actualFetch(input,init);`,{flag:"a"});
 const env={...process.env,PG_DATABASE:database,PRODUCT_IMAGE_DIR:join(runDir,"product-images"),CHAT_ATTACHMENT_DIR:join(runDir,"chat-attachments"),APP_ORIGIN:origin,SMTP_HOST:"test.invalid",SMTP_FROM:"SangTay <test@example.invalid>",SMTP_USER:"test",SMTP_PASSWORD:"test-only",CHAT_TICKET_SECRET:randomBytes(32).toString("hex"),NODE_OPTIONS:"--import "+pathToFileURL(mailPreload).href};
+await writeFile(mailPreload, `const oidcFetch=globalThis.fetch;globalThis.fetch=(input,init)=>{const u=String(input);return u==='https://oauth2.googleapis.com/token'?oidcFetch(${JSON.stringify(googleMock.origin + '/token')},init):u==='https://www.googleapis.com/oauth2/v3/certs'?oidcFetch(${JSON.stringify(googleMock.origin + '/certs')},init):oidcFetch(input,init);};`, {flag:"a"});
+Object.assign(env, { GOOGLE_CLIENT_ID: 'mobile-test-client', GOOGLE_CLIENT_SECRET: 'mobile-test-secret', GOOGLE_REDIRECT_URI: origin + '/api/auth/google/callback', TURNSTILE_SECRET_KEY: '', NEXT_PUBLIC_TURNSTILE_SITE_KEY: '' });
 Object.assign(env,{MEDIA_STORAGE_PROVIDER:storageMock?"supabase":"local",STUDENT_CARD_DIR:join(runDir,"student-cards"),SUPABASE_URL:storageMock?"https://storage-tests.invalid":"",SUPABASE_SECRET_KEY:storageMock?.secret||"",SUPABASE_SERVICE_ROLE_KEY:"",SUPABASE_PRODUCT_BUCKET:"studentmarket-products",SUPABASE_CARD_BUCKET:"studentmarket-cards",SUPABASE_CHAT_BUCKET:"studentmarket-chat"});
 env.MEDIA_STORAGE_READ_LOCAL_FALLBACK="false";
 function mailCode(email){const message=mails.findLast(m=>m.to===email);assert.ok(message,"Expected email delivery");const match=message.text.match(/\b\d{6}\b/);assert.ok(match);return match[0];}
@@ -78,6 +83,7 @@ try{
   await testDb.query("INSERT INTO categories(id,name,slug) VALUES(1,'Học tập','hoc-tap'),(2,'Công nghệ','cong-nghe'),(3,'Nội thất','noi-that'),(4,'Thời trang','thoi-trang'),(5,'Khác','khac') ON CONFLICT(id) DO NOTHING");
   app=launch(process.execPath,["node_modules/next/dist/bin/next","start","-p",String(port),"-H","127.0.0.1"],{cwd:process.cwd(),env});
   await ready(origin+"/api/auth/me",app);
+  await testMobileAuth({ db: testDb, req, origin, google: googleMock, check });
   assert.equal((await req("/api/auth/register",{method:"POST",body:registration("nocard@example.com","NOCARD",false)})).status,400);
   assert.equal((await req("/api/auth/register",{method:"POST",body:registration("student@school.edu.vn","NOSMTP",false)})).status,503);
   assert.equal((await testDb.query("SELECT COUNT(*)::int AS n FROM auth_identities WHERE email='student@school.edu.vn'")).rows[0].n,0);
@@ -406,6 +412,7 @@ try{
 }finally{
   mailServer.close();
   await assistantMock.close();
+  await googleMock.close();
   await stop(chat);await stop(app);await testDb?.end();
   storageMock?.server.close();
   if(created){assert.match(database,/^student_market_test_[a-f0-9]{12}$/);await admin.query('DROP DATABASE "'+database+'" WITH (FORCE)');}

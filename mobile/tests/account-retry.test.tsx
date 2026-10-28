@@ -7,7 +7,7 @@ import type { User } from "../src/api/types";
 jest.mock("../src/providers/Session", () => ({ useSession: jest.fn() }));
 const actor: User = { id: 1, pgUserId: "buyer", role: "student", status: "Active", fullName: "Sinh viên thử", email: "demo@example.invalid", university: "DNTU" };
 function session(user: User | null = null) {
-  const value = { user, ready: true, error: "", expired: false, expiryId: 0, refresh: jest.fn(async () => {}), signIn: jest.fn(async () => {}), signOut: jest.fn(async () => {}) };
+  const value = { user, ready: true, error: "", expired: false, expiryId: 0, refresh: jest.fn(async () => {}), completeSignIn: jest.fn(async () => {}), signIn: jest.fn(async () => {}), signOut: jest.fn(async () => {}) };
   jest.mocked(useSession).mockReturnValue(value);
   return value;
 }

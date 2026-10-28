@@ -14,9 +14,12 @@ import {
   onSessionExpired,
   ApiError,
   message,
+  authenticatedUser,
+  API_URL,
 } from "../api/client";
 import type { User } from "../api/types";
 import { completeSignOut } from "../api/logout";
+import { removeGoogleSecret } from "../api/auth-secrets";
 type Session = {
   user: User | null;
   ready: boolean;
@@ -26,6 +29,7 @@ type Session = {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
+  completeSignIn: () => Promise<void>;
 };
 const Context = createContext<Session | null>(null);
 export function SessionProvider({ children }: { children: ReactNode }) {
@@ -78,6 +82,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         expiryId,
         error,
         refresh,
+        completeSignIn: async () => {
+          setUser(await authenticatedUser()); setExpired(false); setError("");
+        },
         signIn: async (email, password) => {
           setUser(await apiLogin(email, password));
           setExpired(false);
@@ -87,7 +94,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           await completeSignOut(async () => {
             try { await post("/api/auth/logout", {}); }
             catch (error) { if (!(error instanceof ApiError && error.status === 401)) throw error; }
-          }, clearSession, () => { setUser(null); setExpired(false); });
+          }, async () => {
+            try { await clearSession(); }
+            finally { await Promise.all([removeGoogleSecret(API_URL, "flow"), removeGoogleSecret(API_URL, "profile")]); }
+          }, () => { setUser(null); setExpired(false); });
         },
       }}
     >

@@ -11,7 +11,7 @@ Phạm vi là module `mobile/` (ứng dụng Expo); website Next.js/backend có 
 | Role/label, ≥44×44, contrast ≥4,5:1 | Controls dùng role+label, TextInput giữ vai trò nhập liệu native và label (search có searchbox); buttons/chips/icon nhỏ có target tối thiểu. Kiểm thử các cặp chữ/nền của cả hai palette. Cần TalkBack/VoiceOver trên thiết bị để bổ sung kiểm chứng thực. |
 | Shared store + selectors | `state/account.ts`, `catalogue.ts`, `price-alerts.ts`; selector `selectSaved`, `selectFavorites`, `selectCartCount`, `selectCheckout` trong `state/selectors.ts`; UI đọc qua context/useSyncExternalStore. |
 | Server data library | TanStack Query: mọi GET qua `queryClient.fetchQuery`, dedupe theo API origin + revision phiên + path; chi tiết dùng `useQuery`. Mutations làm stale cache, không tự retry POST. Snapshot offline là bản public/non-secret riêng; cache server không ghi cookie ra disk. |
-| Secrets chỉ SecureStore | Cookie native dùng Expo SecureStore, password chỉ ở form RAM rồi xóa sau login. AsyncStorage chỉ giữ catalogue, yêu thích/giỏ, cài đặt không bí mật. Web preview không thay SecureStore bằng localStorage và không hỗ trợ lưu phiên native. Không đóng server secrets vào `EXPO_PUBLIC_*`. |
+| Secrets chỉ SecureStore | Cookie và Google verifier/pending token native dùng Expo SecureStore theo API origin. Password/OTP chỉ ở form RAM, không log/persist/URL. AsyncStorage giữ catalogue, yêu thích/giỏ, cài đặt và nháp tin không bí mật. Web preview không thay SecureStore bằng localStorage. Không đóng server secrets vào `EXPO_PUBLIC_*`. |
 | Strict/typecheck/lint | `npm run typecheck` (`tsc --noEmit`), `npm run lint` (`expo lint`), lệnh tổng từ root `npm run mobile:check`. |
 | Logic/component/critical path tests | `scripts/*.test.mjs` gồm logic/contrast; `tests/components.test.tsx` kiểm UI states/disabled; `tests/auth-critical.test.tsx` dùng SessionProvider/client thật + API giả để kiểm sai mật khẩu→retry→SecureStore→remount→logout; query cache có test riêng. |
 | Commits mỗi thành viên xuyên hai tuần | **Chưa được chứng minh.** Lịch sử gần đây tập trung một tác giả; không tạo giả. Xem `TEAM.md` và lịch sử Git thật. |
@@ -27,6 +27,7 @@ Phạm vi là module `mobile/` (ứng dụng Expo); website Next.js/backend có 
 | Contact | Tạo/lấy phòng | Chưa đăng nhập/id không hợp lệ | Tạo lại phòng bằng nút Thử lại | Chuyển vào Chat khi API thành công |
 | Giỏ/Checkout | Khôi phục store/kiểm tra API | Giỏ trống/chưa login | Kiểm tra lại, xóa món lỗi; giữ giỏ | Dòng món + tổng chi phí |
 | Login/Đăng tin/Tài khoản | Session, gửi form, nén ảnh, logout | Chưa login/form trống/ảnh chưa chọn | Retry thao tác với dữ liệu form còn nguyên | Form/profile |
+| Đăng ký/OTP/Quên mật khẩu/Google | Gửi form/chọn ảnh/xác minh/nhận phiên; tải profile SecureStore | Form trống/chưa bắt đầu/Google chưa trả kết quả | Retry đúng thao tác; không dùng lại OTP/handoff đã nhận khi chỉ lỗi kiểm tra identity | Form native, mã, kết quả chờ duyệt/thành công; xem AUTH.md |
 | Not-found | Không tải dữ liệu | Đường dẫn không tồn tại | Hành động về Khám phá; Router boundary xử lý crash | Trang điều hướng an toàn |
 
 Màn hình tĩnh/form không bịa bốn request trạng thái để làm demo. Với không tìm thấy đường dẫn, thông báo không có màn hình là nội dung đúng; loading/content API chỉ áp dụng màn hình có dữ liệu bất đồng bộ.
