@@ -2,6 +2,14 @@
 
 Hiện đang hoàn thiện **bằng Expo**, chưa tạo APK mới cho các yêu cầu môn học. Xem [đối chiếu MUST HAVE và kịch bản demo](RUBRIC.md).
 
+## Lưu nháp tin đăng và ảnh
+
+Trong tab Đăng tin, nội dung tự lưu trên thiết bị khi bạn nhập. Ảnh chọn/chụp được nén rồi sao chép vào thư mục Documents của app, không giữ đường dẫn cache tạm. Có nút **Lưu bản nháp**, thời gian lưu và **Bỏ bản nháp** có xác nhận. Nháp lưu được cả khi offline hoặc thông tin chưa đủ để đăng.
+
+Chờ hết trạng thái xử lý ảnh và hiện **Đã lưu nháp lúc…**, rồi có thể đóng/mở lại Expo và vào Đăng tin để tiếp tục. Mỗi tài khoản/API có một nháp riêng; đăng xuất không xóa nháp, tài khoản khác không thấy nháp đó. Gửi tin lỗi giữ nguyên nháp; server xác nhận gửi thành công mới xóa nháp cùng ảnh sao chép. Lỗi dung lượng/ảnh thiếu được báo để lưu lại hoặc chọn lại ảnh; bản nháp lỗi đọc không bị tự ghi đè bằng form trống.
+
+Nháp chỉ có trên thiết bị này; gỡ app hoặc xóa dữ liệu app sẽ mất nháp. Đây chưa phải đồng bộ nháp lên server. Tài khoản/phiên vẫn dùng SecureStore, không đưa cookie vào nháp.
+
 ## Chạy từ máy sạch bằng Expo Go
 
 Yêu cầu Git, **Node.js ≥22.20.0** và npm, cùng Expo Go tương thích SDK 58 trên Android/iOS. Không cần cài database, Python, Android Studio hoặc chạy backend trên máy nếu dùng điện thoại với API mặc định.

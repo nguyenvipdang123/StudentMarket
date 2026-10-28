@@ -1,5 +1,13 @@
 # Kiểm tra bản mobile đầu tiên — 27/10/2026
 
+## Lưu nháp và ảnh qua lần đóng app — 29/10/2026
+
+- Một nháp cho mỗi tài khoản/API, tự lưu ngay khi sửa nội dung, flush khi rời màn hình/app ra nền; có Lưu bản nháp và Bỏ bản nháp xác nhận. Form chờ khôi phục trước khi cho sửa, không ghi trắng lên dữ liệu chưa đọc được. Có retry đọc và bỏ nháp lỗi theo xác nhận.
+- Ảnh nén được sao chép vào Documents qua expo-file-system SDK 58; metadata trong AsyncStorage. Khôi phục kiểm tra file, báo ảnh thiếu nhưng giữ nội dung. Chỉ dọn bản sao đúng scope sau khi metadata được ghi thành công; lỗi lưu/copy giữ dữ liệu cũ để thử lại. Không ghi cookie/secret vào nháp.
+- POST lỗi giữ nháp; POST thành công mới clear. Nếu clear local lỗi sau khi server đã nhận tin, chỉ retry dọn nháp, không gửi lại POST. Tài khoản đổi trong khi picker đang mở không nhận ảnh từ phiên cũ.
+- `npm run mobile:check`: TypeScript/lint sạch, **69/69 logic/static + 25/25 Jest đạt**. Bổ sung 9 logic tests, 6 component/critical-path tests và 2 adapter native tests với filesystem giả: restart/scope/offline, hydrate chậm, cache lỗi/retry, ảnh thiếu, write/copy lỗi, queue/clear, gửi lỗi/thành công/cleanup lỗi, picker trả trễ và background flush. `npx expo export --platform android` đạt.
+- Chưa xác minh force-stop/mở lại Expo, camera và file thật trên emulator/điện thoại trong lượt này. Test restart tạo store mới với dữ liệu disk/files giả được giữ lại; không coi đó là thử nghiệm thiết bị thật. Không tạo APK hoặc tin đăng production. Nháp thiết bị mất khi gỡ app/xóa dữ liệu; không có đồng bộ server.
+
 ## Quản lý tin của chủ tin — 28/10/2026
 
 - Tin của tôi có lọc trạng thái, sửa, ẩn/hiện lại, xóa, mark sold; route edit và modal sold xác minh owner trước khi hiện form. Edit giữ dữ liệu khi lỗi, thay ảnh bìa nén và giữ ảnh phụ. Mark sold phân biệt qua SangTay/chờ buyer xác nhận và bán ngoài hệ thống.

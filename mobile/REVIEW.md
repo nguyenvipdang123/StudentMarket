@@ -27,7 +27,7 @@ Cập nhật sau yêu cầu sửa hai lỗi: `npm run mobile:check` đạt TypeS
 | Ưu tiên | Phần còn thiếu | Hiện tại |
 | --- | --- | --- |
 | Đã thêm | Sửa/ẩn/hiện/xóa tin và đánh dấu đã bán | Tin của tôi có thao tác chủ tin, hai route edit/sold, xác nhận và retry; ẩn/xóa cần triển khai backend mới |
-| Cao | Lưu nháp tin và ảnh qua lần đóng app | Form/draft/photos trong useState; chỉ giữ khi màn hình còn sống |
+| Đã thêm | Lưu nháp tin và ảnh qua lần đóng app | Tự lưu và nút lưu offline theo tài khoản/API; ảnh nén lưu Documents; khôi phục, bỏ nháp có xác nhận, giữ khi gửi lỗi; cần xác minh đóng/mở Expo trên thiết bị thật |
 | Vừa | Lọc khoảng giá, tình trạng và giá giảm dần | Có từ khóa, trường, danh mục, nổi bật/giá tăng/mới nhất |
 | Vừa | Auth native đầy đủ | Đăng ký/Google/OTP/quên mật khẩu còn mở trình duyệt, phiên web riêng |
 | Vừa | Gửi ảnh chat, push khi đóng app | App gửi văn bản/xem ảnh; polling khi mở; local price alert không theo dõi khi app đã đóng |

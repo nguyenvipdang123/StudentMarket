@@ -63,6 +63,12 @@ Mỗi thành viên ghi hoạt động AI thực tế của mình, kèm phần đ
 - Giữ API sửa/mark-sold hiện có; sửa/hiện lại phải duyệt, xóa bảo toàn lịch sử. Bổ sung tests payload, lifecycle cache, component CRUD/retry/offline và API tích hợp trên database riêng.
 - Kiểm chứng: TypeScript/lint mobile + 60 logic/static + 17 Jest đạt; frontend typecheck/lint/build và 42 nhóm tích hợp đạt; Android export đạt, không APK. Không mutation dữ liệu production. Triển khai API mới đang chờ kết nối Render; UI emulator chưa xác minh vì công cụ cửa sổ không khởi tạo được.
 
+### 29/10/2026 — Lưu nháp tin và ảnh trên mobile
+
+- Người dùng yêu cầu giữ nháp và ảnh sau khi đóng app. AI thêm store lưu theo API/tài khoản, tự lưu và nút lưu/bỏ nháp, trạng thái khôi phục/lỗi/retry, sao chép ảnh nén vào Documents và dọn sau khi manifest được ghi thành công.
+- Gửi tin lỗi giữ dữ liệu. Khi server nhận tin thành công mới clear; nếu dọn local lỗi, chỉ thử dọn lại để tránh POST trùng trong phiên hiện tại. Ảnh thiếu giữ text và báo chọn lại; picker trả muộn khi đổi tài khoản không gắn ảnh cũ.
+- `npm run mobile:check`: TypeScript/lint sạch, 69 logic/static + 25 Jest đạt. Android export đạt. Tests dùng disk/files/API giả; chưa kiểm tra force-stop/mở lại trên thiết bị thật. Không tạo APK, tin production hoặc phục hồi bộ submission đã xóa.
+
 ## Mẫu cho lần dùng AI tiếp theo
 
 | Ngày thực tế | Thành viên/công cụ | Prompt hoặc mục tiêu | Tệp/chức năng nhận từ AI | Giữ/bỏ/sửa gì | Tự kiểm chứng ra sao | Issue/PR/commit |

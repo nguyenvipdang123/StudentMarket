@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -23,36 +23,41 @@ import { useCatalogue } from "../../providers/Market";
 import { OfflineBanner } from "../../components/OfflineBanner";
 import { Button, Chips, Empty, Field, Notice } from "../../components/UI";
 import { useTheme } from "../../theme";
-const initial = {
-  title: "",
-  description: "",
-  price: "",
-  location: "Khuôn viên trường",
-  kind: "Sell",
-  category: "Học tập",
-  condition: "Như mới",
-};
+import { ScreenState } from "../../components/ScreenState";
+import { useListingDraft } from "../../hooks/useListingDraft";
+import type { ListingDraft } from "../../state/listing-draft";
+import type { User } from "../../api/types";
 export default function Post() {
-  const { user } = useSession();
-  // Switching accounts discards the previous account's unsent listing and photos.
-  return <PostForm key={user?.pgUserId || user?.id || "guest"} />;
+  const { user, ready } = useSession();
+  const { ui } = useTheme();
+  if (!ready) return <SafeAreaView style={ui.screen}><ScreenState loading onRetry={() => {}} /></SafeAreaView>;
+  if (!user || user.role !== "student") return <SafeAreaView style={ui.screen} edges={["top"]}><View style={ui.content}>
+    <Text style={ui.title}>Sang tay món đồ</Text>
+    {user ? <Empty title="Đăng tin dành cho sinh viên" detail="Hãy dùng tài khoản sinh viên để đăng món đồ." /> :
+      <Empty title="Đăng nhập để đăng tin" detail="Dùng tài khoản sinh viên đã xác minh của bạn." action="Đăng nhập" onPress={() => router.push("/login")} />}
+  </View></SafeAreaView>;
+  return <PostForm key={user.pgUserId || user.id} user={user} />;
 }
-function PostForm() {
+function PostForm({ user }: { user: User }) {
   const { colors, ui } = useTheme();
-  const { user } = useSession();
   const { offline } = useCatalogue();
-  const [draft, setDraft] = useState(initial),
-    [photos, setPhotos] = useState<CompressedPhoto[]>([]),
-    [busy, setBusy] = useState(false),
+  const { state, store } = useListingDraft(user.pgUserId || String(user.id));
+  const { draft, photos } = state;
+  const [busy, setBusy] = useState(false),
     [processing, setProcessing] = useState(false),
+    [submitted, setSubmitted] = useState(false),
     [error, setError] = useState("");
   const pending = useRef(false), picking = useRef(false);
-  const change = (key: keyof typeof initial, value: string) => {
-    setDraft((d) => ({ ...d, [key]: value }));
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const locked = busy || state.clearing || submitted;
+  const change = (key: keyof ListingDraft, value: string) => {
+    if (locked) return;
+    store.change(key, value);
     setError("");
   };
   async function pick(camera = false) {
-    if (picking.current || photos.length >= 8) return;
+    if (picking.current || locked || photos.length >= 8) return;
     picking.current = true; setProcessing(true); setError("");
     try {
       if (camera) {
@@ -65,19 +70,32 @@ function PostForm() {
         selectionLimit: 8 - photos.length,
         quality: 1,
       });
-      if (result.canceled) return;
+      if (result.canceled || !mounted.current) return;
       const compressed: CompressedPhoto[] = [];
       // Sequential processing keeps memory bounded on older phones.
       for (const asset of result.assets.slice(0, 8 - photos.length)) compressed.push(await compressPhoto(asset));
-      setPhotos((old) => [...old, ...compressed].slice(0, 8));
-      setError("");
+      if (!mounted.current) return;
+      await store.addPhotos(compressed);
+      if (mounted.current) setError("");
     } catch (e) {
-      setError(message(e));
-    } finally { picking.current = false; setProcessing(false); }
+      if (mounted.current) setError(message(e));
+    } finally { picking.current = false; if (mounted.current) setProcessing(false); }
+  }
+  async function removePhoto(uri: string) {
+    if (locked || picking.current) return;
+    picking.current = true; setProcessing(true);
+    try { await store.removePhoto(uri); }
+    finally { picking.current = false; if (mounted.current) setProcessing(false); }
+  }
+  function discard() {
+    Alert.alert("Bỏ bản nháp?", "Nội dung và các ảnh nháp của tài khoản này sẽ được xóa khỏi thiết bị.", [
+      { text: "Giữ lại", style: "cancel" },
+      { text: "Bỏ bản nháp", style: "destructive", onPress: () => { void store.clear(); } },
+    ]);
   }
   async function submit() {
-    if (pending.current || picking.current) return;
-    const invalid = offline ? "Bạn đang offline. Giữ nội dung và ảnh trên màn hình; kết nối mạng để gửi tin." : validateDraft(draft) || validatePhotos(photos);
+    if (pending.current || picking.current || locked) return;
+    const invalid = offline ? "Bạn đang offline. Có thể lưu bản nháp trên máy và gửi khi có mạng." : validateDraft(draft) || validatePhotos(photos);
     if (invalid) {
       setError(invalid);
       return;
@@ -99,8 +117,10 @@ function PostForm() {
       form.append("location", draft.location.trim());
       await appendPhotos(form, photos);
       await request("/api/products", { method: "POST", body: form }, 60000);
-      setDraft(initial);
-      setPhotos([]);
+      // Once the server accepts the listing, never offer to resend it if local cleanup fails.
+      if (mounted.current) setSubmitted(true);
+      await store.clear();
+      if (!mounted.current) return;
       Alert.alert(
         "Đã gửi tin đăng",
         "Tin đang chờ kiểm duyệt. Bạn có thể theo dõi trong Tin của tôi.",
@@ -112,37 +132,27 @@ function PostForm() {
         ],
       );
     } catch (e) {
-      setError(message(e));
+      if (mounted.current) setError(message(e));
     } finally {
       pending.current = false;
-      setBusy(false);
+      if (mounted.current) setBusy(false);
     }
   }
-  if (!user)
-    return (
-      <SafeAreaView style={ui.screen} edges={["top"]}>
-        <View style={ui.content}>
-          <Text style={ui.title}>Sang tay món đồ</Text>
-          <Empty
-            title="Đăng nhập để đăng tin"
-            detail="Dùng tài khoản sinh viên đã xác minh của bạn."
-            action="Đăng nhập"
-            onPress={() => router.push("/login")}
-          />
-        </View>
-      </SafeAreaView>
-    );
-  if (user.role !== "student")
-    return (
-      <SafeAreaView style={ui.screen} edges={["top"]}>
-        <View style={ui.content}>
-          <Empty
-            title="Đăng tin dành cho sinh viên"
-            detail="Hãy dùng tài khoản sinh viên để đăng món đồ."
-          />
-        </View>
-      </SafeAreaView>
-    );
+  if (!state.ready) return <SafeAreaView style={ui.screen} edges={["top"]}>
+    <ScreenState loading={!state.loadError} error={state.loadError} onRetry={() => void store.retryLoad()} />
+    {!!state.loadError && <View style={ui.content}>
+      <Notice text={state.error} />
+      <Button title="Bỏ bản nháp lỗi" soft disabled={state.clearing} onPress={discard} />
+    </View>}
+  </SafeAreaView>;
+  if (submitted) return <SafeAreaView style={ui.screen} edges={["top"]}><View style={ui.content}>
+    <Text style={ui.title}>Đã gửi tin đăng</Text>
+    <Text style={ui.body}>Tin đang chờ kiểm duyệt. Bạn có thể theo dõi trong Tin của tôi.</Text>
+    <Notice text={state.error} />
+    {!!state.error && <Button title="Thử xóa nháp đã gửi" onPress={() => void store.clear()} disabled={state.clearing} />}
+    <Button title="Xem tin của tôi" onPress={() => router.push("/my-listings")} />
+    <Button title="Đăng món đồ khác" soft disabled={state.clearing} onPress={() => { void store.clear().then(ok => { if (ok && mounted.current) { setSubmitted(false); setError(""); } }); }} />
+  </View></SafeAreaView>;
   return (
     <SafeAreaView style={ui.screen} edges={["top"]}>
       <KeyboardAvoidingView
@@ -160,6 +170,16 @@ function PostForm() {
             Đăng tin miễn phí · Tin mới sẽ được kiểm duyệt.
           </Text>
           <View style={ui.panel}>
+            <Text style={ui.heading}>Bản nháp trên thiết bị</Text>
+            <Text style={ui.small} accessibilityLiveRegion="polite">
+              {state.saving ? "Đang lưu nháp…" : state.dirty ? "Có thay đổi chưa lưu trên máy." : state.savedAt ? `Đã lưu nháp lúc ${new Date(state.savedAt).toLocaleString("vi-VN")}` : "Tự lưu nội dung và ảnh riêng cho tài khoản này, kể cả khi mất mạng."}
+            </Text>
+            {!!state.warning && <Text style={ui.body}>{state.warning}</Text>}
+            <Notice text={state.error} />
+            <Button title="Lưu bản nháp" soft disabled={locked || processing} loading={state.saving} onPress={() => void store.save()} />
+            <Button title="Bỏ bản nháp" soft disabled={locked || processing || (!state.savedAt && !state.dirty && !photos.length)} onPress={discard} />
+          </View>
+          <View style={ui.panel}>
             <Text style={ui.heading}>Ảnh món đồ · {photos.length}/8</Text>
             <Text style={ui.small}>
               Bắt buộc ít nhất 1 ảnh. Ảnh được nén JPEG 72%, tối đa 1.600px và 5 MB trước khi gửi; ảnh đầu là ảnh bìa.
@@ -174,11 +194,9 @@ function PostForm() {
                   <Text style={[ui.small, { fontSize: 10 }]}>{Math.round(photo.fileSize / 1024)} KB · Đã nén</Text>
                   <Pressable
                     accessibilityRole="button"
-                    disabled={busy || processing}
+                    disabled={locked || processing}
                     accessibilityLabel={`Xóa ảnh ${i + 1}`}
-                    onPress={() =>
-                      setPhotos((old) => old.filter((_, n) => n !== i))
-                    }
+                    onPress={() => void removePhoto(photo.uri)}
                     style={{
                       position: "absolute",
                       right: 2,
@@ -200,11 +218,11 @@ function PostForm() {
             <Button
               title="Chọn ảnh từ thiết bị"
               soft
-              disabled={busy || processing || photos.length >= 8}
+              disabled={locked || processing || photos.length >= 8}
               onPress={() => void pick()}
             />
-            <Button title="Chụp ảnh món đồ" soft disabled={busy || processing || photos.length >= 8} onPress={() => void pick(true)} />
-            {processing && <Text style={ui.small}>Đang nén ảnh trên thiết bị…</Text>}
+            <Button title="Chụp ảnh món đồ" soft disabled={locked || processing || photos.length >= 8} onPress={() => void pick(true)} />
+            {processing && <Text style={ui.small}>Đang xử lý và lưu ảnh trên thiết bị…</Text>}
           </View>
           <View style={ui.panel}>
             <Field
@@ -212,7 +230,7 @@ function PostForm() {
               value={draft.title}
               onChangeText={(v) => change("title", v)}
               maxLength={200}
-              editable={!busy}
+              editable={!locked}
               placeholder="Ví dụ: Đèn bàn học màu kem"
             />
             <Text style={ui.label}>Danh mục</Text>
@@ -220,7 +238,7 @@ function PostForm() {
               values={categories.slice(1)}
               value={draft.category}
               onChange={(v) => {
-                if (!busy) change("category", v);
+                if (!locked) change("category", v);
               }}
             />
             <Text style={ui.label}>Tình trạng</Text>
@@ -228,7 +246,7 @@ function PostForm() {
               values={conditions}
               value={draft.condition}
               onChange={(v) => {
-                if (!busy) change("condition", v);
+                if (!locked) change("condition", v);
               }}
             />
             <Field
@@ -237,7 +255,7 @@ function PostForm() {
               onChangeText={(v) => change("description", v)}
               multiline
               maxLength={10000}
-              editable={!busy}
+              editable={!locked}
               placeholder="Tình trạng, phụ kiện và lỗi nếu có…"
             />
           </View>
@@ -253,7 +271,7 @@ function PostForm() {
                     : "Trao đổi"
               }
               onChange={(v) => {
-                if (!busy)
+                if (!locked)
                   change(
                     "kind",
                     v === "Bán lại"
@@ -270,7 +288,8 @@ function PostForm() {
                 value={draft.price}
                 onChangeText={(v) => change("price", v)}
                 keyboardType="number-pad"
-                editable={!busy}
+                editable={!locked}
+                maxLength={40}
               />
             )}
             <Text style={ui.small}>{user.university}</Text>
@@ -279,20 +298,20 @@ function PostForm() {
               value={draft.location}
               onChangeText={(v) => change("location", v)}
               maxLength={200}
-              editable={!busy}
+              editable={!locked}
             />
           </View>
           <Notice text={error} />
-          {!!error && <Button title="Thử gửi lại" soft disabled={busy || processing} onPress={() => void submit()} />}
+          {!!error && <Button title="Thử gửi lại" soft disabled={locked || processing} onPress={() => void submit()} />}
           <Button
             title="Gửi tin đăng"
             loading={busy}
-            disabled={processing || offline}
+            disabled={locked || processing || offline}
             onPress={() => void submit()}
           />
           <Text style={ui.small}>
-            Hãy kiểm tra thông tin trước khi gửi. Khi lỗi, nội dung và ảnh vẫn
-            giữ trong màn hình này.
+            Hãy kiểm tra thông tin trước khi gửi. Khi gửi lỗi, bản nháp vẫn được giữ.
+            Khi gửi thành công, bản nháp và ảnh lưu trên máy được xóa. Gỡ app hoặc xóa dữ liệu app sẽ làm mất bản nháp.
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>
