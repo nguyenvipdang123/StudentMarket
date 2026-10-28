@@ -9,7 +9,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
   if (!isUUID(id)) return NextResponse.json({ error: "Không tìm thấy tin." }, { status: 404 });
   const user = await getAuthenticatedUser(request);
-  const rows = await query(productSelect + ` WHERE p.id = $1 AND
+  const rows = await query(productSelect + ` WHERE p.id = $1 AND p.status <> 'Deleted' AND
     ((p.status IN ('Active','Sold') AND p.moderation_status = 'APPROVED') OR p.seller_id = $2 OR $3)`,
     [id, user?.pgUserId || null, user?.role === "admin" || user?.role === "staff"]);
   if (!rows.length) return NextResponse.json({ error: "Không tìm thấy tin." }, { status: 404 });

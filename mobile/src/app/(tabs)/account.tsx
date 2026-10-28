@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -16,19 +16,27 @@ import { Button, Chips, Notice } from "../../components/UI";
 import { useTheme } from "../../theme";
 import appConfig from "../../../app.json";
 import { SessionNotice } from "../../components/SessionNotice";
+type Action = "support" | "logout";
+type ActionError = { action: Action; message: string; actor?: string | number };
 export default function Account() {
   const { colors, ui, mode, setMode } = useTheme();
-  const { user, ready, signOut, refresh } = useSession();
-  const [error, setError] = useState(""),
-    [busy, setBusy] = useState(false);
-  async function logout() {
-    setBusy(true);
+  const { user, ready, signOut } = useSession();
+  const [failure, setFailure] = useState<ActionError | null>(null),
+    [busy, setBusy] = useState<Action | null>(null);
+  const pending = useRef(false);
+  const actor = user?.pgUserId || user?.id;
+  // A previous account's logout failure must never sign out a newly logged-in account.
+  const error = failure?.action === "logout" && user && failure.actor !== actor ? null : failure;
+  async function run(action: Action) {
+    if (pending.current) return;
+    pending.current = true; setBusy(action); setFailure(null);
     try {
-      await signOut();
+      if (action === "support") await Linking.openURL(API_URL + "/support");
+      else await signOut();
     } catch (e) {
-      setError(message(e));
+      setFailure({ action, actor, message: action === "support" ? "Chưa mở được trang hỗ trợ. Bấm Thử lại để mở lại trang." : message(e) });
     } finally {
-      setBusy(false);
+      pending.current = false; setBusy(null);
     }
   }
   return (
@@ -106,7 +114,9 @@ export default function Account() {
           <Button
             title="Trung tâm hỗ trợ trên website ↗"
             soft
-            onPress={() => { void Linking.openURL(API_URL + "/support").catch(() => setError("Chưa mở được trang hỗ trợ. Bấm lại nút để thử.")); }}
+            loading={busy === "support"}
+            disabled={busy !== null}
+            onPress={() => { void run("support"); }}
           />
           <Button
             title="Tin nhắn"
@@ -114,17 +124,19 @@ export default function Account() {
             onPress={() => router.push("/messages")}
           />
         </View>
-        <Notice text={error} />
-        {!!error && <Button title="Thử lại" onPress={() => { setError(""); void refresh(); }} />}
+        <Notice text={error?.message || ""} />
+        {error && (error.action === "support" || user) && <Button title="Thử lại" loading={busy !== null} onPress={() => { void run(error.action); }} />}
+        {error?.action === "logout" && !user && <Button title="Đóng thông báo" soft onPress={() => setFailure(null)} />}
         {user && (
           <Button
             title="Đăng xuất"
-            loading={busy}
+            loading={busy === "logout"}
+            disabled={busy !== null}
             soft
             onPress={() =>
               Alert.alert("Đăng xuất?", "Kết thúc phiên trên thiết bị này.", [
                 { text: "Ở lại", style: "cancel" },
-                { text: "Đăng xuất", onPress: () => void logout() },
+                { text: "Đăng xuất", onPress: () => void run("logout") },
               ])
             }
           />

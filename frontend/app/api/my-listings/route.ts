@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   await query("UPDATE listing_promotions SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND end_at < NOW()");
 
   const rows = await query(
-    `SELECT p.id, p.title, p.price, p.status, p.moderation_status, p.condition, p.location, p.view_count,
+    `SELECT p.id, p.seller_id, p.title, p.price, p.status, p.moderation_status, p.condition, p.location, p.view_count,
             p.created_at, p.updated_at, p.description, p.rejection_reason,
             u.full_name AS seller_name, u.university AS seller_school,
             (SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id AND pi.is_primary = TRUE LIMIT 1) AS image,
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
           AND lp.status = 'ACTIVE' 
           AND NOW() BETWEEN lp.start_at AND lp.end_at
      LEFT JOIN promotion_packages pp ON pp.id = lp.package_id
-     WHERE p.seller_id = $1 OR p.user_id = $1
+     WHERE (p.seller_id = $1 OR p.user_id = $1) AND p.status <> 'Deleted'
      ORDER BY p.created_at DESC`,
     [user!.pgUserId]
   );
@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     listings: rows.map(r => ({
       id: r.id,
+      sellerId: r.seller_id,
       title: r.title,
       price: Number(r.price),
       status: r.status,

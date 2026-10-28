@@ -1,0 +1,75 @@
+import assert from 'node:assert/strict';
+/** All fixtures and mutations are confined to the disposable integration database. */
+export async function testOwnedListings({ db, req, users, cookies, check }) {
+  assert.match(db.database, /^student_market_test_[a-f0-9]{12}$/);
+  const seller = users.seller.pgUserId, buyer = users.buyer.pgUserId;
+  async function create(title = 'Tin quản lý mobile') {
+    const { rows: [item] } = await db.query(`INSERT INTO products(id,user_id,seller_id,category_id,title,description,price,condition,type,status,location,university,view_count,created_at,updated_at,moderation_status)
+      VALUES(gen_random_uuid(),$1,$1,1,$2,'Sách còn dùng tốt',50000,'Tốt','Sell','Active','Thư viện','DNTU',0,NOW(),NOW(),'APPROVED') RETURNING id`, [seller, title]);
+    return item.id;
+  }
+  const id = await create(), endpoint = '/api/my-listings/' + id;
+  const mutate = (method, body, cookie = cookies.seller) => req(endpoint, { method, body, cookie });
+  assert.equal((await req(endpoint, { method: 'PATCH', body: { status: 'Hidden' } })).status, 401);
+  assert.equal((await mutate('PATCH', { status: 'Hidden', sellerId: seller }, cookies.other)).status, 403);
+  assert.equal((await mutate('DELETE', { confirmed: true }, cookies.admin)).status, 403);
+  assert.equal((await mutate('PATCH', { status: 'Sold' })).status, 400);
+  assert.equal((await mutate('DELETE', {})).status, 400);
+  assert.equal((await req(endpoint, { method: 'PATCH', cookie: cookies.seller, body: { status: 'Hidden' }, headers: { Origin: 'https://wrong.invalid' } })).status, 403);
+  check('owned listing management enforces session, authenticated ownership, origin and explicit delete confirmation');
+  assert.equal((await mutate('PATCH', { status: 'Hidden', expectedStatus: 'Active' })).status, 200);
+  assert.equal((await req('/api/products/' + id)).status, 404);
+  assert.equal((await req('/api/my-listings', { cookie: cookies.seller })).data.listings.find(item => item.id === id).status, 'Hidden');
+  assert.equal((await mutate('PATCH', { status: 'Active', expectedStatus: 'Active' })).status, 409);
+  const shown = await mutate('PATCH', { status: 'Active', expectedStatus: 'Hidden', moderationStatus: 'APPROVED' });
+  assert.equal(shown.status, 200); assert.equal(shown.data.moderationStatus, 'PENDING');
+  assert.equal((await req('/api/products/' + id)).status, 404);
+  assert.equal((await req('/api/products/' + id, { cookie: cookies.seller })).data.product.sellerId, seller);
+  check('hide removes public visibility; show requires re-moderation and stale status cannot overwrite a newer state');
+  const cover = '/api/product-images/11111111-1111-4111-8111-111111111111.jpg', extra = '/api/product-images/22222222-2222-4222-8222-222222222222.jpg';
+  await db.query('INSERT INTO product_images(id,product_id,image_url,is_primary,sort_order,created_at) VALUES(gen_random_uuid(),$1,$2,TRUE,1,NOW()),(gen_random_uuid(),$1,$3,FALSE,2,NOW())', [id, cover, extra]);
+  const edit = { title: 'Sách đã chỉnh mobile', description: 'Tặng miễn phí. Sách còn dùng tốt', price: 0, category: 'Học tập', condition: 'Tốt', location: 'Thư viện', image: cover, status: 'Active', expectedStatus: 'Active' };
+  assert.equal((await req('/api/listings/' + id, { method: 'PATCH', cookie: cookies.seller, body: { ...edit, expectedStatus: 'Hidden' } })).status, 409);
+  assert.equal((await req('/api/listings/' + id, { method: 'PATCH', cookie: cookies.seller, body: edit })).status, 200);
+  const edited = (await req('/api/products/' + id, { cookie: cookies.seller })).data.product;
+  assert.equal(edited.description, edit.description);assert.equal(edited.price, 0);assert.equal(edited.moderationStatus, 'PENDING');assert.deepEqual(edited.images, [cover, extra]);
+  check('mobile edit preserves gift description and secondary images, validates expected status and queues moderation');
+  await db.query("UPDATE products SET moderation_status='APPROVED' WHERE id=$1", [id]);
+  await req('/api/favorites', { method: 'POST', cookie: cookies.buyer, body: { productId: id } });
+  await db.query('INSERT INTO view_history(user_id,product_id) VALUES($1,$2)', [buyer, id]);
+  const { rows: [conversation] } = await db.query('INSERT INTO conversations(id,product_id,buyer_id,seller_id,created_at) VALUES(gen_random_uuid(),$1,$2,$3,NOW()) RETURNING id', [id, buyer, seller]);
+  const { rows: [sale] } = await db.query("INSERT INTO transactions(id,listing_id,seller_id,buyer_id,status,sale_source,seller_confirmed_at) VALUES(gen_random_uuid(),$1,$2,$3,'SELLER_CONFIRMED','SANGTAY',NOW()) RETURNING id", [id, seller, buyer]);
+  assert.equal((await mutate('DELETE', { confirmed: true, expectedStatus: 'Active' })).status, 409);
+  await db.query("UPDATE transactions SET status='COMPLETED',buyer_confirmed_at=NOW(),completed_at=NOW() WHERE id=$1", [sale.id]);
+  assert.equal((await mutate('DELETE', { confirmed: true, expectedStatus: 'Active' })).status, 200);
+  assert.equal((await mutate('DELETE', { confirmed: true })).status, 200);
+  assert.equal((await req('/api/products/' + id, { cookie: cookies.seller })).status, 404);
+  assert.equal((await req('/api/my-listings', { cookie: cookies.seller })).data.listings.some(item => item.id === id), false);
+  assert.equal((await req('/api/favorites', { cookie: cookies.buyer })).data.favorites.some(item => item.productId === id), false);
+  assert.equal((await req('/api/history', { cookie: cookies.buyer })).data.history.some(item => item.productId === id || item.id === id), false);
+  assert.equal((await db.query('SELECT status FROM products WHERE id=$1', [id])).rows[0].status, 'Deleted');
+  assert.equal((await db.query('SELECT id FROM conversations WHERE id=$1', [conversation.id])).rowCount, 1);
+  assert.equal((await db.query('SELECT id FROM transactions WHERE id=$1', [sale.id])).rowCount, 1);
+  assert.equal((await mutate('PATCH', { status: 'Active' })).status, 404);
+  assert.equal((await req('/api/listings/' + id, { cookie: cookies.seller, method: 'PATCH', body: edit })).status, 404);
+  check('soft delete is idempotent, excludes detail/favorites/history and preserves conversation and transaction history');
+  const soldId = await create('Tin bán từ mobile');
+  assert.equal((await req('/api/listings/' + soldId + '/mark-sold', { method: 'POST', cookie: cookies.seller, body: { viaSangTay: false } })).status, 200);
+  assert.equal((await req('/api/listings/' + soldId, { method: 'PATCH', cookie: cookies.seller, body: edit })).status, 409);
+  assert.equal((await req('/api/my-listings/' + soldId, { method: 'PATCH', cookie: cookies.seller, body: { status: 'Hidden' } })).status, 409);
+  check('mark-sold endpoint changes availability and sold listings cannot be edited or relisted');
+  const guarded = await create('Tin có gói hoặc lịch hẹn'), guardedUrl = '/api/my-listings/' + guarded;
+  const { rows: [pkg] } = await db.query("INSERT INTO promotion_packages(name,duration_hours,price,priority) VALUES('Fixture owner management',24,1000,1) RETURNING id");
+  const { rows: [promotion] } = await db.query("INSERT INTO listing_promotions(listing_id,user_id,package_id,status,start_at,end_at,price,payment_status) VALUES($1,$2,$3,'ACTIVE',NOW(),NOW()+INTERVAL '1 hour',1000,'PAID') RETURNING id", [guarded, seller, pkg.id]);
+  assert.equal((await req(guardedUrl, { cookie: cookies.seller, method: 'DELETE', body: { confirmed: true } })).status, 409);
+  await db.query("UPDATE listing_promotions SET status='EXPIRED' WHERE id=$1", [promotion.id]);
+  const { rows: [order] } = await db.query("INSERT INTO promotion_orders(user_id,listing_id,package_id,amount,payment_status,expires_at) VALUES($1,$2,$3,1000,'PENDING',NOW()+INTERVAL '1 hour') RETURNING id", [seller, guarded, pkg.id]);
+  assert.equal((await req(guardedUrl, { cookie: cookies.seller, method: 'PATCH', body: { status: 'Hidden' } })).status, 409);
+  await db.query("UPDATE promotion_orders SET payment_status='CANCELLED' WHERE id=$1", [order.id]);
+  const { rows: [room] } = await db.query('INSERT INTO conversations(id,product_id,buyer_id,seller_id,created_at) VALUES(gen_random_uuid(),$1,$2,$3,NOW()) RETURNING id', [guarded, buyer, seller]);
+  const { rows: [reservation] } = await db.query("INSERT INTO listing_reservations(listing_id,seller_id,buyer_id,conversation_id,meeting_at,location,expires_at,status) VALUES($1,$2,$3,$4,NOW()+INTERVAL '1 hour','Thư viện',NOW()+INTERVAL '2 hours','PENDING') RETURNING id", [guarded, seller, buyer, room.id]);
+  assert.equal((await req(guardedUrl, { cookie: cookies.seller, method: 'DELETE', body: { confirmed: true } })).status, 409);
+  await db.query("UPDATE listing_reservations SET expires_at=NOW()-INTERVAL '1 minute' WHERE id=$1", [reservation.id]);
+  assert.equal((await req(guardedUrl, { cookie: cookies.seller, method: 'PATCH', body: { status: 'Hidden' } })).status, 200);
+  check('paid promotions, pending payments, reservations and waiting buyer confirmations cannot be bypassed by hide/delete');
+}

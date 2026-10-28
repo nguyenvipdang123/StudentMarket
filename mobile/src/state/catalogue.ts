@@ -6,7 +6,7 @@ export function isProduct(value: unknown): value is Product {
 }
 export function createCatalogueStore(storage: Storage, key: string, fetchAll: () => Promise<Product[]>) {
   let state = { products: [] as Product[], savedAt: "", ready: false, busy: false, stale: false, error: "" };
-  let disposed = false, pending: Promise<void> | null = null;
+  let disposed = false, revision = 0, pending: Promise<void> | null = null;
   const listeners = new Set<() => void>(), persist = writer(storage, key);
   const emit = (patch: Partial<typeof state>) => { if (!disposed) { state = { ...state, ...patch }; listeners.forEach(fn => fn()); } };
   async function hydrate() {
@@ -27,11 +27,12 @@ export function createCatalogueStore(storage: Storage, key: string, fetchAll: ()
       if (offline) { emit({ stale: true, busy: false }); return; }
       if (pending) return pending;
       pending = (async () => {
+        const run = revision;
         emit({ busy: true, error: "" });
         try {
           const products = await fetchAll();
           if (!products.every(isProduct)) throw Error("Dữ liệu catalogue không hợp lệ.");
-          if (disposed) return;
+          if (disposed || run !== revision) return;
           const savedAt = new Date().toISOString();
           emit({ products, savedAt, stale: false });
           try { await persist({ version: 1, products, savedAt }); }
@@ -40,6 +41,15 @@ export function createCatalogueStore(storage: Storage, key: string, fetchAll: ()
         finally { emit({ busy: false }); pending = null; }
       })();
       return pending;
+    },
+    async forgetProduct(id: string) {
+      await hydrated;
+      if (disposed) return;
+      revision++;
+      const products = state.products.filter(item => item.id !== id);
+      emit({ products, stale: true });
+      try { await persist({ version: 1, products, savedAt: state.savedAt }); }
+      catch { emit({ error: "Tin đã thay đổi trên server nhưng chưa cập nhật được bản lưu offline." }); }
     },
     dispose() { disposed = true; listeners.clear(); },
   };

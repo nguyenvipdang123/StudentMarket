@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
      FROM favorites f
      JOIN products p ON p.id = f.product_id
      LEFT JOIN users u ON u.id = p.seller_id
-     WHERE f.user_id = $1 AND p.moderation_status='APPROVED' AND p.status <> 'Hidden'
+     WHERE f.user_id = $1 AND p.moderation_status='APPROVED' AND p.status IN ('Active','Sold')
      ORDER BY f.created_at DESC`,
     [user!.pgUserId]
   );

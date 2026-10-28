@@ -14,18 +14,20 @@ export function Button({
   loading = false,
   soft = false,
   disabled = false,
+  label,
 }: {
   title: string;
   onPress: () => void;
   loading?: boolean;
   soft?: boolean;
   disabled?: boolean;
+  label?: string;
 }) {
   const { colors } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={title}
+      accessibilityLabel={label || title}
       accessibilityState={{ disabled: disabled || loading, busy: loading }}
       disabled={disabled || loading}
       onPress={onPress}

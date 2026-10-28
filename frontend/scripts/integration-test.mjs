@@ -11,6 +11,7 @@ import { startMockMediaStorage } from "./helpers/mock-media-storage.mjs";
 import { testCatalogSearch } from "./helpers/test-catalog-search.mjs";
 import { startMockAssistant } from "./helpers/mock-assistant.mjs";
 import { testAssistantProducts } from "./helpers/test-assistant-products.mjs";
+import { testOwnedListings } from "./helpers/test-owned-listings.mjs";
 process.loadEnvFile(".env.local");
 const root=resolve("..");
 await mkdir(join(root,".backups"),{recursive:true});
@@ -358,6 +359,7 @@ try{
   }
   assert.equal((await testDb.query("SELECT COUNT(*)::int AS count FROM promotion_orders WHERE payment_status='PAID'")).rows[0].count,0);
   check("client cannot activate paid promotion");
+  await testOwnedListings({ db: testDb, req, users, cookies, check });
   if (process.env.TEST_MOBILE_CHAT === "1") {
     const { testMobileChat } = await import("./helpers/test-mobile-chat.mjs");
     await testMobileChat({ db: testDb, req, users, cookies, check });

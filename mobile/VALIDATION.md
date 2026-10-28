@@ -1,5 +1,27 @@
 # Kiểm tra bản mobile đầu tiên — 27/10/2026
 
+## Quản lý tin của chủ tin — 28/10/2026
+
+- Tin của tôi có lọc trạng thái, sửa, ẩn/hiện lại, xóa, mark sold; route edit và modal sold xác minh owner trước khi hiện form. Edit giữ dữ liệu khi lỗi, thay ảnh bìa nén và giữ ảnh phụ. Mark sold phân biệt qua SangTay/chờ buyer xác nhận và bán ngoài hệ thống.
+- Backend thêm PATCH/DELETE my-listings/:id với session/ownership/origin, khóa product, expectedStatus, chặn gói đẩy/đơn thanh toán/lịch hẹn/giao dịch đang mở. Delete dùng status Deleted, giữ rows lịch sử; các API detail/favorites/history/owned-list bỏ Deleted. Hiện lại chuyển PENDING; không sửa tin đã Sold/Deleted.
+- Cache catalogue/favorites/cart loại tin đã đổi; phản hồi fetch/toggle cũ không được đưa tin trở lại. Chi tiết không lấy nội dung cache nếu API trả 403/404.
+- `npm run mobile:check`: **60/60 logic/static + 17/17 Jest đạt**, TypeScript/lint sạch. Frontend typecheck/lint các API đổi và build production đạt. **42/42 nhóm tích hợp API/PostgreSQL** đạt trong database thử riêng, có 6 nhóm về quản lý tin. Expo Android export thành công, không tạo APK.
+- Chưa xác minh UI bằng emulator trong lượt này do công cụ cửa sổ không khởi tạo được. Backend ẩn/xóa cần triển khai Render; tại thời điểm ghi log đang chờ kết nối plugin, không dùng tin/tài khoản thật để thử mutation.
+
+## Retry thông báo giá và thao tác Tài khoản — 28/10/2026
+
+- Outbox thông báo nằm cùng cài đặt per-account trong AsyncStorage; chứa identifier ổn định và sự kiện chờ. Refresh favorites thành công gọi notify cả khi không có thay đổi giá mới để thử lại pending; chỉ giữ sự kiện của món còn được lưu. Thành công được xác nhận/xóa từng sự kiện; partial failure không gửi lại các sự kiện đã xong.
+- Queue sống qua process restart, bị dọn khi tắt báo/đăng xuất. Gửi tuần tự để hai refresh không cùng gửi một sự kiện; kiểm tra generation sau thao tác async để opt-out/logout không khôi phục lỗi hoặc phát thông báo muộn. Không hỏi lại quyền trong retry tự động.
+- Tài khoản nhớ support/logout riêng. Retry hỗ trợ mở lại cùng URL, không gọi refresh phiên. Đăng xuất đã hoàn tất local chỉ cho đóng cảnh báo thu hồi server; không retry bằng tài khoản mới.
+- TypeScript/lint sạch, **53/53 logic/static + 10/10 Jest tests đạt**. Test dùng Storage/NotificationDevice/Linking giả; không gửi thông báo, liên hệ hoặc logout tài khoản thật trên production. Không tạo APK hay sửa release đã nộp; notification tray native cần xác minh thêm.
+
+## Sửa khởi động Expo Go: module thông báo push — 28/10/2026
+
+- Expo Go trên emulator là 58.0.5. Root import của expo-notifications 58.1.6 nạp cả `ExpoTopicSubscriptionModule` dành cho remote push, gây lỗi từ MarketProvider dù ứng dụng chỉ dùng thông báo cục bộ.
+- Adapter native chỉ import các entry thông báo cục bộ trong package đã cài; giữ handler, channel, xin quyền, lập lịch và xóa theo scope tài khoản. Không sửa node_modules hoặc tắt báo đổi giá. Các đường dẫn `build/*` là chi tiết nội bộ, cần kiểm tra lại khi nâng expo-notifications.
+- Thêm hai kiểm thử hồi quy: root entry ném lỗi thiếu module push nhưng adapter vẫn xin quyền/lập lịch được; logout chỉ xóa thông báo đúng scope. 45 ca logic/static và 7 ca Jest đạt; typecheck/lint sạch. Export Android thành công, bundle không còn chuỗi `ExpoTopicSubscriptionModule`, vẫn có scheduler/permissions/presenter cục bộ.
+- Đã gửi yêu cầu reload qua Metro đang chạy cổng 8081. Công cụ xem cửa sổ không khởi tạo được và Hermes inspector không phản hồi, nên chưa xác nhận lại UI hoặc notification tray trên emulator trong lượt này. Không tạo APK hay thay đổi release đã nộp.
+
 ## TECHNICAL REQUIREMENTS — source Expo, 28/10/2026
 
 - Expo 58 + TS strict + Router: bổ sung `+not-found` và ErrorBoundary retry; giữ dynamic routes, login modal và function components. Bảng đối chiếu từng yêu cầu/trạng thái ở [TECHNICAL.md](TECHNICAL.md).

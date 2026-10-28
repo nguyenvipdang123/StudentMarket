@@ -58,6 +58,8 @@ function AppLayout() {
           options={{ title: "Tài khoản SangTay", presentation: "modal" }}
         />
         <Stack.Screen name="my-listings" options={{ title: "Tin của tôi" }} />
+        <Stack.Screen name="my-listings/[id]/edit" options={{ title: "Sửa tin" }} />
+        <Stack.Screen name="my-listings/[id]/sold" options={{ title: "Đánh dấu đã bán", presentation: "modal" }} />
         <Stack.Screen name="contact/[listingId]" options={{ title: "Liên hệ người bán" }} />
         <Stack.Screen name="chat/[id]" options={{ title: "Trò chuyện" }} />
         <Stack.Screen name="cart" options={{ title: "Giỏ hàng" }} />

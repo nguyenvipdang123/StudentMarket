@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
      FROM view_history vh
      JOIN products p ON p.id = vh.product_id
      LEFT JOIN users u ON u.id = p.seller_id
-     WHERE vh.user_id = $1 AND p.moderation_status='APPROVED' AND p.status <> 'Hidden'
+     WHERE vh.user_id = $1 AND p.moderation_status='APPROVED' AND p.status IN ('Active','Sold')
      ORDER BY vh.viewed_at DESC
      LIMIT 50`,
     [user!.pgUserId]

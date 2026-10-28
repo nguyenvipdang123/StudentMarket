@@ -15,7 +15,7 @@ import { OfflineBanner } from "../../components/OfflineBanner";
 import { useAccountMarket, useCatalogue } from "../../providers/Market";
 import { availability } from "../../state/commerce";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { API_URL, message, request } from "../../api/client";
+import { API_URL, ApiError, message, request } from "../../api/client";
 import type { Product } from "../../api/types";
 import { mediaUrl, priceLabel } from "../../api/policy";
 import { useSession } from "../../providers/Session";
@@ -44,7 +44,8 @@ function DetailContent() {
   const { products, offline } = useCatalogue();
   const { favorites, cart, store } = useAccountMarket();
   const cached = products.find(p => p.id === id) || favorites.find(p => p.id === id) || cart.find(p => p.id === id);
-  const item = fetchedItem?.id === id ? fetchedItem : cached;
+  const inaccessible = query.error instanceof ApiError && [403, 404].includes(query.error.status);
+  const item = inaccessible ? undefined : fetchedItem?.id === id ? fetchedItem : cached;
   const [adding, setAdding] = useState(false);
   async function addToCart() {
     if (!user) { router.push("/login"); return; }

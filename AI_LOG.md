@@ -45,6 +45,24 @@ Mỗi thành viên ghi hoạt động AI thực tế của mình, kèm phần đ
 - Kiểm chứng: kiểm tra lại TypeScript/lint và 45 + 5 tests; ảnh thử được chọn và nén còn khoảng 27 KB. Phần demo tạm được gỡ khỏi app trước đóng gói; không tạo APK, tài khoản, tin đăng hoặc giao dịch thật.
 - Video không phải bản quay Android đầu-cuối; các bước camera/thông báo/SecureStore native được ghi trong kịch bản để thử bằng Expo Go. Chưa nộp Canvas khi chưa có liên kết bài nộp.
 
+### 28/10/2026 — Sửa lỗi ExpoTopicSubscriptionModule trong Expo Go
+
+- Người dùng gửi ảnh màn hình lỗi khởi động. AI xác định root import expo-notifications kéo theo remote topic module mà Expo Go 58.0.5 thiếu.
+- Sửa adapter native chỉ nạp entry thông báo cục bộ, giữ tính năng báo đổi giá. Thêm hai regression tests và export Android để kiểm tra module push đã rời bundle.
+- TypeScript/lint và 45 + 7 tests đạt. Chưa xác nhận UI/notification tray vì công cụ cửa sổ không khởi tạo được, debugger không phản hồi. Không sửa/xây lại bộ ZIP đã nộp hoặc APK.
+
+### 28/10/2026 — Sửa retry thông báo giá và lỗi thao tác Tài khoản
+
+- Người dùng yêu cầu sửa hai phát hiện trong rà soát. AI thêm outbox thông báo lưu trên máy với identifier ổn định, retry khi refresh/restart, dọn khi tắt/đăng xuất/bỏ lưu và gửi tuần tự.
+- Tách lỗi hỗ trợ/logout trong Tài khoản để retry đúng hành động; không refresh phiên thay cho mở hỗ trợ, không dùng lỗi logout cũ để đăng xuất tài khoản mới.
+- Thêm 8 kiểm thử logic hồi quy và 3 component tests. `npm run mobile:check` đạt TypeScript/lint, 53 logic/static + 10 Jest. Chưa xác minh notification tray trên thiết bị thật trong lượt này; không tạo APK hoặc thay release đã nộp.
+
+### 28/10/2026 — Quản lý tin trên mobile
+
+- Người dùng yêu cầu thêm sửa, ẩn/xóa và đánh dấu đã bán. AI thêm UI Tin của tôi, route edit/sold, API adapter, cache invalidation và backend visibility/soft delete có kiểm tra chủ tin cùng các ràng buộc giao dịch.
+- Giữ API sửa/mark-sold hiện có; sửa/hiện lại phải duyệt, xóa bảo toàn lịch sử. Bổ sung tests payload, lifecycle cache, component CRUD/retry/offline và API tích hợp trên database riêng.
+- Kiểm chứng: TypeScript/lint mobile + 60 logic/static + 17 Jest đạt; frontend typecheck/lint/build và 42 nhóm tích hợp đạt; Android export đạt, không APK. Không mutation dữ liệu production. Triển khai API mới đang chờ kết nối Render; UI emulator chưa xác minh vì công cụ cửa sổ không khởi tạo được.
+
 ## Mẫu cho lần dùng AI tiếp theo
 
 | Ngày thực tế | Thành viên/công cụ | Prompt hoặc mục tiêu | Tệp/chức năng nhận từ AI | Giữ/bỏ/sửa gì | Tự kiểm chứng ra sao | Issue/PR/commit |

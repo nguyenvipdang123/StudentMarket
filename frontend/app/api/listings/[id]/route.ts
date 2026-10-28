@@ -25,6 +25,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       const p = rows[0];
       if (!p) throw new ApiError("Không tìm thấy tin.",404);
       if (p.seller_id !== user!.pgUserId) throw new ApiError("Bạn không phải chủ tin.",403);
+      if (p.status === "Deleted") throw new ApiError("Tin đã được xóa.",404);
+      if (body.expectedStatus !== undefined && body.expectedStatus !== p.status) throw new ApiError("Tin đã thay đổi. Tải lại trước khi sửa.",409);
       if (p.status === "Sold") throw new ApiError("Không thể sửa tin đã bán.",409);
       const active = await c.query("SELECT id FROM listing_promotions WHERE listing_id=$1 AND status='ACTIVE' AND end_at>NOW()",[id]);
       if (active.rows.length) throw new ApiError("Vui lòng chờ gói quảng cáo kết thúc trước khi sửa nội dung.",409);

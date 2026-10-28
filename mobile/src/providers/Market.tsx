@@ -49,7 +49,8 @@ export function useCatalogue() {
   if (!ctx) throw Error("Catalogue provider missing");
   const state = useSyncExternalStore(ctx.store.subscribe, ctx.store.getSnapshot, ctx.store.getSnapshot);
   const refresh = useCallback(() => ctx.store.refresh(ctx.offline), [ctx.store, ctx.offline]);
-  return { ...state, offline: ctx.offline, refresh };
+  const forgetProduct = useCallback((id: string) => ctx.store.forgetProduct(id), [ctx.store]);
+  return { ...state, offline: ctx.offline, refresh, forgetProduct };
 }
 export function useAccountMarket<T = ReturnType<AccountStore["getSnapshot"]>>(selector: (state: ReturnType<AccountStore["getSnapshot"]>) => T = state => state as T) {
   const store = useContext(AccountContext);

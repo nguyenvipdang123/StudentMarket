@@ -4,7 +4,7 @@ import { addCartItem } from "./commerce.ts";
 import { parseCache, writer, type Storage } from "./storage.ts";
 import { priceChanges, type PriceChange } from "./price-alerts.ts";
 type FavoritesApi = { read: () => Promise<Product[]>; toggle: (id: string) => Promise<boolean> };
-export function createAccountStore(storage: Storage, key: string, actorId: string | undefined, api: FavoritesApi, onPriceChanges?: (changes: PriceChange[], isCurrent: () => boolean) => Promise<void>) {
+export function createAccountStore(storage: Storage, key: string, actorId: string | undefined, api: FavoritesApi, onPriceChanges?: (changes: PriceChange[], isCurrent: () => boolean, favorites: Product[]) => Promise<void>) {
   let state = { favorites: [] as Product[], cart: [] as Product[], ready: false, busy: false, error: "", lastUpdatedAt: "" };
   let disposed = false, revision = 0, mutating = false;
   const listeners = new Set<() => void>(), persist = writer(storage, key);
@@ -38,7 +38,7 @@ export function createAccountStore(storage: Storage, key: string, actorId: strin
           const changes = priceChanges(state.favorites, favorites);
           emit({ favorites, error: "", lastUpdatedAt: new Date().toISOString() });
           const saved = await save();
-          if (saved && !disposed && run === revision) await onPriceChanges?.(changes, () => !disposed && run === revision);
+          if (saved && !disposed && run === revision) await onPriceChanges?.(changes, () => !disposed && run === revision, favorites);
         }
       }
       catch { if (run === revision) emit({ error: "Chưa đồng bộ được Đã lưu. Các món đã lưu trên thiết bị vẫn được giữ." }); }
@@ -49,10 +49,10 @@ export function createAccountStore(storage: Storage, key: string, actorId: strin
       if (!actorId || disposed) throw Error("Đăng nhập để lưu món đồ.");
       if (offline) throw Error("Bạn đang offline. Kết nối mạng để thay đổi Đã lưu.");
       if (mutating) throw Error("Đang lưu thay đổi trước. Bạn chờ một chút nhé.");
-      mutating = true; ++revision; emit({ busy: true, error: "" });
+      mutating = true; const run = ++revision; emit({ busy: true, error: "" });
       try {
         const saved = await api.toggle(product.id);
-        if (disposed) return;
+        if (disposed || run !== revision) return;
         emit({ favorites: saved ? [product, ...state.favorites.filter(p => p.id !== product.id)] : state.favorites.filter(p => p.id !== product.id) });
         await save();
       } finally { mutating = false; emit({ busy: false }); }
@@ -64,6 +64,13 @@ export function createAccountStore(storage: Storage, key: string, actorId: strin
     },
     async remove(id: string) { await hydrated; emit({ cart: state.cart.filter(p => p.id !== id) }); await save(); },
     async replaceCart(products: Product[]) { await hydrated; emit({ cart: products }); await save(); },
+    async forgetProduct(id: string) {
+      await hydrated;
+      if (disposed) return;
+      const run = ++revision;
+      emit({ favorites: state.favorites.filter(item => item.id !== id), cart: state.cart.filter(item => item.id !== id), busy: false });
+      if (await save()) await onPriceChanges?.([], () => !disposed && run === revision, state.favorites);
+    },
     dispose() { disposed = true; revision++; listeners.clear(); },
   };
 }

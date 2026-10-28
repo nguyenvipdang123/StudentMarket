@@ -1,0 +1,93 @@
+import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { Alert } from "react-native";
+import { router } from "expo-router";
+import { PersonalProducts } from "../src/components/PersonalProducts";
+import { OwnedListingEditor } from "../src/components/OwnedListingEditor";
+import { SoldListingForm } from "../src/components/SoldListingForm";
+import { ThemeProvider } from "../src/theme";
+import type { Product } from "../src/api/types";
+jest.mock("expo-router", () => ({ router: { push: jest.fn(), replace: jest.fn() }, useFocusEffect(effect: () => void | (() => void)) { const React = jest.requireActual<typeof import("react")>("react"); React.useEffect(effect, [effect]); } }));
+jest.mock("expo-image", () => ({ Image: "Image" }));
+const mockUser = { id: 1, pgUserId: "seller", fullName: "Người bán", role: "student" };
+jest.mock("../src/providers/Session", () => ({ useSession: () => ({ user: mockUser, ready: true }) }));
+let mockOffline = false;
+const mockChanged = jest.fn(async () => {});
+jest.mock("../src/providers/Market", () => ({ useCatalogue: () => ({ offline: mockOffline }) }));
+jest.mock("../src/hooks/useOwnedListingChange", () => ({ useOwnedListingChange: () => mockChanged }));
+const item: Product = { id: "11111111-1111-4111-8111-111111111111", title: "Bàn học gỗ", description: "Bàn còn dùng tốt", price: 50000, category: "Nội thất", status: "Active", moderationStatus: "APPROVED", condition: "Tốt", school: "DNTU", location: "Thư viện", seller: "Người bán", sellerId: "seller", image: "/fixture.jpg" };
+beforeEach(() => { mockOffline = false; });
+afterEach(() => { jest.restoreAllMocks(); });
+
+test("owner actions navigate to edit, require confirmation, keep the row on failure and hide/show/delete on success", async () => {
+  let listings = [item];
+  const api = { list: jest.fn(async () => ({ listings })), visibility: jest.fn(async (_id: string, status: "Active" | "Hidden") => { listings = [{ ...item, status, moderationStatus: status === "Active" ? "PENDING" : "APPROVED" }]; return { success: true, message: "Đã cập nhật", moderationStatus: listings[0].moderationStatus }; }), remove: jest.fn(async () => { listings = []; return { success: true, message: "Đã xóa tin" }; }) };
+  api.remove.mockRejectedValueOnce(Error("Tin còn gói đẩy đang chạy"));
+  const confirm = jest.spyOn(Alert, "alert");
+  await render(<ThemeProvider><PersonalProducts api={api} /></ThemeProvider>);
+  await screen.findByRole("button", { name: "Sửa tin Bàn học gỗ", disabled: false });
+  await fireEvent.press(screen.getByRole("button", { name: "Sửa tin Bàn học gỗ" }));
+  expect(router.push).toHaveBeenCalledWith({ pathname: "/my-listings/[id]/edit", params: { id: item.id } });
+  await fireEvent.press(screen.getByRole("button", { name: "Xóa tin Bàn học gỗ" }));
+  expect(api.remove).not.toHaveBeenCalled();
+  await act(async () => { confirm.mock.calls.at(-1)?.[2]?.find(button => button.text === "Xóa tin")?.onPress?.(); });
+  await screen.findByText("Tin còn gói đẩy đang chạy");
+  expect(screen.getByText(item.title)).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole("button", { name: "Ẩn tin Bàn học gỗ" }));
+  await act(async () => { confirm.mock.calls.at(-1)?.[2]?.find(button => button.text === "Xác nhận")?.onPress?.(); });
+  await screen.findByRole("button", { name: "Hiện lại tin Bàn học gỗ", disabled: false });
+  expect(mockChanged).toHaveBeenCalledWith(item.id);
+  await fireEvent.press(screen.getByRole("button", { name: "Hiện lại tin Bàn học gỗ" }));
+  await act(async () => { confirm.mock.calls.at(-1)?.[2]?.find(button => button.text === "Xác nhận")?.onPress?.(); });
+  expect(api.visibility).toHaveBeenLastCalledWith(item.id, "Active", "Hidden");
+  await fireEvent.press(screen.getByRole("button", { name: "Xóa tin Bàn học gỗ" }));
+  await act(async () => { confirm.mock.calls.at(-1)?.[2]?.find(button => button.text === "Xóa tin")?.onPress?.(); });
+  await screen.findByText("Chưa có tin đăng");
+  expect(screen.queryByText(item.title)).not.toBeOnTheScreen();
+});
+
+test("edit failure keeps changed fields and Retry resubmits the same draft, then invalidates cached data", async () => {
+  const api = { edit: jest.fn(async () => ({ success: true, message: "Đã lưu, chờ duyệt lại" })) };
+  api.edit.mockRejectedValueOnce(Error("Không kết nối được"));
+  await render(<ThemeProvider><OwnedListingEditor item={item} api={api} /></ThemeProvider>);
+  await fireEvent.changeText(screen.getByLabelText("Tên món đồ *"), "Bàn học đã chỉnh");
+  await fireEvent.changeText(screen.getByLabelText("Giá bán (đ) *"), "40000");
+  await fireEvent.press(screen.getByRole("button", { name: "Lưu thay đổi" }));
+  await screen.findByText("Không kết nối được");
+  expect(screen.getByLabelText("Tên món đồ *")).toHaveDisplayValue("Bàn học đã chỉnh");
+  await fireEvent.press(screen.getByRole("button", { name: "Thử lưu lại" }));
+  expect(api.edit).toHaveBeenCalledTimes(2);
+  expect(api.edit.mock.calls[0]).toEqual(api.edit.mock.calls[1]);
+  await screen.findByText("Đã lưu, chờ duyệt lại");
+  expect(mockChanged).toHaveBeenCalledWith(item.id);
+});
+
+test("mark sold validates buyer before confirmation, retains a failed attempt and supports an explicit outside sale", async () => {
+  const api = { sold: jest.fn(async (_id: string, _viaSangTay: boolean, _buyer: string) => ({ success: true, message: "Đã đánh dấu đã bán" })) };
+  const confirm = jest.spyOn(Alert, "alert");
+  await render(<ThemeProvider><SoldListingForm item={item} api={api} onReload={jest.fn()} /></ThemeProvider>);
+  await fireEvent.press(screen.getByRole("button", { name: "Xác nhận đã giao đồ" }));
+  expect(confirm).not.toHaveBeenCalled(); expect(api.sold).not.toHaveBeenCalled();
+  await fireEvent.changeText(screen.getByLabelText("Email hoặc mã người mua"), "buyer@example.invalid");
+  await fireEvent.press(screen.getByRole("button", { name: "Xác nhận đã giao đồ" }));
+  api.sold.mockRejectedValueOnce(Error("Chưa đến giờ hẹn"));
+  await act(async () => { confirm.mock.calls.at(-1)?.[2]?.find(button => button.text === "Đã giao đồ")?.onPress?.(); });
+  await screen.findByText("Chưa đến giờ hẹn");
+  expect(screen.getByLabelText("Email hoặc mã người mua")).toHaveDisplayValue("buyer@example.invalid");
+  await fireEvent.press(screen.getByRole("button", { name: "Ngoài SangTay" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Xác nhận đã giao đồ" }));
+  await act(async () => { confirm.mock.calls.at(-1)?.[2]?.find(button => button.text === "Đã giao đồ")?.onPress?.(); });
+  await screen.findByText("Đã đánh dấu đã bán");
+  expect(api.sold.mock.calls.at(-1)?.[1]).toBe(false);
+});
+
+test("offline listing management disables mutations and an already sold row has no edit, hide or mark-sold action", async () => {
+  mockOffline = true;
+  const api = { list: jest.fn(async () => ({ listings: [item, { ...item, id: "22222222-2222-4222-8222-222222222222", title: "Tin đã bán", status: "Sold" as const }] })), visibility: jest.fn(), remove: jest.fn() };
+  await render(<ThemeProvider><PersonalProducts api={api} /></ThemeProvider>);
+  await screen.findByRole("button", { name: "Sửa tin Bàn học gỗ" });
+  expect(screen.getByRole("button", { name: "Sửa tin Bàn học gỗ" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Xóa tin Bàn học gỗ" })).toBeDisabled();
+  expect(screen.queryByRole("button", { name: "Sửa tin Tin đã bán" })).not.toBeOnTheScreen();
+  expect(screen.queryByRole("button", { name: "Đánh dấu đã bán Tin đã bán" })).not.toBeOnTheScreen();
+  expect(api.visibility).not.toHaveBeenCalled();expect(api.remove).not.toHaveBeenCalled();
+});
