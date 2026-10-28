@@ -1,0 +1,47 @@
+1
+00:00:00,000 --> 00:00:14,000
+Bắt đầu từ catalogue. Các màn hình trong video là UI Expo thật với dữ liệu demo local.
+
+2
+00:00:14,000 --> 00:00:32,000
+Ở màn hình Khám phá, nhập từ khóa và chọn danh mục để thu hẹp danh sách.
+
+3
+00:00:32,000 --> 00:00:50,000
+Web preview không hỗ trợ thông báo cục bộ. Trên điện thoại, người dùng chủ động bật thông báo.
+
+4
+00:00:50,000 --> 00:01:08,000
+Hai góc nhìn dùng cùng một tin. Bộ dữ liệu demo đổi vai người mua và chủ tin để đối chiếu.
+
+5
+00:01:08,000 --> 00:01:26,000
+Video đã chọn ảnh và chạy nén thật trên Expo Web. Quyền camera cần thử thêm trong Expo Go.
+
+6
+00:01:26,000 --> 00:01:44,000
+Đây là tóm tắt chi phí và tình trạng. Người mua trao đổi với người bán trước khi giao dịch.
+
+7
+00:01:44,000 --> 00:02:02,000
+Khi mô phỏng mất mạng, catalogue vẫn hiển thị cùng cảnh báo. Giá và tình trạng cần xác minh lại.
+
+8
+00:02:02,000 --> 00:02:20,000
+Ví dụ: “Mình có thể xem bàn lúc 15 giờ không?”. Hội thoại giữ ngữ cảnh món đồ đang xem.
+
+9
+00:02:20,000 --> 00:02:38,000
+Hai theme dùng cùng token nguồn. TalkBack và VoiceOver cần được kiểm tra trên thiết bị thật.
+
+10
+00:02:38,000 --> 00:02:56,000
+Luồng đăng nhập → khôi phục phiên → đăng xuất đã có critical-path test với API giả.
+
+11
+00:02:56,000 --> 00:03:18,000
+Chạy npm run mobile:check. Các kiểm thử không thay thế thử camera, thông báo và thao tác trên máy thật.
+
+12
+00:03:18,000 --> 00:03:40,000
+github.com/nguyenvipdang123/StudentMarket — kiểm thử native trên Expo Go trước buổi trình bày.

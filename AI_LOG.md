@@ -38,6 +38,13 @@ Mỗi thành viên ghi hoạt động AI thực tế của mình, kèm phần đ
 - Kết quả kiểm chứng của trợ lý: 45 kiểm thử logic/static và 5 kiểm thử Jest đạt; TypeScript/lint sạch, Expo config/export và npm ci dry-run đạt. Chưa thử TalkBack/VoiceOver, notification/camera trên thiết bị trong lượt này. Web catalogue gặp lỗi mạng, nút retry và thông báo dữ liệu rỗng vẫn hoạt động.
 - Phần cần nhóm tự làm: review mã, chạy Expo Go trên thiết bị, bổ sung nhật ký cá nhân và commit thật theo tiến độ. Lịch sử Git không được sửa tác giả hoặc backdate để đáp ứng rubric.
 
+### 28/10/2026 — Chuẩn bị bộ nộp Day 10
+
+- Yêu cầu: tagged release, source ZIP, video 3–5 phút và reflection một trang. Giữ cách viết reflection ngắn gọn theo yêu cầu của người dùng.
+- AI hỗ trợ: tài liệu nộp bài, reflection PDF, video walkthrough có phụ đề dài 03:40 từ ảnh UI Expo Web thực tế và dữ liệu demo local; đóng gói source từ Git.
+- Kiểm chứng: kiểm tra lại TypeScript/lint và 45 + 5 tests; ảnh thử được chọn và nén còn khoảng 27 KB. Phần demo tạm được gỡ khỏi app trước đóng gói; không tạo APK, tài khoản, tin đăng hoặc giao dịch thật.
+- Video không phải bản quay Android đầu-cuối; các bước camera/thông báo/SecureStore native được ghi trong kịch bản để thử bằng Expo Go. Chưa nộp Canvas khi chưa có liên kết bài nộp.
+
 ## Mẫu cho lần dùng AI tiếp theo
 
 | Ngày thực tế | Thành viên/công cụ | Prompt hoặc mục tiêu | Tệp/chức năng nhận từ AI | Giữ/bỏ/sửa gì | Tự kiểm chứng ra sao | Issue/PR/commit |

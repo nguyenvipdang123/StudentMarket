@@ -2,6 +2,8 @@
 
 ## Bài Lập trình Mobile (Expo)
 
+Bộ nộp Day 10: [release, ZIP source, video 03:40 và reflection](submission/day10/README.md).
+
 Ứng dụng mobile nằm ở `mobile/`. Trên máy sạch: cài Node.js ≥22.20.0, chạy `npm --prefix mobile ci`, rồi `npm run mobile` và mở bằng Expo Go SDK 58. Không cần chạy website localhost:3000. Xem [README mobile](mobile/README.md), [rubric kỹ thuật](mobile/TECHNICAL.md), [phân công nhóm](mobile/TEAM.md) và [AI_LOG toàn nhóm](AI_LOG.md).
 
 

@@ -25,6 +25,11 @@
 **/*.pem
 **/*.key
 StudentMarket-render*.zip
+submission/day10/assets/
+submission/day10/*.zip
+submission/day10/*.mp4
+submission/day10/*.pdf
+submission/day10/*.sha256
 
 # This repository contains the cleaned Render application; local reference projects stay on disk.
 /backend/
