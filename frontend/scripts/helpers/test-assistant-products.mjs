@@ -59,12 +59,14 @@ export async function testAssistantProducts({ db, origin, sellerId, mock, check 
 
     const crossOrigin = await ask(query, { headers: { Origin: "https://evil.invalid" } }); assert.equal(crossOrigin.status, 403);
     const invalidSchool = await ask(query, { school: 123 }); assert.equal(invalidSchool.status, 400);
-    mock.setReady(true);
-    const faq = await ask("Làm sao để đăng tin?", { cookie: current.cookie }); assert.equal(faq.status, 200); assert.equal(faq.event.event, "assistant/partial"); assert.match(faq.event.data.text, /^FAQ giữ nguyên/);
-    assert.deepEqual(mock.calls.slice(initialCalls), ["/api/status", "/threads", "/api/chat"]);
+    const faq = await ask("Làm sao để đăng tin?", { cookie: current.cookie }); assert.equal(faq.status, 200); assert.equal(faq.event.event, "assistant/partial"); assert.match(faq.event.data.text, /\/create-listing/);
+    assert.equal(mock.calls.length, initialCalls, "public FAQ works locally while the AI/PDF service is offline");
     const afterFaq = await ask("Xem thêm", { cookie: current.cookie }); assert.equal(afterFaq.event.event, "assistant/partial");
+    mock.setReady(true);
+    const ai = await ask("Giải thích kinh tế tuần hoàn", { cookie: current.cookie }); assert.equal(ai.status, 200); assert.equal(ai.event.event, "assistant/partial"); assert.match(ai.event.data.text, /^AI thử nghiệm:/);
+    assert.deepEqual(mock.calls.slice(initialCalls), ["/api/status", "/threads", "/api/chat"]);
     assert.ok(requests < 30);
-    check("assistant origin/input guards still apply and existing FAQ/AI streams continue on their original upstream path");
+    check("assistant origin/input guards apply, FAQ stays local during outages, and other AI questions stream through the configured upstream");
   } finally {
     await db.query("DELETE FROM products WHERE id=ANY($1::uuid[])", [ids]);
     await db.query("UPDATE users SET university=$2 WHERE id=$1", [sellerId, original.university]);

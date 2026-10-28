@@ -314,7 +314,9 @@ try{
   assert.equal(result.status,200);const sale=result.data.transactionId;
   assert.equal((await req(salePath,{cookie:cookies.seller,method:"POST",body:{viaSangTay:true,buyerId:users.buyer.pgUserId}})).status,409);
   const confirmPath="/api/transactions/"+sale+"/confirm";
-  assert.equal((await req(confirmPath,{cookie:cookies.other,method:"POST",body:{confirm:true}})).status,403);
+  assert.equal((await req(confirmPath,{cookie:cookies.other,method:"POST",body:{confirm:true}})).status,404);
+  assert.equal((await testDb.query("SELECT status FROM transactions WHERE id=$1",[sale])).rows[0].status,"SELLER_CONFIRMED");
+  assert.equal((await req(confirmPath,{cookie:cookies.buyer,method:"POST",body:{confirm:true}})).status,200);
   assert.equal((await req(confirmPath,{cookie:cookies.buyer,method:"POST",body:{confirm:true}})).status,200);
   assert.equal((await req(confirmPath,{cookie:cookies.buyer,method:"POST",body:{confirm:false}})).status,409);
   assert.equal((await testDb.query("SELECT status FROM products WHERE id=$1",[product])).rows[0].status,"Sold");

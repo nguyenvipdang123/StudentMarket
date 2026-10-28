@@ -1,0 +1,16 @@
+// Keep CMake object names short on Windows, including native dependencies.
+// This is supplied to Gradle at build time; generated CNG files stay untouched.
+gradle.beforeProject { project ->
+    ['com.android.application', 'com.android.library'].each { pluginId ->
+        project.pluginManager.withPlugin(pluginId) {
+            project.extensions.getByName('androidComponents').finalizeDsl { android ->
+                android.defaultConfig.externalNativeBuild.cmake.arguments.add('-DCMAKE_OBJECT_PATH_MAX=240')
+                def cacheRoot = System.getenv('SANGTAY_CXX_DIR')
+                if (cacheRoot) {
+                    def moduleId = Integer.toHexString(project.projectDir.absolutePath.hashCode())
+                    android.externalNativeBuild.cmake.buildStagingDirectory = new File(cacheRoot, moduleId)
+                }
+            }
+        }
+    }
+}

@@ -10,18 +10,22 @@ if (Test-Path -LiteralPath $archivePath) {
     throw "ZIP already exists: $archivePath. Choose another -Destination or move the old ZIP first."
 }
 
-$omitDirectories = @('node_modules', '.next', '.next-e2e', '.next-render', '.venv', '.backups', '.data', '.git', 'bin', 'obj', '__pycache__', '.npm-cache', '.vscode')
+$omitDirectories = @('node_modules', '.next', '.next-e2e', '.next-render', '.venv', '.backups', '.data', '.git', 'bin', 'obj', '__pycache__', '.npm-cache', '.vscode', '.expo', '.build-cache', '.credentials', '.gradle', '.kotlin', '.cxx', '.pytest_cache', 'coverage', 'test-results', 'playwright-report')
+$omitPaths = @('mobile/android', 'mobile/ios', 'mobile/dist', 'mobile/web-build', 'mobile/releases')
 function Get-SourceFiles([string]$Directory) {
     foreach ($item in Get-ChildItem -LiteralPath $Directory -Force) {
+        $relative = $item.FullName.Substring($projectRoot.Length + 1).Replace('\', '/')
+        if ($item.PSIsContainer -and (($omitDirectories -contains $item.Name) -or ($omitPaths -contains $relative))) { continue }
         if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
             throw "Cannot package a symbolic link: $($item.FullName)"
         }
         if ($item.PSIsContainer) {
-            if ($omitDirectories -notcontains $item.Name) { Get-SourceFiles $item.FullName }
+            Get-SourceFiles $item.FullName
         } elseif (
             ($item.Name -notlike '.env*' -or $item.Name -eq '.env.example') -and
             $item.Name -notmatch '^appsettings\.(Development|Local)\.json$' -and
-            $item.Name -notmatch '\.(tsbuildinfo|log|sqlite[^.]*|db|dump|zip|pyc)$' -and
+            $item.Name -notmatch '\.(tsbuildinfo|log|sqlite[^.]*|db|dump|zip|pyc|keystore|jks|p12|p8|pem|key|apk|aab|dpapi)$' -and
+            $item.Name -ne 'credentials.json' -and
             $item.Name -ne '.codex-tool-check.txt'
         ) {
             $item

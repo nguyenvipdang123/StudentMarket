@@ -25,7 +25,11 @@ if(process.argv[2]!=="chat"&&!(await listening(3000)))start(process.execPath,[ne
 if(process.argv[2]!=="chat")start(process.execPath,["--experimental-strip-types",join(root,"frontend/scripts/ai-moderation-worker.mjs")],join(root,"frontend"),true);
 const pdfChatRoot=resolve(root,"../ai-pdf-chatbot-langchain");
 const pdfChatRunner=join(pdfChatRoot,"scripts/dev-local.mjs");
-if(process.argv[2]!=="chat"&&existsSync(pdfChatRunner))start(process.execPath,[pdfChatRunner],pdfChatRoot);
+if(process.argv[2]!=="chat"&&existsSync(pdfChatRunner)){
+  const pdfDependencies=["node_modules/@langchain/langgraph-cli/dist/cli/cli.mjs","node_modules/next/dist/bin/next"];
+  if(pdfDependencies.every(path=>existsSync(join(pdfChatRoot,path))))start(process.execPath,[pdfChatRunner],pdfChatRoot);
+  else console.warn("Bỏ qua chatbot PDF: project phụ chưa có đủ dependencies. Website và chat mua bán vẫn chạy; xem hướng dẫn cài chatbot trong README.md.");
+}
 if(!(await listening(8000)))start(python,["-m","uvicorn","fastapi_chat.main:app","--host","127.0.0.1","--port","8000","--ws-max-size","20000","--no-access-log","--log-level","warning"],root);
 console.log("StudentMarket: http://localhost:3000 | Chat: http://127.0.0.1:8000/health");
 process.on("SIGINT",()=>stop());

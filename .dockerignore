@@ -18,3 +18,14 @@
 **/test-results
 **/playwright-report
 *.zip
+
+# Local mobile builds and signing credentials
+mobile/.expo
+mobile/.build-cache
+mobile/.credentials
+mobile/android
+mobile/ios
+mobile/releases
+mobile/dist
+**/*.keystore
+**/*.jks

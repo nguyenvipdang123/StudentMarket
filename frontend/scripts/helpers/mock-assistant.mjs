@@ -10,7 +10,7 @@ export async function startMockAssistant() {
       let raw = ""; for await (const chunk of request) raw += chunk;
       const body = JSON.parse(raw);
       response.writeHead(200, { "Content-Type": "text/event-stream" });
-      response.end(`data: ${JSON.stringify({ event: "assistant/partial", data: { text: "FAQ giữ nguyên: " + body.message } })}\n\n`); return;
+      response.end(`data: ${JSON.stringify({ event: "assistant/partial", data: { text: "AI thử nghiệm: " + body.message } })}\n\n`); return;
     }
     response.writeHead(404); response.end();
   });

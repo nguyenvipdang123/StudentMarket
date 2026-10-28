@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, writeFile, readFile, readdir, symlink, unlink } from "n
 import { resolve, join } from "node:path";
 import { parseEnv } from "node:util";
 import { randomBytes } from "node:crypto";
-import { spawn } from "node:child_process";
+import { spawn, execFileSync } from "node:child_process";
 import pg from "pg";
 import { validateDatabase, safeRelative, restoreEnvironment, describeFiles, verifyBackup } from "./helpers/backup-tools.mjs";
 
@@ -88,6 +88,17 @@ test("PostgreSQL round trip: schema, ledger, sequence, view, trigger, all media,
     for (const name of added) { const dir = join(backups, "snapshots", name); if ((await verifyBackup(dir)).manifest.sourceDatabase === source) candidates.push(dir); }
     assert.equal(candidates.length, 1); const backup = candidates[0];
     assert.equal((await verifyBackup(backup)).manifest.media.length, 3);
+    const sourceEntries = execFileSync("powershell.exe", ["-NoProfile", "-Command",
+      "Add-Type -AssemblyName System.IO.Compression.FileSystem; $zip=[IO.Compression.ZipFile]::OpenRead($env:SANGTAY_TEST_SOURCE_ZIP); try { foreach($entry in $zip.Entries) { [Console]::WriteLine($entry.FullName) } } finally { $zip.Dispose() }"
+    ], { env: { ...env, SANGTAY_TEST_SOURCE_ZIP: join(backup, "source.zip") }, encoding: "utf8", windowsHide: true }).trim().split(/\r?\n/);
+    assert.ok(sourceEntries.includes("StudentMarket/mobile/app.json"), "source backup includes the mobile app configuration");
+    assert.ok(sourceEntries.includes("StudentMarket/mobile/package-lock.json"), "source backup retains reproducible mobile dependencies");
+    for (const entry of sourceEntries) {
+      assert.doesNotMatch(entry, /(?:^|\/)(?:node_modules|\.expo|\.build-cache|\.credentials|\.gradle|\.kotlin|\.cxx)(?:\/|$)/i);
+      assert.doesNotMatch(entry, /^StudentMarket\/mobile\/(?:android|ios|dist|web-build|releases)\//i);
+      assert.doesNotMatch(entry, /\.(?:keystore|jks|p12|p8|pem|key|apk|aab|dpapi)$/i);
+      assert.notEqual(entry.split("/").at(-1), "credentials.json");
+    }
     assert.notEqual((await cli(["restore", "--from", backup, "--database", source])).code, 0);
     assert.notEqual((await cli(["restore", "--from", backup, "--database", "postgres"])) .code, 0);
     const existing = "student_market_existing_test_" + suffix;

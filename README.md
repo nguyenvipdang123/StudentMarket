@@ -1,5 +1,11 @@
 # StudentMarket / SangTay
 
+## Ứng dụng mobile React Native
+
+App Expo + TypeScript nằm ở [mobile](mobile/README.md), dùng chung API của `https://sangtay.shop`. Chạy `npm --prefix mobile ci` rồi `npm run mobile:android` để mở trên Android emulator. Website và app mobile có dependencies, giao diện và lệnh chạy riêng.
+
+Build APK cài độc lập bằng `npm run mobile:apk`; kiểm tra TypeScript, lint và các kiểm thử mobile bằng `npm run mobile:check`. Xem [hướng dẫn APK và khóa ký](mobile/APK.md). Không đưa `node_modules`, APK, cache build hoặc thư mục khóa ký lên GitHub; máy mới cài lại thư viện bằng `npm --prefix frontend ci` và `npm --prefix mobile ci`.
+
 ## Triển khai Render
 
 Xem [hướng dẫn Render](DEPLOY-RENDER.md) và `render.yaml` cho website, chat, worker AI và PostgreSQL. `npm run deploy:package` tạo ZIP mã nguồn sạch cho GitHub/Render, loại dependencies/cache/khóa/dữ liệu local và .NET không dùng khi chạy. Production dùng standalone (`npm run build:render`, `npm run start:render`); database trống được khởi tạo qua `npm run db:migrate`. Không dùng `npm run dev` trên Render. FAQ và tìm sản phẩm chạy trong website; hỏi tài liệu PDF cần endpoint chatbot riêng như hướng dẫn.
@@ -46,7 +52,7 @@ Giữ terminal đang chạy trong khi dùng website. Khi Next.js báo `Ready`, m
 | Trang nạp PDF của chatbot, nếu có project chatbot bên cạnh | http://127.0.0.1:3001/ |
 | Thông tin backend chatbot PDF | http://127.0.0.1:2024/info |
 
-`npm run dev` khởi động website, chat và worker AI; đồng thời khởi động chatbot PDF nếu có `../ai-pdf-chatbot-langchain/scripts/dev-local.mjs`. Chatbot có dependencies và cấu hình riêng, xem [hướng dẫn chatbot](../ai-pdf-chatbot-langchain/LOCAL-SETUP.md). Cài dependencies frontend StudentMarket không cài dependencies chatbot.
+`npm run dev` khởi động website, chat và worker AI; đồng thời khởi động chatbot PDF nếu có `../ai-pdf-chatbot-langchain/scripts/dev-local.mjs` và đủ dependencies của project phụ. Nếu dependencies chatbot đã bị xóa, lệnh bỏ qua chatbot PDF để website và chat mua bán vẫn chạy. Chatbot có dependencies và cấu hình riêng, xem [hướng dẫn chatbot](../ai-pdf-chatbot-langchain/LOCAL-SETUP.md). Cài dependencies frontend StudentMarket không cài dependencies chatbot.
 
 - Ctrl+C dừng các tiến trình do terminal này tạo; dịch vụ đã chạy sẵn được tái sử dụng và không bị dừng cùng terminal này.
 - Chỉ website: `npm run dev:frontend`.

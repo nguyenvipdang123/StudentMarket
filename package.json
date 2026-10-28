@@ -2,6 +2,10 @@
   "name": "student-market",
   "private": true,
   "scripts": {
+    "mobile": "npm --prefix mobile start",
+    "mobile:android": "npm --prefix mobile run android:local",
+    "mobile:apk": "npm --prefix mobile run apk:build",
+    "mobile:check": "npm --prefix mobile run typecheck && npm --prefix mobile run lint && npm --prefix mobile test",
     "clean": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/clean.ps1",
     "clean:all": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/clean.ps1 -Dependencies",
     "dev": "node scripts/dev.mjs",
