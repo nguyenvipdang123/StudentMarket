@@ -10,6 +10,12 @@ Chờ hết trạng thái xử lý ảnh và hiện **Đã lưu nháp lúc…**,
 
 Nháp chỉ có trên thiết bị này; gỡ app hoặc xóa dữ liệu app sẽ mất nháp. Đây chưa phải đồng bộ nháp lên server. Tài khoản/phiên vẫn dùng SecureStore, không đưa cookie vào nháp.
 
+## Bộ lọc Khám phá
+
+Vào **Khám phá → Bộ lọc** để nhập giá từ/đến, chọn tình trạng và sắp xếp Nổi bật/Giá tăng dần/Giá giảm dần/Mới nhất. Giá dùng số nguyên đồng không có dấu phân cách (ví dụ `50000`); bỏ trống một đầu để không giới hạn phía đó. Giá âm, quá giới hạn hoặc giá từ lớn hơn giá đến được báo lỗi. Món tặng/trao đổi được tính là 0đ khi lọc.
+
+Các điều kiện kết hợp với từ khóa, danh mục và trường; kết quả tính trong render trên catalogue hiện có, không lưu thành derived state hoặc gọi lại API mỗi lần chỉnh lọc. Dùng được offline với catalogue lưu gần nhất. **Xóa bộ lọc** đưa tìm kiếm, trường, danh mục, giá, tình trạng và sắp xếp về mặc định.
+
 ## Chạy từ máy sạch bằng Expo Go
 
 Yêu cầu Git, **Node.js ≥22.20.0** và npm, cùng Expo Go tương thích SDK 58 trên Android/iOS. Không cần cài database, Python, Android Studio hoặc chạy backend trên máy nếu dùng điện thoại với API mặc định.

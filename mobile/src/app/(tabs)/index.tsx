@@ -12,27 +12,37 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
-import { selectProducts } from "../../api/catalog";
-import { categories } from "../../api/types";
+import { catalogPriceRange, catalogSorts, selectProducts, type CatalogSort } from "../../api/catalog";
+import { categories, conditions } from "../../api/types";
 import { useCatalogue, useAccountMarket } from "../../providers/Market";
 import { OfflineBanner } from "../../components/OfflineBanner";
 import { LastUpdated } from "../../components/LastUpdated";
 import { ProductCard } from "../../components/ProductCard";
 import { SchoolPicker } from "../../components/SchoolPicker";
-import { Button, Empty, Notice } from "../../components/UI";
+import { Button, Chips, Empty, Field, Notice } from "../../components/UI";
 import { useTheme } from "../../theme";
 export default function Explore() {
   const { colors, ui } = useTheme();
   const { products, ready, busy, error, offline, stale, savedAt, refresh } = useCatalogue();
   const { cart } = useAccountMarket();
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("Tất cả"), [school, setSchool] = useState(""), [sort, setSort] = useState("featured");
+  const [category, setCategory] = useState("Tất cả"), [school, setSchool] = useState("");
+  const [sort, setSort] = useState<CatalogSort>("featured");
+  const [condition, setCondition] = useState(""), [minPrice, setMinPrice] = useState(""), [maxPrice, setMaxPrice] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [visibleLimit, setVisibleLimit] = useState(12);
   useFocusEffect(useCallback(() => { void refresh(); }, [refresh]));
   // Derived on every render; neither filtered products nor totals are state.
-  const filtered = selectProducts(products, { search: query, category, school, sort });
+  const filtered = selectProducts(products, { search: query, category, school, sort, condition, minPrice, maxPrice });
+  const range = catalogPriceRange(minPrice, maxPrice);
+  const sortLabel = catalogSorts.find(option => option.value === sort)!.label;
+  const filterCount = Number(!!minPrice.trim() || !!maxPrice.trim()) + Number(!!condition) + Number(!!school) + Number(category !== "Tất cả");
   const items = filtered.slice(0, visibleLimit), total = filtered.length, more = visibleLimit < total;
   const load = refresh;
+  function resetFilters() {
+    setQuery(""); setCategory("Tất cả"); setSchool(""); setSort("featured");
+    setCondition(""); setMinPrice(""); setMaxPrice(""); setVisibleLimit(12);
+  }
   return (
     <SafeAreaView style={ui.screen} edges={["top"]}>
       <FlatList
@@ -46,6 +56,8 @@ export default function Explore() {
           marginBottom: 14,
         }}
         contentContainerStyle={{ paddingBottom: 25 }}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         refreshControl={
           <RefreshControl
             refreshing={busy}
@@ -183,6 +195,39 @@ export default function Explore() {
                 </Pressable>
               ))}
             </ScrollView>
+            <View style={{ marginHorizontal: 20, gap: 12 }}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Bộ lọc sản phẩm"
+                accessibilityState={{ expanded: filtersOpen }}
+                onPress={() => setFiltersOpen(open => !open)}
+                style={[ui.between, { minHeight: 50, padding: 14, borderRadius: 15, backgroundColor: colors.sage }]}
+              >
+                <View style={ui.row}>
+                  <Ionicons name="options-outline" size={20} color={colors.green} />
+                  <Text style={ui.label}>Bộ lọc{filterCount ? ` · ${filterCount}` : ""}</Text>
+                </View>
+                <Ionicons name={filtersOpen ? "chevron-up" : "chevron-down"} size={18} color={colors.green} />
+              </Pressable>
+              {filtersOpen && <View style={ui.panel}>
+                <Text style={ui.heading}>Khoảng giá (đ)</Text>
+                <View style={[ui.row, { alignItems: "flex-start" }]}>
+                  <View style={{ flex: 1 }}><Field label="Giá từ (đ)" value={minPrice} keyboardType="number-pad" placeholder="Không giới hạn" maxLength={16} onChangeText={value => { setMinPrice(value); setVisibleLimit(12); }} /></View>
+                  <View style={{ flex: 1 }}><Field label="Giá đến (đ)" value={maxPrice} keyboardType="number-pad" placeholder="Không giới hạn" maxLength={16} onChangeText={value => { setMaxPrice(value); setVisibleLimit(12); }} /></View>
+                </View>
+                <Text style={ui.small}>Nhập số không có dấu phân cách, ví dụ 50000. Món tặng và trao đổi được tính là 0đ khi lọc giá.</Text>
+                <Text style={ui.label}>Tình trạng món đồ</Text>
+                <Chips values={["Mọi tình trạng", ...conditions]} value={condition || "Mọi tình trạng"} onChange={value => { setCondition(value === "Mọi tình trạng" ? "" : value); setVisibleLimit(12); }} />
+                <Text style={ui.label}>Sắp xếp</Text>
+                <Chips values={catalogSorts.map(option => option.label)} value={sortLabel} onChange={label => { setSort(catalogSorts.find(option => option.label === label)!.value); setVisibleLimit(12); }} />
+                <Button title="Xóa bộ lọc" soft onPress={resetFilters} />
+              </View>}
+              <Notice text={range.error} />
+              <Text style={ui.small}>
+                {sortLabel}{condition ? ` · ${condition}` : ""}
+                {!range.error && (range.min !== null || range.max !== null) ? ` · ${range.min === null ? "0" : range.min.toLocaleString("vi-VN")}đ – ${range.max === null ? "không giới hạn" : `${range.max.toLocaleString("vi-VN")}đ`}` : ""}
+              </Text>
+            </View>
             <View style={[ui.between, { paddingHorizontal: 20 }]}>
               <View style={{ flex: 1 }}>
                 <Text style={ui.heading}>
@@ -194,29 +239,6 @@ export default function Explore() {
                     : `${total} món đồ · ${school || "Tất cả trường"}`}
                 </Text>
               </View>
-              <Pressable
-                accessibilityLabel="Đổi sắp xếp sản phẩm"
-                accessibilityRole="button"
-                onPress={() =>
-                  setSort((s) =>
-                    s === "featured"
-                      ? "price-asc"
-                      : s === "price-asc"
-                        ? "newest"
-                        : "featured",
-                  )
-                }
-                style={{ padding: 10, minWidth: 44, minHeight: 44 }}
-              >
-                <Ionicons name="swap-vertical" size={18} color={colors.green} />
-                <Text style={[ui.small, { fontSize: 10 }]}>
-                  {sort === "featured"
-                    ? "Nổi bật"
-                    : sort === "price-asc"
-                      ? "Giá tăng"
-                      : "Mới nhất"}
-                </Text>
-              </Pressable>
             </View>
             {!!error && (
               <View style={{ paddingHorizontal: 20 }}>
@@ -230,10 +252,10 @@ export default function Explore() {
           ready && !busy ? (
             <View style={{ marginHorizontal: 20 }}>
               <Empty
-                title={products.length ? "Chưa tìm thấy món phù hợp" : offline || stale ? "Chưa có catalogue lưu trên máy" : "Chưa có món đồ"}
-                detail={products.length ? "Thử tên món đồ khác, đổi trường hoặc chọn Tất cả." : "Kết nối Internet rồi bấm Thử lại hoặc kéo xuống để tải catalogue. Các chức năng khác vẫn có thể truy cập."}
-                action={school ? "Xem tất cả trường" : undefined}
-                onPress={() => setSchool("")}
+                title={range.error ? "Kiểm tra khoảng giá" : products.length ? "Chưa tìm thấy món phù hợp" : offline || stale ? "Chưa có catalogue lưu trên máy" : "Chưa có món đồ"}
+                detail={range.error ? "Chỉnh lại giá từ và giá đến trong Bộ lọc, hoặc xóa bộ lọc để xem lại món đồ." : products.length ? "Thử từ khóa khác hoặc bỏ bớt bộ lọc giá, tình trạng, trường và danh mục." : "Kết nối Internet rồi bấm Thử lại hoặc kéo xuống để tải catalogue. Các chức năng khác vẫn có thể truy cập."}
+                action={products.length || filterCount || query ? "Xóa bộ lọc" : "Thử tải catalogue"}
+                onPress={products.length || filterCount || query ? resetFilters : () => void load()}
               />
             </View>
           ) : busy || !ready ? (

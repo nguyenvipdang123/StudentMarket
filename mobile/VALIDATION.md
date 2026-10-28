@@ -1,5 +1,11 @@
 # Kiểm tra bản mobile đầu tiên — 27/10/2026
 
+## Khoảng giá, tình trạng và giá giảm dần — 29/10/2026
+
+- Khám phá có bảng Bộ lọc mở/đóng: giá từ/đến (một đầu có thể trống, chấp nhận 0), các tình trạng hiện có và bốn kiểu sắp xếp. Tất cả kết hợp trường/danh mục/từ khóa; selector tính trong render trên raw catalogue, không lưu kết quả vào state hoặc gọi API theo bộ lọc. Mỗi lần đổi lọc/sort reset số mục hiển thị về 12.
+- Giá phải là số nguyên 0–9.999.999.999đ, không có dấu phân cách. Sai số hoặc khoảng ngược có cảnh báo; không áp dụng im lặng một khoảng khác. Món giá 0 được giữ ở cận 0, cả tặng và trao đổi. Empty state có nút xóa bộ lọc; thiếu catalogue có nút thử tải.
+- Thêm 3 logic tests (biên giá/invalid/zero/combined/không sửa raw/stable sort) và 3 component tests dùng catalogue giả (combine/reset, lỗi giá/empty/recover, offline). `npm run mobile:check`: TypeScript/lint sạch, **72/72 logic/static + 28/28 Jest đạt**. Android export đạt; chưa xác minh bố cục/bàn phím trên thiết bị thật trong lượt này. Không tạo APK hoặc đổi backend.
+
 ## Lưu nháp và ảnh qua lần đóng app — 29/10/2026
 
 - Một nháp cho mỗi tài khoản/API, tự lưu ngay khi sửa nội dung, flush khi rời màn hình/app ra nền; có Lưu bản nháp và Bỏ bản nháp xác nhận. Form chờ khôi phục trước khi cho sửa, không ghi trắng lên dữ liệu chưa đọc được. Có retry đọc và bỏ nháp lỗi theo xác nhận.

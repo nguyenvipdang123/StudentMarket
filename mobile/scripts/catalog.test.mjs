@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fetchCatalogue, selectProducts } from "../src/api/catalog.ts";
+import { catalogPriceRange, fetchCatalogue, selectProducts } from "../src/api/catalog.ts";
 import { SOUTHERN_UNIVERSITIES, findUniversity, universityMatchesQuery } from "../src/data/universities.ts";
 import { SOUTHERN_UNIVERSITIES as webUniversities } from "../../frontend/lib/universities.ts";
 
@@ -31,4 +31,40 @@ test("remote catalogue loads every unfiltered page before local search, deduplic
   assert.equal(calls.length,2);assert.ok(calls.every(p=>!p.includes("q=")&&!p.includes("category=")&&!p.includes("school=")));
   assert.deepEqual(selectProducts(raw,{search:"ban",category:"Tất cả",school:"",sort:"featured"}).map(p=>p.id),["b"]);
   await assert.rejects(fetchCatalogue(async()=>({products:[],pagination:{page:1,hasNext:true}})));
+});
+
+test("price bounds accept empty, one-sided and zero ranges but reject invalid or reversed values", () => {
+  assert.deepEqual(catalogPriceRange(), { min: null, max: null, error: "" });
+  assert.deepEqual(catalogPriceRange(" 0 ", "0"), { min: 0, max: 0, error: "" });
+  assert.deepEqual(catalogPriceRange("50000", ""), { min: 50000, max: null, error: "" });
+  assert.deepEqual(catalogPriceRange("", "9999999999"), { min: null, max: 9999999999, error: "" });
+  for (const value of ["-1", "1.5", "50.000", "1e3", "abc", "Infinity", "10000000000"]) {
+    assert.ok(catalogPriceRange(value, "").error, value);
+    assert.ok(catalogPriceRange("", value).error, value);
+  }
+  assert.match(catalogPriceRange("60000", "50000").error, /không được lớn hơn/);
+});
+
+test("price and condition combine with school, category and text, including both price boundaries", () => {
+  const raw = [
+    { ...product("a", "Học tập", "DNTU", "Sách lập trình", 50000), condition: "Tốt" },
+    { ...product("b", "Học tập", "DNTU", "Sách lập trình", 100000), condition: "Tốt" },
+    { ...product("c", "Học tập", "DNTU", "Sách lập trình", 75000), condition: "Như mới" },
+    { ...product("d", "Học tập", "UTH", "Sách lập trình", 75000), condition: "Tốt" },
+    { ...product("e", "Nội thất", "DNTU", "Bàn học", 75000), condition: "Tốt" },
+  ];
+  const before = structuredClone(raw);
+  const filters = { search: "sach lap", category: "Học tập", school: "DNTU", condition: "Tốt", minPrice: "50000", maxPrice: "100000", sort: "price-desc" };
+  assert.deepEqual(selectProducts(raw, filters).map(p => p.id), ["b", "a"]);
+  assert.deepEqual(selectProducts(raw, { ...filters, minPrice: "100001", maxPrice: "" }), []);
+  assert.deepEqual(selectProducts(raw, { ...filters, minPrice: "100000", maxPrice: "50000" }), []);
+  assert.deepEqual(raw, before);
+});
+
+test("zero-price gift/exchange items stay available at a zero upper bound; descending keeps equal-price order", () => {
+  const raw = [product("gift", "Khác", "DNTU", "Tặng đồ", 0), product("high", "Khác", "DNTU", "Đồ giá cao", 200000), product("swap", "Khác", "DNTU", "Trao đổi", 0), product("same", "Khác", "DNTU", "Cùng giá", 200000)];
+  const filters = { search: "", category: "Tất cả", school: "", sort: "price-desc", maxPrice: "0" };
+  assert.deepEqual(selectProducts(raw, filters).map(p => p.id), ["gift", "swap"]);
+  assert.deepEqual(selectProducts(raw, { ...filters, maxPrice: "" }).map(p => p.id), ["high", "same", "gift", "swap"]);
+  assert.deepEqual(selectProducts(raw, { ...filters, minPrice: "1", maxPrice: "" }).map(p => p.id), ["high", "same"]);
 });

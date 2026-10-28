@@ -28,7 +28,7 @@ Cập nhật sau yêu cầu sửa hai lỗi: `npm run mobile:check` đạt TypeS
 | --- | --- | --- |
 | Đã thêm | Sửa/ẩn/hiện/xóa tin và đánh dấu đã bán | Tin của tôi có thao tác chủ tin, hai route edit/sold, xác nhận và retry; ẩn/xóa cần triển khai backend mới |
 | Đã thêm | Lưu nháp tin và ảnh qua lần đóng app | Tự lưu và nút lưu offline theo tài khoản/API; ảnh nén lưu Documents; khôi phục, bỏ nháp có xác nhận, giữ khi gửi lỗi; cần xác minh đóng/mở Expo trên thiết bị thật |
-| Vừa | Lọc khoảng giá, tình trạng và giá giảm dần | Có từ khóa, trường, danh mục, nổi bật/giá tăng/mới nhất |
+| Đã thêm | Lọc khoảng giá, tình trạng và giá giảm dần | Khám phá → Bộ lọc; kết hợp trường/danh mục/từ khóa, kiểm tra khoảng giá và xóa bộ lọc, dùng catalogue offline |
 | Vừa | Auth native đầy đủ | Đăng ký/Google/OTP/quên mật khẩu còn mở trình duyệt, phiên web riêng |
 | Vừa | Gửi ảnh chat, push khi đóng app | App gửi văn bản/xem ảnh; polling khi mở; local price alert không theo dõi khi app đã đóng |
 | Sau | Admin, hỗ trợ, lịch hẹn/xác nhận giao dịch/đánh giá | Chưa có màn hình native tương ứng |
@@ -66,10 +66,10 @@ Kiểm thử native với fixture: login, restoreSession, GET có cookie đều 
 - Admin/staff: dashboard, kiểm duyệt, tài khoản, giao dịch, phiếu hỗ trợ.
 - Đăng ký, Google, OTP và quên mật khẩu native: hiện hướng sang trình duyệt.
 - Đã có chat văn bản native, lịch sử và trạng thái đã xem dùng chung website. Chưa gửi ảnh từ app, thông báo đẩy và chatbot/AI góp ý tin.
-- Quản lý tin đã bổ sung sửa/ẩn/hiện/xóa/đánh dấu đã bán và đổi ảnh bìa; chưa đổi thứ tự toàn bộ gallery hoặc lưu nháp qua lần đóng app.
+- Quản lý tin đã bổ sung sửa/ẩn/hiện/xóa/đánh dấu đã bán và đổi ảnh bìa; đã lưu nháp nội dung/ảnh qua lần đóng app, chưa đổi thứ tự toàn bộ gallery.
 - Đã có giỏ và checkout tổng kết chi phí, kiểm tra availability; chưa có đặt đơn/thu tiền, gói đẩy tin, QR/thanh toán hoặc thống kê hiệu quả đẩy tin native.
 - Lịch hẹn, xác nhận giao dịch, đánh giá, báo cáo và yêu cầu hỗ trợ native.
-- Đã có bộ lọc trường với tìm tên/mã trường. Khoảng giá/tình trạng và sắp xếp giá giảm dần chưa có UI dù backend hỗ trợ.
+- Đã có bộ lọc trường với tìm tên/mã trường, khoảng giá, tình trạng và sắp xếp giá giảm dần trên catalogue local; chưa có lọc đồng bộ theo URL như web.
 - Đã có APK Android ký riêng và lệnh `npm run mobile:apk`; xem [APK.md](APK.md). Chưa có AAB hoặc phát hành lên cửa hàng.
 
 Các màn hình mở bằng trình duyệt có phiên đăng nhập riêng; đăng nhập app không tự đăng nhập website.

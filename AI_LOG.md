@@ -69,6 +69,12 @@ Mỗi thành viên ghi hoạt động AI thực tế của mình, kèm phần đ
 - Gửi tin lỗi giữ dữ liệu. Khi server nhận tin thành công mới clear; nếu dọn local lỗi, chỉ thử dọn lại để tránh POST trùng trong phiên hiện tại. Ảnh thiếu giữ text và báo chọn lại; picker trả muộn khi đổi tài khoản không gắn ảnh cũ.
 - `npm run mobile:check`: TypeScript/lint sạch, 69 logic/static + 25 Jest đạt. Android export đạt. Tests dùng disk/files/API giả; chưa kiểm tra force-stop/mở lại trên thiết bị thật. Không tạo APK, tin production hoặc phục hồi bộ submission đã xóa.
 
+### 29/10/2026 — Bộ lọc khoảng giá, tình trạng và giá giảm dần
+
+- Người dùng yêu cầu bổ sung ba lựa chọn lọc/sort trên mobile. AI thêm panel Khám phá, kiểm tra cận giá, selector kết hợp giá/tình trạng/trường/danh mục/từ khóa, chọn sắp xếp trực tiếp và reset toàn bộ bộ lọc.
+- Kết quả tính trong render trên catalogue hiện có, dùng được offline; không lưu derived state hoặc thay API backend. Giữ món tặng/trao đổi ở giá 0, báo khoảng ngược và hỗ trợ thoát empty state.
+- TypeScript/lint sạch, 72 logic/static + 28 Jest đạt; Android export đạt. 6 tests mới dùng dữ liệu giả, chưa xác minh UI/bàn phím trên thiết bị thật. Không tạo APK hay chỉnh bộ submission đã xóa.
+
 ## Mẫu cho lần dùng AI tiếp theo
 
 | Ngày thực tế | Thành viên/công cụ | Prompt hoặc mục tiêu | Tệp/chức năng nhận từ AI | Giữ/bỏ/sửa gì | Tự kiểm chứng ra sao | Issue/PR/commit |
