@@ -12,7 +12,6 @@ import "./figma.css";
 import "./figma-motion.css";
 import "./assistant.css";
 import "./page-transitions.css";
-import "./footer-crowd.css";
 import "./robot-widget.css";
 import AssistantWidget from "@/components/AssistantWidget";
 import RobotWidget from "@/components/RobotWidget";

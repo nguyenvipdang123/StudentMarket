@@ -48,7 +48,6 @@
   "dependencies": {
     "@splinetool/react-spline": "^4.1.0",
     "@splinetool/runtime": "2.0.95",
-    "gsap": "^3.15.0",
     "jose": "^6.2.12",
     "next": "16.3.6",
     "nodemailer": "^10.0.10",
