@@ -1,6 +1,6 @@
 # SangTay Mobile
 
-Hiện đang hoàn thiện **bằng Expo**, chưa tạo APK mới cho các yêu cầu môn học. Xem [đối chiếu MUST HAVE và kịch bản demo](RUBRIC.md).
+Có thể phát triển **bằng Expo** hoặc tải [APK cài độc lập 1.0.3](https://github.com/nguyenvipdang123/StudentMarket/releases/tag/mobile-v1.0.3). Xem [hướng dẫn APK](APK.md) và [đối chiếu MUST HAVE/kịch bản demo](RUBRIC.md).
 
 ## Lưu nháp tin đăng và ảnh
 
@@ -20,7 +20,7 @@ Các điều kiện kết hợp với từ khóa, danh mục và trường; kế
 
 Các form đã có trên app: vào Tài khoản hoặc Đăng nhập để chọn. Đăng ký hỗ trợ chọn/nén ảnh thẻ, xác minh/gửi lại OTP; quên mật khẩu nhập OTP và mật khẩu mới ngay trên mobile. Google dùng cửa sổ hệ thống để xác thực, đóng cửa sổ quay về app rồi kiểm tra kết quả/bổ sung hồ sơ native. Cookie và mã bàn giao Google lưu bằng SecureStore, không yêu cầu nhập server secret vào app.
 
-**Cần deploy backend mới trước khi dùng với sangtay.shop**: API `/api/auth/mobile/config` phải trả JSON `version: 1`. Tại thời điểm sửa, API live vẫn 404 và kết nối Render của phiên làm việc chưa có. Xem [AUTH.md](AUTH.md) để triển khai và kiểm tra từng luồng; tests/bundle đã đạt không có nghĩa Google/SMTP/Turnstile thật đã được thử trên điện thoại.
+Backend phải có API `/api/auth/mobile/config` trả JSON `version: 1`. Khi đóng gói APK 1.0.3 ngày 29/10, API live đã trả 200 với Google/Turnstile bật. Xem [AUTH.md](AUTH.md) để triển khai và kiểm tra từng luồng; tests/bundle đã đạt không có nghĩa Google/SMTP/Turnstile thật đã được thử trên điện thoại.
 
 ## Chạy từ máy sạch bằng Expo Go
 

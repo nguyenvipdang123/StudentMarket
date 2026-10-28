@@ -81,6 +81,12 @@ Mỗi thành viên ghi hoạt động AI thực tế của mình, kèm phần đ
 - Google dùng cửa sổ hệ thống rồi nhận kết quả bằng verifier lưu SecureStore và handoff ngắn hạn một lần; giữ callback HTTPS hiện tại, không đưa session/token vào URL. Backend thêm migration bảng flow/config/challenge/Google native và transaction onboarding dùng chung web. SessionProvider nhận cookie OTP/Google qua SecureStore và kiểm identity; retry identity không tiêu thụ lại mã đã dùng.
 - Kiểm chứng dùng mock API/SMTP/OIDC + PostgreSQL local riêng: 74 logic/static + 40 Jest đạt; frontend build/typecheck/lint, 46 nhóm integration và Android export đạt. Chưa xác minh Google/SMTP/Turnstile thật trên điện thoại. API live mới probe 404, cần deploy Render theo AUTH.md; không có kết nối Render trong phiên. Không tạo APK hoặc chỉnh bộ submission đã nộp.
 
+### 29/10/2026 — Build và phát hành APK 1.0.3
+
+- Người dùng yêu cầu tạo APK và đưa lên GitHub, thay cho ưu tiên Expo-only trước đó. AI tăng version 1.0.3/code 4, build bằng script local, ký bằng khóa SangTay hiện có, kiểm nội dung/chữ ký/zipalign và chuẩn bị APK/SHA-256 trên GitHub Releases.
+- Source TS/lint và 74 logic/static + 40 Jest đạt; release build đạt. Cài đè 1.0.0 → 1.0.3 trên Pixel_7 thành công, mở APK tải 34 sản phẩm. Computer Use dừng theo Escape của người dùng; không thử nghiệp vụ tài khoản thật hoặc thiết bị vật lý. Probe config auth live đã trả 200; không coi đó là kiểm thử Google/OTP/Turnstile đầu-cuối.
+- Chỉ phát hành APK và checksum, không gửi khóa ký/DPAPI/secret lên GitHub; không sửa bộ submission hay tag Day10.
+
 ## Mẫu cho lần dùng AI tiếp theo
 
 | Ngày thực tế | Thành viên/công cụ | Prompt hoặc mục tiêu | Tệp/chức năng nhận từ AI | Giữ/bỏ/sửa gì | Tự kiểm chứng ra sao | Issue/PR/commit |

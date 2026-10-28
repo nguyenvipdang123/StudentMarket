@@ -1,5 +1,7 @@
 # APK cài độc lập
 
+Bản mới nhất: **[SangTay Android 1.0.3](https://github.com/nguyenvipdang123/StudentMarket/releases/tag/mobile-v1.0.3)**. Trong Assets, tải `SangTay-v1.0.3-4.apk` để cài; file `.sha256` dùng kiểm tra tải xuống. APK được phát hành bằng GitHub Releases, không đưa binary hoặc khóa ký vào lịch sử source Git.
+
 APK release dùng API `https://sangtay.shop`, đóng gói JavaScript, ảnh nhận diện và font trong ứng dụng. Không cần Expo Go, Metro hay máy tính khi sử dụng; các chức năng lấy dữ liệu vẫn cần Internet.
 
 ## Build trên Windows
@@ -23,6 +25,16 @@ Nếu Gradle đã build xong và chỉ cần chạy lại bước ký, từ gố
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File mobile/scripts/build-apk.ps1 -SignOnly
 ```
+
+## Bản cập nhật 1.0.3 — 29/10/2026
+
+- VersionCode 4, package `shop.sangtay.mobile`, dùng khóa ký SangTay hiện có để cập nhật bản cũ mà không gỡ app.
+- Có đăng ký/ảnh thẻ, OTP/gửi lại mã, quên mật khẩu và hồ sơ Google native; Google xác thực trong cửa sổ hệ thống rồi nhận phiên về app, xem [AUTH.md](AUTH.md).
+- Thêm lưu nháp nội dung và ảnh trên thiết bị, quản lý sửa/ẩn/hiện/xóa/đã bán, lọc khoảng giá/tình trạng/giá giảm dần. Bao gồm các sửa lỗi phiên, thông báo đổi giá và retry Tài khoản.
+- Source đã qua TypeScript, lint và 114 kiểm thử mobile. API production `/api/auth/mobile/config` trả 200/JSON version 1 với Google/Turnstile bật; chưa coi đó là kiểm thử OTP/Google/Turnstile đầu-cuối bằng tài khoản thật.
+- Gradle release build đạt, chữ ký v2/v3 dùng đúng chứng chỉ SangTay cũ và zipalign 16 KB đạt. APK 59.963.011 byte, arm64-v8a/x86_64, Android API 24+, versionName 1.0.3/code 4. SHA-256: `45FC6D61EFF773B4490D5AF8C4A5B87A96CE99D7D3DAA1D3ED2B09C1949CFFDB`.
+- Cài đè thành công từ 1.0.0 lên 1.0.3 trên Pixel_7 emulator, mở app không cần Metro/Expo Go; Khám phá tải 34 sản phẩm và hiển thị trường/bộ lọc. Không có lỗi khởi động trong log app đã đọc. Chưa thử thiết bị vật lý hoặc đăng nhập/OTP/Google thật trong APK này.
+- API catalogue/chat/xác thực vẫn cần Internet; catalogue đã lưu xem được offline. Admin, thanh toán và các tính năng chỉ có trên website chưa tự trở thành màn hình native.
 
 ## Bản cập nhật 1.0.2 — 28/10/2026
 
@@ -54,10 +66,10 @@ Chép APK sang điện thoại và mở file bằng trình quản lý tệp. And
 Với Pixel_7 đang mở trên máy phát triển:
 
 ```powershell
-F:\AndroidSdk\platform-tools\adb.exe install -r mobile\releases\SangTay-v1.0.2-3.apk
+F:\AndroidSdk\platform-tools\adb.exe install -r mobile\releases\SangTay-v1.0.3-4.apk
 ```
 
-App xuất hiện với tên **SangTay**, application ID `shop.sangtay.mobile`. Đã có chat native; Admin, thanh toán và AI chưa có màn hình native. Đăng ký/quên mật khẩu vẫn mở website.
+App xuất hiện với tên **SangTay**, application ID `shop.sangtay.mobile`. Đã có chat và các form xác thực native; Admin, thanh toán và AI chưa có màn hình native.
 
 ## Giữ khóa ký để cập nhật app
 

@@ -1,5 +1,13 @@
 # Kiểm tra bản mobile đầu tiên — 27/10/2026
 
+## APK 1.0.3 / code 4 — 29/10/2026
+
+- Theo yêu cầu mới, build APK cài độc lập bằng pipeline local sẵn có. Expo Prebuild sinh cấu hình native từ app.json; không sửa tay android/. Version package/Expo 1.0.3, Android versionCode 4, cùng package và khóa ký cũ. Source TS/lint + **74 logic/static + 40 Jest đạt**.
+- Gradle `assembleRelease` thành công (618 tasks); apksigner xác minh v2/v3, chứng chỉ SHA-256 `808f1a602b768ca6319e8fd4e3a1bea8feeb1fd50808482a3be28c5f32911020` khớp bản cũ; zipalign 16 KB đạt. AAPT xác nhận code 4/name 1.0.3/API 24+/target 36, arm64-v8a+x86_64, không debuggable. APK 59.963.011 byte; SHA-256 `45fc6d61eff773b4490d5af8c4a5b87a96ce99d7d3daa1d3ed2b09c1949cffdb`.
+- Kiểm nội dung APK: bundle Hermes có API production, auth mobile/OTP, ảnh thẻ, price-desc và nháp; native Crypto/WebBrowser/Notifications/WebView có trong DEX. Có font, không đóng gói keystore/DPAPI/.env/source map.
+- `adb install -r` cài đè thành công SangTay 1.0.0 → 1.0.3 trên Pixel_7; mở MainActivity đạt, log chỉ có Running main, chưa thấy lỗi khởi động. Quan sát UI thấy catalogue 34 món, thời điểm tải, lọc trường và nút Bộ lọc. Computer Use được người dùng dừng bằng Escape sau kiểm tra mở app; không thao tác UI thêm. Chưa thử login/OTP/Google/nháp/thông báo đầu-cuối trong APK hoặc điện thoại vật lý.
+- Probe API production auth mobile hiện **200/JSON version 1**, Turnstile và Google enabled. Không gửi OTP/email hoặc giao dịch thật. APK/SHA-256 phát hành riêng qua GitHub Releases `mobile-v1.0.3`; khóa ký và binary không đưa vào Git source. Không sửa release Day10/bộ submission đã xóa.
+
 ## Auth native — 29/10/2026
 
 - Đăng ký (ảnh thẻ nén), nhập/gửi lại OTP, quên mật khẩu và hồ sơ Google là native forms. Login/Tài khoản dẫn tới route app. Turnstile dùng trang challenge cùng origin trong WebView, không bỏ kiểm tra server. Không persist mật khẩu/OTP, cookie/Google verifier/pending token chỉ SecureStore; lỗi 401 của OTP/Google không hết phiên đang hợp lệ. Sau nhận session, lỗi kiểm tra identity retry identity thay vì dùng lại mã đã tiêu thụ.

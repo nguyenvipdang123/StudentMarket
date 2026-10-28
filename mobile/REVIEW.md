@@ -74,7 +74,7 @@ Kiểm thử native với fixture: login, restoreSession, GET có cookie đều 
 
 Các màn hình mở bằng trình duyệt có phiên đăng nhập riêng; đăng nhập app không tự đăng nhập website.
 
-Source Expo hiện được bổ sung offline catalogue, state yêu thích/giỏ chung và ảnh bắt buộc nén; xem [RUBRIC.md](RUBRIC.md). APK 1.0.2 trước đó chưa chứa các bổ sung này; chưa tạo APK mới theo yêu cầu người dùng.
+Source Expo hiện được bổ sung offline catalogue, state yêu thích/giỏ chung và ảnh bắt buộc nén; xem [RUBRIC.md](RUBRIC.md). Theo yêu cầu mới, APK 1.0.3/code 4 đã được đóng gói với các bổ sung này, kiểm chữ ký/căn chỉnh và cài đè/mở catalogue trên emulator. Thiết bị thật và nghiệp vụ có xác thực vẫn cần kiểm tra thêm; xem [APK.md](APK.md).
 
 ## Kết quả kiểm tra
 
