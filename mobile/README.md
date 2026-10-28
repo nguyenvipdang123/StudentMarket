@@ -23,7 +23,7 @@ Trên máy khác, đặt `ANDROID_HOME` đến SDK của máy đó rồi chạy 
 
 ## Phạm vi bản đầu
 
-- Khám phá sản phẩm thực, tìm theo từ khóa, lọc danh mục, đổi sắp xếp và tải trang tiếp theo.
+- Khám phá sản phẩm thực, tìm theo từ khóa, lọc danh mục và trường đại học, đổi sắp xếp và tải trang tiếp theo. Nút trường nằm dưới ô tìm kiếm; tìm tên không dấu hoặc mã trường, chọn trường hoặc bỏ lọc về Tất cả trường. Lọc trường được giữ khi tải thêm và làm mới.
 - Chi tiết sản phẩm, vuốt ảnh, thông tin người bán và hướng dẫn giao dịch an toàn.
 - Đăng nhập email/mật khẩu bằng tài khoản đã xác minh trên website; lưu **cookie phiên** trong Expo SecureStore, không lưu mật khẩu. Khôi phục phiên khi mở app và đăng xuất qua API.
 - Khi API xác nhận phiên hết hạn (401 hoặc `/api/auth/me` trả `user: null`), app xóa cookie, bỏ trạng thái đăng nhập và mở màn hình đăng nhập một lần kèm thông báo. Lỗi mật khẩu sai, mất mạng hoặc lỗi server không tự xóa phiên hợp lệ; phản hồi cũ không làm mất phiên vừa đăng nhập lại.

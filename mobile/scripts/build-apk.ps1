@@ -74,7 +74,10 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'APK signature verification failed.' }
     & $zipalign -c -P 16 4 $outputApk
     if ($LASTEXITCODE -ne 0) { throw 'APK zip alignment verification failed.' }
-    $hash = (Get-FileHash -LiteralPath $outputApk -Algorithm SHA256).Hash
+    $sha256 = [Security.Cryptography.SHA256]::Create()
+    $apkStream = [IO.File]::OpenRead($outputApk)
+    try { $hash = [BitConverter]::ToString($sha256.ComputeHash($apkStream)).Replace('-', '') }
+    finally { $apkStream.Dispose(); $sha256.Dispose() }
     [IO.File]::WriteAllText($outputApk + '.sha256', $hash + '  ' + [IO.Path]::GetFileName($outputApk) + [Environment]::NewLine)
     Write-Host "APK ready: $outputApk"
     Write-Host "SHA256: $hash"

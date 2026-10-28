@@ -13,8 +13,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { request, message } from "../../api/client";
+import { catalogPath } from "../../api/catalog";
 import { categories, type Catalog, type Product } from "../../api/types";
 import { ProductCard } from "../../components/ProductCard";
+import { SchoolPicker } from "../../components/SchoolPicker";
 import { Button, Empty, Notice } from "../../components/UI";
 import { colors, ui } from "../../theme";
 export default function Explore() {
@@ -22,6 +24,7 @@ export default function Explore() {
     [query, setQuery] = useState(""),
     [search, setSearch] = useState(""),
     [category, setCategory] = useState("Tất cả"),
+    [school, setSchool] = useState(""),
     [sort, setSort] = useState("featured");
   const [busy, setBusy] = useState(true),
     [error, setError] = useState(""),
@@ -36,13 +39,7 @@ export default function Explore() {
     setError("");
     loadingMore.current = false;
     try {
-      const params = new URLSearchParams({
-        q: search,
-        category,
-        sort,
-        page: "1",
-      });
-      const result = await request<Catalog>("/api/products?" + params);
+      const result = await request<Catalog>(catalogPath({ search, category, sort, school }));
       if (run !== generation.current) return;
       setItems(result.products);
       setPage(result.pagination.page);
@@ -51,12 +48,14 @@ export default function Explore() {
     } catch (e) {
       if (run === generation.current) {
         setItems([]);
+        setTotal(0);
+        setMore(false);
         setError(message(e));
       }
     } finally {
       if (run === generation.current) setBusy(false);
     }
-  }, [search, category, sort]);
+  }, [search, category, sort, school]);
   // A new catalogue request must immediately replace the previous loading state.
   useEffect(() => {
     const counter = generation;
@@ -73,13 +72,7 @@ export default function Explore() {
     setError("");
     try {
       const result = await request<Catalog>(
-        "/api/products?" +
-          new URLSearchParams({
-            q: search,
-            category,
-            sort,
-            page: String(page + 1),
-          }),
+        catalogPath({ search, category, sort, school }, page + 1),
       );
       if (run === generation.current) {
         setItems((old) => [
@@ -94,7 +87,7 @@ export default function Explore() {
     } catch (e) {
       if (run === generation.current) setError(message(e));
     } finally {
-      loadingMore.current = false;
+      if (run === generation.current) loadingMore.current = false;
     }
   }
   return (
@@ -204,6 +197,7 @@ export default function Explore() {
                 </Pressable>
               </View>
             </View>
+            <SchoolPicker value={school} onChange={setSchool} />
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -237,14 +231,14 @@ export default function Explore() {
               ))}
             </ScrollView>
             <View style={[ui.between, { paddingHorizontal: 20 }]}>
-              <View>
+              <View style={{ flex: 1 }}>
                 <Text style={ui.heading}>
                   {search ? `Kết quả “${search}”` : "Khám phá món hay"}
                 </Text>
-                <Text style={ui.small}>
+                <Text style={ui.small} numberOfLines={2}>
                   {busy
                     ? "Đang tìm món đồ…"
-                    : `${total} món đồ · Tất cả trường`}
+                    : `${total} món đồ · ${school || "Tất cả trường"}`}
                 </Text>
               </View>
               <Pressable
@@ -270,7 +264,7 @@ export default function Explore() {
                 </Text>
               </Pressable>
             </View>
-            {error && (
+            {!!error && (
               <View style={{ paddingHorizontal: 20 }}>
                 <Notice text={error} />
                 <Button title="Thử lại" soft onPress={() => void load()} />
@@ -283,7 +277,9 @@ export default function Explore() {
             <View style={{ marginHorizontal: 20 }}>
               <Empty
                 title="Chưa tìm thấy món phù hợp"
-                detail="Thử tên món đồ khác hoặc chọn Tất cả."
+                detail="Thử tên món đồ khác, đổi trường hoặc chọn Tất cả."
+                action={school ? "Xem tất cả trường" : undefined}
+                onPress={() => setSchool("")}
               />
             </View>
           ) : busy ? (

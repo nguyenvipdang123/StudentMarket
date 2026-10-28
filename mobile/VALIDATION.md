@@ -1,5 +1,13 @@
 # Kiểm tra bản mobile đầu tiên — 27/10/2026
 
+## Bổ sung bộ lọc trường — 28/10/2026
+
+- Bảng chọn trường trong Khám phá dùng cùng danh sách và alias với website; hỗ trợ tìm tên không dấu/mã trường, chọn và bỏ lọc.
+- Tham số school đi cùng tìm kiếm, danh mục và sắp xếp khi làm mới/tải thêm. Đổi trường bắt đầu lại trang 1; phản hồi cũ không ghi đè danh sách mới.
+- TypeScript, lint và 16/16 kiểm thử đạt, gồm kiểm tra danh sách trường khớp web và hợp đồng phân trang với parser API.
+- Đọc API production với DNTU/UTH cho đúng 9/4 món tương ứng; bỏ lọc trả tổng 34 món tại thời điểm kiểm tra. Bản xem thử React Native Web ở kích thước điện thoại đã mở bảng chọn, tìm mã DNTU và hiển thị 9 món của trường.
+- Phiên bản ứng dụng tăng lên 1.0.1/versionCode 2 để cài cập nhật bằng cùng khóa ký. Kiểm tra giao diện web không thay thế kiểm thử APK trên thiết bị Android thật.
+
 ## Cài lại dependencies và chuẩn bị GitHub — 28/10/2026
 
 - Khôi phục dependencies bằng `npm --prefix mobile ci`, giữ nguyên lockfile.

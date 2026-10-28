@@ -24,7 +24,15 @@ Nếu Gradle đã build xong và chỉ cần chạy lại bước ký, từ gố
 powershell -NoProfile -ExecutionPolicy Bypass -File mobile/scripts/build-apk.ps1 -SignOnly
 ```
 
-## Bản đã tạo ngày 28/10/2026
+## Bản cập nhật 1.0.1 — 28/10/2026
+
+- File `SangTay-v1.0.1-2.apk`, khoảng 56 MB; versionCode 2, cùng package và chứng chỉ ký với bản 1.0.0 nên cài đè để cập nhật, không cần gỡ app.
+- Thêm bộ lọc trường dưới ô tìm kiếm trong Khám phá: tìm tên/mã trường, chọn trường và bỏ lọc; giữ trường khi làm mới/tải thêm.
+- TypeScript, lint và 16/16 kiểm thử đạt. Bản xem thử ở kích thước điện thoại đã kiểm tra chọn DNTU, tìm tên UTH không dấu và bỏ lọc.
+- Gradle release build, chữ ký v2/v3 và zipalign đều đạt. Đã đọc bundle trong APK để xác nhận có bảng chọn trường, API production và không có địa chỉ proxy preview.
+- Chưa kiểm thử cài/mở APK mới trên thiết bị Android thật. Kiểm tra giao diện React Native Web không thay thế kiểm thử thiết bị.
+
+## Bản 1.0.0 đã tạo trước đó ngày 28/10/2026
 
 - File `SangTay-v1.0.0-1.apk`, khoảng 56 MB; package `shop.sangtay.mobile`, versionCode `1`, Android 7.0/API 24 trở lên trên hai kiến trúc nêu trên.
 - Gradle release build thành công; apksigner xác minh chữ ký v2/v3 bằng khóa riêng SangTay; zipalign xác minh căn chỉnh 16 KB.
@@ -38,7 +46,7 @@ Chép APK sang điện thoại và mở file bằng trình quản lý tệp. And
 Với Pixel_7 đang mở trên máy phát triển:
 
 ```powershell
-F:\AndroidSdk\platform-tools\adb.exe install -r mobile\releases\SangTay-v1.0.0-1.apk
+F:\AndroidSdk\platform-tools\adb.exe install -r mobile\releases\SangTay-v1.0.1-2.apk
 ```
 
 App xuất hiện với tên **SangTay**, application ID `shop.sangtay.mobile`. Các chức năng native hiện có giống bản Expo Go; Admin, chat, thanh toán và AI chưa tự trở thành màn hình native chỉ vì xuất APK. Đăng ký/quên mật khẩu vẫn mở website.

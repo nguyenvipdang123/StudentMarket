@@ -30,7 +30,7 @@ Kiểm thử native với fixture: login, restoreSession, GET có cookie đều 
 - Quản lý tin: mới xem/tạo, chưa sửa/xóa/ẩn/đánh dấu đã bán; chưa đổi thứ tự ảnh, chọn ảnh bìa hoặc lưu nháp qua lần đóng app.
 - Gói đẩy tin, QR/thanh toán, thống kê hiệu quả đẩy tin.
 - Lịch hẹn, xác nhận giao dịch, đánh giá, báo cáo và yêu cầu hỗ trợ native.
-- Bộ lọc trường/khoảng giá/tình trạng và sắp xếp giá giảm dần chưa có UI dù backend hỗ trợ.
+- Đã có bộ lọc trường với tìm tên/mã trường. Khoảng giá/tình trạng và sắp xếp giá giảm dần chưa có UI dù backend hỗ trợ.
 - Đã có APK Android ký riêng và lệnh `npm run mobile:apk`; xem [APK.md](APK.md). Chưa có AAB hoặc phát hành lên cửa hàng.
 
 Các màn hình mở bằng trình duyệt có phiên đăng nhập riêng; đăng nhập app không tự đăng nhập website.
