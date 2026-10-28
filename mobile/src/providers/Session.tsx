@@ -15,6 +15,7 @@ import {
   ApiError,
 } from "../api/client";
 import type { User } from "../api/types";
+import { completeSignOut } from "../api/logout";
 type Session = {
   user: User | null;
   ready: boolean;
@@ -75,15 +76,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           setExpired(false);
         },
         signOut: async () => {
-          try {
-            await post("/api/auth/logout", {});
-          } catch (error) {
-            if (!(error instanceof ApiError && error.status === 401))
-              throw error;
-          }
-          await clearSession();
-          setUser(null);
-          setExpired(false);
+          await completeSignOut(async () => {
+            try { await post("/api/auth/logout", {}); }
+            catch (error) { if (!(error instanceof ApiError && error.status === 401)) throw error; }
+          }, clearSession, () => { setUser(null); setExpired(false); });
         },
       }}
     >

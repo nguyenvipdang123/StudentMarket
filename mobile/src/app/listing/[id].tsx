@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   Text,
   View,
@@ -9,9 +8,12 @@ import {
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Image } from "expo-image";
-import { Ionicons } from "@expo/vector-icons";
+import { FavoriteButton } from "../../components/FavoriteButton";
+import { OfflineBanner } from "../../components/OfflineBanner";
+import { useAccountMarket, useCatalogue } from "../../providers/Market";
+import { availability } from "../../state/commerce";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { API_URL, message, post, request } from "../../api/client";
+import { API_URL, message, request } from "../../api/client";
 import type { Product } from "../../api/types";
 import { mediaUrl, priceLabel } from "../../api/policy";
 import { useSession } from "../../providers/Session";
@@ -21,11 +23,9 @@ export default function Detail() {
   const { id } = useLocalSearchParams<{ id: string }>(),
     { width } = useWindowDimensions(),
     { user } = useSession();
-  const [item, setItem] = useState<Product | null>(null),
+  const [fetchedItem, setItem] = useState<Product | null>(null),
     [busy, setBusy] = useState(true),
     [error, setError] = useState(""),
-    [saved, setSaved] = useState(false),
-    [saving, setSaving] = useState(false),
     [retry, setRetry] = useState(0);
   // Reset the displayed item while synchronizing a new route with the remote API.
   useEffect(() => {
@@ -50,41 +50,22 @@ export default function Detail() {
       alive = false;
     };
   }, [id, retry]);
-  // Saved status belongs to both the current account and listing, never the old one.
-  useEffect(() => {
-    let alive = true;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSaved(false);
-    if (user)
-      void request<{ favorites: { productId: string }[] }>("/api/favorites")
-        .then((r) => {
-          if (alive) setSaved(r.favorites.some((p) => p.productId === id));
-        })
-        .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, [user, id]);
-  async function toggle() {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-    if (saving) return;
-    setSaving(true);
-    setError("");
+  const { products, offline } = useCatalogue();
+  const { favorites, cart, store } = useAccountMarket();
+  const cached = products.find(p => p.id === id) || favorites.find(p => p.id === id) || cart.find(p => p.id === id);
+  const item = fetchedItem?.id === id ? fetchedItem : cached;
+  const [adding, setAdding] = useState(false);
+  async function addToCart() {
+    if (!user) { router.push("/login"); return; }
+    if (offline) { setError("Kết nối mạng để kiểm tra tình trạng món đồ trước khi thêm vào giỏ."); return; }
+    setAdding(true); setError("");
     try {
-      const r = await post<{ isSaved: boolean }>("/api/favorites", {
-        productId: id,
-      });
-      setSaved(r.isSaved);
-    } catch (e) {
-      setError(message(e));
-    } finally {
-      setSaving(false);
-    }
+      const result = await request<{ product: Product }>("/api/products/" + encodeURIComponent(id));
+      await store.add(result.product); setItem(result.product);
+      router.push("/cart");
+    } catch (e) { setError(message(e)); } finally { setAdding(false); }
   }
-  if (busy)
+  if (busy && !item)
     return (
       <View style={[ui.screen, { justifyContent: "center" }]}>
         <ActivityIndicator color={colors.green} />
@@ -138,25 +119,12 @@ export default function Detail() {
           ))}
         </ScrollView>
         <View style={ui.content}>
+          <OfflineBanner />
           <View style={ui.between}>
             <View style={ui.badge}>
               <Text style={ui.badgeText}>{item.condition}</Text>
             </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={saved ? "Bỏ lưu món đồ" : "Lưu món đồ"}
-              accessibilityState={{ selected: saved, disabled: saving }}
-              disabled={saving}
-              onPress={() => void toggle()}
-              style={ui.row}
-            >
-              <Ionicons
-                name={saved ? "heart" : "heart-outline"}
-                size={24}
-                color={colors.green}
-              />
-              <Text style={ui.small}>{saved ? "Đã lưu" : "Lưu"}</Text>
-            </Pressable>
+            <FavoriteButton item={item} />
           </View>
           <Text style={ui.title}>{item.title}</Text>
           <Text
@@ -183,6 +151,7 @@ export default function Detail() {
             </Text>
           </View>
           <Notice text={error} />
+          {!!availability(item, user?.pgUserId) && <Notice text={availability(item, user?.pgUserId)} />}
         </View>
       </ScrollView>
       <SafeAreaView
@@ -192,9 +161,12 @@ export default function Detail() {
           borderTopWidth: 1,
           borderColor: colors.line,
           padding: 14,
+          gap: 8,
         }}
       >
+        <Button title={cart.some(p => p.id === id) ? "Xem giỏ hàng" : "Thêm vào giỏ · Số lượng 1"} loading={adding} disabled={!cart.some(p => p.id === id) && !!availability(item, user?.pgUserId)} onPress={() => cart.some(p => p.id === id) ? router.push("/cart") : void addToCart()} />
         <Button
+          soft
           title={
             own ? "Xem tin nhắn của tôi" : item.status !== "Active"
               ? "Món đồ đã được sang tay"

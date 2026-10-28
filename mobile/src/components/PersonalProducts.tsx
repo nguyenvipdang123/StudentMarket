@@ -13,7 +13,7 @@ import type { Product } from "../api/types";
 import { Empty, Notice, Button } from "./UI";
 import { ProductCard } from "./ProductCard";
 import { ui, colors } from "../theme";
-export function PersonalProducts({ saved = false }: { saved?: boolean }) {
+export function PersonalProducts() {
   const { user, ready } = useSession();
   const [items, setItems] = useState<Product[]>([]),
     [busy, setBusy] = useState(false),
@@ -28,21 +28,10 @@ export function PersonalProducts({ saved = false }: { saved?: boolean }) {
     }
     setBusy(true);
     setError("");
-    void request<{
-      listings?: Product[];
-      favorites?: (Product & { productId: string })[];
-    }>(saved ? "/api/favorites" : "/api/my-listings")
+    void request<{ listings: Product[] }>("/api/my-listings")
       .then((result) => {
         if (run === generation.current)
-          setItems(
-            saved
-              ? (result.favorites || []).map((p) => ({
-                  ...p,
-                  id: p.productId,
-                  description: p.description || "",
-                }))
-              : result.listings || [],
-          );
+          setItems(result.listings || []);
       })
       .catch((e) => {
         if (run === generation.current) setError(message(e));
@@ -50,7 +39,7 @@ export function PersonalProducts({ saved = false }: { saved?: boolean }) {
       .finally(() => {
         if (run === generation.current) setBusy(false);
       });
-  }, [saved, user]);
+  }, [user]);
   useFocusEffect(
     useCallback(() => {
       const counter = generation;
@@ -93,11 +82,9 @@ export function PersonalProducts({ saved = false }: { saved?: boolean }) {
       ListHeaderComponent={
         <View style={ui.content}>
           <Text style={ui.eyebrow}>
-            {saved
-              ? "Giữ lại những món bạn thích"
-              : "Mỗi món đồ, một hành trình"}
+            Mỗi món đồ, một hành trình
           </Text>
-          <Text style={ui.title}>{saved ? "Đã lưu" : "Tin của tôi"}</Text>
+          <Text style={ui.title}>Tin của tôi</Text>
           <Text style={ui.small}>
             {items.length} món đồ · Kéo xuống để cập nhật
           </Text>
@@ -117,12 +104,8 @@ export function PersonalProducts({ saved = false }: { saved?: boolean }) {
         !busy && !error ? (
           <View style={{ marginHorizontal: 20 }}>
             <Empty
-              title={saved ? "Chưa lưu món đồ nào" : "Chưa có tin đăng"}
-              detail={
-                saved
-                  ? "Mở chi tiết một món đồ rồi bấm Lưu để xem lại tại đây."
-                  : "Đăng món đồ đầu tiên của bạn để tìm một người chủ mới."
-              }
+              title="Chưa có tin đăng"
+              detail="Đăng món đồ đầu tiên của bạn để tìm một người chủ mới."
             />
           </View>
         ) : undefined

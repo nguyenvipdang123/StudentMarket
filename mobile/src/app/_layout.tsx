@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import { ActivityIndicator, View } from "react-native";
 import { SessionProvider } from "../providers/Session";
+import { MarketProvider } from "../providers/Market";
 import { SessionExpiryRedirect } from "../components/SessionExpiryRedirect";
 import { colors } from "../theme";
 export default function Layout() {
@@ -26,6 +27,7 @@ export default function Layout() {
     );
   return (
     <SessionProvider>
+      <MarketProvider>
       <StatusBar style="dark" />
       <Stack
         screenOptions={{
@@ -48,8 +50,11 @@ export default function Layout() {
         <Stack.Screen name="my-listings" options={{ title: "Tin của tôi" }} />
         <Stack.Screen name="contact/[listingId]" options={{ title: "Liên hệ người bán" }} />
         <Stack.Screen name="chat/[id]" options={{ title: "Trò chuyện" }} />
+        <Stack.Screen name="cart" options={{ title: "Giỏ hàng" }} />
+        <Stack.Screen name="checkout" options={{ title: "Tóm tắt thanh toán" }} />
       </Stack>
       <SessionExpiryRedirect />
+      </MarketProvider>
     </SessionProvider>
   );
 }

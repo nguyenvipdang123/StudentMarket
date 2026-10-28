@@ -2,6 +2,8 @@
 
 Build bản cài Android độc lập bằng `npm run mobile:apk` từ gốc repo. Xem [hướng dẫn APK](APK.md) về file cài, công cụ build và khóa ký để cập nhật app.
 
+Hiện đang hoàn thiện **bằng Expo**, chưa tạo APK mới cho các yêu cầu môn học. Xem [đối chiếu MUST HAVE và kịch bản demo](RUBRIC.md).
+
 Ứng dụng **React Native + Expo + TypeScript**, dùng chung API và dữ liệu của [sangtay.shop](https://sangtay.shop). Giao diện native được viết riêng cho điện thoại; website Next.js vẫn nằm ở `../frontend`.
 
 ## Chạy Android trên máy này
@@ -23,12 +25,13 @@ Trên máy khác, đặt `ANDROID_HOME` đến SDK của máy đó rồi chạy 
 
 ## Phạm vi bản đầu
 
-- Khám phá sản phẩm thực, tìm theo từ khóa, lọc danh mục và trường đại học, đổi sắp xếp và tải trang tiếp theo. Nút trường nằm dưới ô tìm kiếm; tìm tên không dấu hoặc mã trường, chọn trường hoặc bỏ lọc về Tất cả trường. Lọc trường được giữ khi tải thêm và làm mới.
+- Catalogue tải đủ trang từ API và lưu bản thành công gần nhất trên máy. Tìm từ khóa không dấu, lọc danh mục/trường và sắp xếp được tính trực tiếp khi render; không lưu danh sách lọc thành state. Offline vẫn xem/tìm/lọc bản lưu với banner; lần đầu chưa có dữ liệu luôn hiện hướng dẫn và nút thử lại.
 - Chi tiết sản phẩm, vuốt ảnh, thông tin người bán và hướng dẫn giao dịch an toàn.
 - Đăng nhập email/mật khẩu bằng tài khoản đã xác minh trên website; lưu **cookie phiên** trong Expo SecureStore, không lưu mật khẩu. Khôi phục phiên khi mở app và đăng xuất qua API.
 - Khi API xác nhận phiên hết hạn (401 hoặc `/api/auth/me` trả `user: null`), app xóa cookie, bỏ trạng thái đăng nhập và mở màn hình đăng nhập một lần kèm thông báo. Lỗi mật khẩu sai, mất mạng hoặc lỗi server không tự xóa phiên hợp lệ; phản hồi cũ không làm mất phiên vừa đăng nhập lại.
-- Lưu/bỏ lưu sản phẩm, xem danh sách đã lưu và tin của tôi.
-- Sinh viên có thể tạo tin chờ duyệt, chọn tối đa 8 ảnh (JPG/PNG/WebP, 5 MB/ảnh), bán/trao đổi/tặng. Màn hình giữ dữ liệu khi API báo lỗi; chưa có bản nháp lưu qua lần đóng app.
+- Yêu thích dùng chung state ở Khám phá, Chi tiết và Đã lưu, lưu AsyncStorage riêng từng tài khoản và đồng bộ API. Đã lưu và giỏ khôi phục sau khi mở lại; không hiện dữ liệu của tài khoản trước sau đăng xuất/đổi tài khoản.
+- Giỏ hàng từ biểu tượng ở Khám phá hoặc Tài khoản. Mỗi tin số lượng 1; checkout tính tạm tính/phí giao/tổng, kiểm tra lại giá/tình trạng từ API và chặn món đã bán/giữ chỗ/không xác minh được. Đây là bảng dự tính và liên hệ người bán, chưa tạo đơn hoặc thu tiền.
+- Sinh viên tạo tin chờ duyệt với ít nhất 1 và tối đa 8 ảnh từ thư viện/camera; ảnh được nén JPEG 72%, tối đa 1.600px và 5 MB trước khi gửi. Màn hình giữ dữ liệu khi API báo lỗi; chưa có bản nháp lưu qua lần đóng app.
 - Nhắn tin người bán ngay trong chi tiết sản phẩm; tab Tin nhắn có cả cuộc trò chuyện mua và bán, số tin chưa đọc, lịch sử và trạng thái đã xem dùng chung với website. Gửi văn bản ngay trong app và xem ảnh người dùng gửi từ website; chưa gửi ảnh từ app. Gửi lỗi giữ nội dung đang soạn, không tự gửi lại để tránh trùng tin.
 - Lịch sử chat cập nhật mỗi 5 giây, danh sách cuộc trò chuyện mỗi 15 giây khi màn hình đang mở; dừng khi chuyển màn hình hoặc đưa app vào nền. Chưa có thông báo đẩy khi đóng app.
 - Đăng ký, quên mật khẩu, Google và hỗ trợ mở trên website, có thể cần đăng nhập riêng trên trình duyệt. Chưa có thanh toán native, AI hoặc màn hình Admin.
@@ -54,6 +57,7 @@ src/app/          Expo Router: tabs, đăng nhập, chi tiết, tin của tôi
 src/api/          API client, DTO, kiểm tra URL/session và dữ liệu đầu vào
 src/components/   Thành phần giao diện dùng lại
 src/providers/    Phiên đăng nhập
+src/state/        Catalogue offline, yêu thích và giỏ dùng chung, quy tắc checkout
 src/hooks/        Cập nhật chat theo trạng thái màn hình và ứng dụng
 src/theme.ts      Màu và typography SangTay
 assets/fonts/     Font dùng chung nhận diện với website và giấy phép

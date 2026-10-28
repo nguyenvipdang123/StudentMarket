@@ -19,6 +19,7 @@ export type Product = {
   likes?: number;
   chats?: number;
   reservedUntil?: string | null;
+  createdAt?: string;
 };
 export type User = {
   id: number;

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -11,85 +11,26 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { request, message } from "../../api/client";
-import { catalogPath } from "../../api/catalog";
-import { categories, type Catalog, type Product } from "../../api/types";
+import { router, useFocusEffect } from "expo-router";
+import { selectProducts } from "../../api/catalog";
+import { categories } from "../../api/types";
+import { useCatalogue, useAccountMarket } from "../../providers/Market";
+import { OfflineBanner } from "../../components/OfflineBanner";
 import { ProductCard } from "../../components/ProductCard";
 import { SchoolPicker } from "../../components/SchoolPicker";
 import { Button, Empty, Notice } from "../../components/UI";
 import { colors, ui } from "../../theme";
 export default function Explore() {
-  const [items, setItems] = useState<Product[]>([]),
-    [query, setQuery] = useState(""),
-    [search, setSearch] = useState(""),
-    [category, setCategory] = useState("Tất cả"),
-    [school, setSchool] = useState(""),
-    [sort, setSort] = useState("featured");
-  const [busy, setBusy] = useState(true),
-    [error, setError] = useState(""),
-    [page, setPage] = useState(1),
-    [total, setTotal] = useState(0),
-    [more, setMore] = useState(false);
-  const generation = useRef(0),
-    loadingMore = useRef(false);
-  const load = useCallback(async () => {
-    const run = ++generation.current;
-    setBusy(true);
-    setError("");
-    loadingMore.current = false;
-    try {
-      const result = await request<Catalog>(catalogPath({ search, category, sort, school }));
-      if (run !== generation.current) return;
-      setItems(result.products);
-      setPage(result.pagination.page);
-      setMore(result.pagination.hasNext);
-      setTotal(result.pagination.total);
-    } catch (e) {
-      if (run === generation.current) {
-        setItems([]);
-        setTotal(0);
-        setMore(false);
-        setError(message(e));
-      }
-    } finally {
-      if (run === generation.current) setBusy(false);
-    }
-  }, [search, category, sort, school]);
-  // A new catalogue request must immediately replace the previous loading state.
-  useEffect(() => {
-    const counter = generation;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void load();
-    return () => {
-      counter.current++;
-    };
-  }, [load]);
-  async function next() {
-    if (busy || !more || loadingMore.current) return;
-    loadingMore.current = true;
-    const run = generation.current;
-    setError("");
-    try {
-      const result = await request<Catalog>(
-        catalogPath({ search, category, sort, school }, page + 1),
-      );
-      if (run === generation.current) {
-        setItems((old) => [
-          ...old,
-          ...result.products.filter(
-            (item) => !old.some((p) => p.id === item.id),
-          ),
-        ]);
-        setPage(result.pagination.page);
-        setMore(result.pagination.hasNext);
-      }
-    } catch (e) {
-      if (run === generation.current) setError(message(e));
-    } finally {
-      if (run === generation.current) loadingMore.current = false;
-    }
-  }
+  const { products, ready, busy, error, offline, stale, refresh } = useCatalogue();
+  const { cart } = useAccountMarket();
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("Tất cả"), [school, setSchool] = useState(""), [sort, setSort] = useState("featured");
+  const [visibleLimit, setVisibleLimit] = useState(12);
+  useFocusEffect(useCallback(() => { void refresh(); }, [refresh]));
+  // Derived on every render; neither filtered products nor totals are state.
+  const filtered = selectProducts(products, { search: query, category, school, sort });
+  const items = filtered.slice(0, visibleLimit), total = filtered.length, more = visibleLimit < total;
+  const load = refresh;
   return (
     <SafeAreaView style={ui.screen} edges={["top"]}>
       <FlatList
@@ -121,8 +62,8 @@ export default function Explore() {
                 sang<Text style={{ color: "#D5935B" }}>tay.</Text>
               </Text>
               <Pressable
-                accessibilityLabel="Mở tài khoản"
-                onPress={() => router.push("/account")}
+                accessibilityLabel={`Mở giỏ hàng, ${cart.length} món`}
+                onPress={() => router.push("/cart")}
                 style={{
                   padding: 10,
                   borderRadius: 16,
@@ -130,7 +71,7 @@ export default function Explore() {
                 }}
               >
                 <Ionicons
-                  name="person-outline"
+                  name="cart-outline"
                   size={21}
                   color={colors.green}
                 />
@@ -174,8 +115,8 @@ export default function Explore() {
                   placeholder="Bạn đang tìm món gì?"
                   placeholderTextColor={colors.muted}
                   value={query}
-                  onChangeText={setQuery}
-                  onSubmitEditing={() => setSearch(query.trim())}
+                  onChangeText={text => { setQuery(text); setVisibleLimit(12); }}
+                  onSubmitEditing={() => setVisibleLimit(12)}
                   returnKeyType="search"
                   style={{
                     flex: 1,
@@ -186,7 +127,7 @@ export default function Explore() {
                 />
                 <Pressable
                   accessibilityLabel="Tìm kiếm"
-                  onPress={() => setSearch(query.trim())}
+                  onPress={() => setVisibleLimit(12)}
                   style={{ padding: 14 }}
                 >
                   <Ionicons
@@ -197,7 +138,8 @@ export default function Explore() {
                 </Pressable>
               </View>
             </View>
-            <SchoolPicker value={school} onChange={setSchool} />
+            <View style={{ marginHorizontal: 20 }}><OfflineBanner /></View>
+            <SchoolPicker value={school} onChange={value => { setSchool(value); setVisibleLimit(12); }} />
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -208,7 +150,7 @@ export default function Explore() {
                   key={c}
                   accessibilityRole="button"
                   accessibilityState={{ selected: c === category }}
-                  onPress={() => setCategory(c)}
+                  onPress={() => { setCategory(c); setVisibleLimit(12); }}
                   style={{
                     padding: 12,
                     borderRadius: 13,
@@ -233,7 +175,7 @@ export default function Explore() {
             <View style={[ui.between, { paddingHorizontal: 20 }]}>
               <View style={{ flex: 1 }}>
                 <Text style={ui.heading}>
-                  {search ? `Kết quả “${search}”` : "Khám phá món hay"}
+                  {query ? `Kết quả “${query}”` : "Khám phá món hay"}
                 </Text>
                 <Text style={ui.small} numberOfLines={2}>
                   {busy
@@ -273,16 +215,16 @@ export default function Explore() {
           </View>
         }
         ListEmptyComponent={
-          !busy && !error ? (
+          ready && !busy ? (
             <View style={{ marginHorizontal: 20 }}>
               <Empty
-                title="Chưa tìm thấy món phù hợp"
-                detail="Thử tên món đồ khác, đổi trường hoặc chọn Tất cả."
+                title={products.length ? "Chưa tìm thấy món phù hợp" : offline || stale ? "Chưa có catalogue lưu trên máy" : "Chưa có món đồ"}
+                detail={products.length ? "Thử tên món đồ khác, đổi trường hoặc chọn Tất cả." : "Kết nối Internet rồi bấm Thử lại hoặc kéo xuống để tải catalogue. Các chức năng khác vẫn có thể truy cập."}
                 action={school ? "Xem tất cả trường" : undefined}
                 onPress={() => setSchool("")}
               />
             </View>
-          ) : busy ? (
+          ) : busy || !ready ? (
             <ActivityIndicator color={colors.green} />
           ) : undefined
         }
@@ -292,7 +234,7 @@ export default function Explore() {
               <Button
                 title="Xem thêm món đồ"
                 soft
-                onPress={() => void next()}
+                onPress={() => setVisibleLimit(n => n + 12)}
               />
             </View>
           ) : undefined

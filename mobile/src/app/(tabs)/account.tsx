@@ -85,6 +85,7 @@ export default function Account() {
           </View>
         )}
         <View style={ui.panel}>
+          <Button title="Giỏ hàng" soft onPress={() => router.push("/cart")} />
           <Button
             title="Tin của tôi"
             soft

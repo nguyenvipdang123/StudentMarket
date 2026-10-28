@@ -30,7 +30,7 @@
         "expo-image-picker",
         {
           "photosPermission": "Cho phép SangTay chọn ảnh món đồ để đăng tin.",
-          "cameraPermission": false,
+          "cameraPermission": "Cho phép SangTay chụp ảnh món đồ để đăng tin.",
           "microphonePermission": false
         }
       ],

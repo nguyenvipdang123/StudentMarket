@@ -17,6 +17,10 @@ import { useSession } from "../../providers/Session";
 import { message, request } from "../../api/client";
 import { categories, conditions } from "../../api/types";
 import { validateDraft } from "../../api/policy";
+import { compressPhoto, appendPhotos } from "../../api/photos";
+import { validatePhotos, type CompressedPhoto } from "../../api/photos-policy";
+import { useCatalogue } from "../../providers/Market";
+import { OfflineBanner } from "../../components/OfflineBanner";
 import { Button, Chips, Empty, Field, Notice } from "../../components/UI";
 import { colors, ui } from "../../theme";
 const initial = {
@@ -35,45 +39,44 @@ export default function Post() {
 }
 function PostForm() {
   const { user } = useSession();
+  const { offline } = useCatalogue();
   const [draft, setDraft] = useState(initial),
-    [photos, setPhotos] = useState<ImagePicker.ImagePickerAsset[]>([]),
+    [photos, setPhotos] = useState<CompressedPhoto[]>([]),
     [busy, setBusy] = useState(false),
+    [processing, setProcessing] = useState(false),
     [error, setError] = useState("");
-  const pending = useRef(false);
+  const pending = useRef(false), picking = useRef(false);
   const change = (key: keyof typeof initial, value: string) => {
     setDraft((d) => ({ ...d, [key]: value }));
     setError("");
   };
-  async function pick() {
+  async function pick(camera = false) {
+    if (picking.current || photos.length >= 8) return;
+    picking.current = true; setProcessing(true); setError("");
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
+      if (camera) {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permission.granted) { setError("Bạn chưa cho phép camera. Có thể chọn ảnh từ thư viện thay thế."); return; }
+      }
+      const result = camera ? await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 1 }) : await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         allowsMultipleSelection: true,
         selectionLimit: 8 - photos.length,
-        quality: 0.85,
+        quality: 1,
       });
       if (result.canceled) return;
-      if (
-        result.assets.some(
-          (a) =>
-            (a.fileSize || 0) > 5 * 1024 * 1024 ||
-            !["image/jpeg", "image/png", "image/webp"].includes(
-              a.mimeType || "",
-            ),
-        )
-      ) {
-        setError("Chọn ảnh JPG, PNG hoặc WebP, mỗi ảnh tối đa 5 MB.");
-        return;
-      }
-      setPhotos((old) => [...old, ...result.assets].slice(0, 8));
+      const compressed: CompressedPhoto[] = [];
+      // Sequential processing keeps memory bounded on older phones.
+      for (const asset of result.assets.slice(0, 8 - photos.length)) compressed.push(await compressPhoto(asset));
+      setPhotos((old) => [...old, ...compressed].slice(0, 8));
       setError("");
     } catch (e) {
       setError(message(e));
-    }
+    } finally { picking.current = false; setProcessing(false); }
   }
   async function submit() {
-    if (pending.current) return;
-    const invalid = validateDraft(draft);
+    if (pending.current || picking.current) return;
+    const invalid = offline ? "Bạn đang offline. Giữ nội dung và ảnh trên màn hình; kết nối mạng để gửi tin." : validateDraft(draft) || validatePhotos(photos);
     if (invalid) {
       setError(invalid);
       return;
@@ -93,13 +96,7 @@ function PostForm() {
       form.append("category", draft.category);
       form.append("condition", draft.condition);
       form.append("location", draft.location.trim());
-      photos.forEach((photo, index) =>
-        form.append("imageFiles", {
-          uri: photo.uri,
-          name: photo.fileName || `photo-${index}.jpg`,
-          type: photo.mimeType || "image/jpeg",
-        } as unknown as Blob),
-      );
+      await appendPhotos(form, photos);
       await request("/api/products", { method: "POST", body: form }, 60000);
       setDraft(initial);
       setPhotos([]);
@@ -157,13 +154,14 @@ function PostForm() {
         >
           <Text style={ui.eyebrow}>Cũ với bạn, mới với ai đó</Text>
           <Text style={ui.title}>Sang tay món đồ{"\n"}của bạn.</Text>
+          <OfflineBanner />
           <Text style={ui.small}>
             Đăng tin miễn phí · Tin mới sẽ được kiểm duyệt.
           </Text>
           <View style={ui.panel}>
             <Text style={ui.heading}>Ảnh món đồ · {photos.length}/8</Text>
             <Text style={ui.small}>
-              Ảnh đầu tiên là ảnh bìa. JPG, PNG, WebP · tối đa 5 MB/ảnh.
+              Bắt buộc ít nhất 1 ảnh. Ảnh được nén JPEG 72%, tối đa 1.600px và 5 MB trước khi gửi; ảnh đầu là ảnh bìa.
             </Text>
             <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
               {photos.map((photo, i) => (
@@ -172,8 +170,9 @@ function PostForm() {
                     source={photo.uri}
                     style={{ width: 88, height: 88, borderRadius: 12 }}
                   />
+                  <Text style={[ui.small, { fontSize: 10 }]}>{Math.round(photo.fileSize / 1024)} KB · Đã nén</Text>
                   <Pressable
-                    disabled={busy}
+                    disabled={busy || processing}
                     accessibilityLabel={`Xóa ảnh ${i + 1}`}
                     onPress={() =>
                       setPhotos((old) => old.filter((_, n) => n !== i))
@@ -195,9 +194,11 @@ function PostForm() {
             <Button
               title="Chọn ảnh từ thiết bị"
               soft
-              disabled={busy || photos.length >= 8}
+              disabled={busy || processing || photos.length >= 8}
               onPress={() => void pick()}
             />
+            <Button title="Chụp ảnh món đồ" soft disabled={busy || processing || photos.length >= 8} onPress={() => void pick(true)} />
+            {processing && <Text style={ui.small}>Đang nén ảnh trên thiết bị…</Text>}
           </View>
           <View style={ui.panel}>
             <Field
@@ -279,6 +280,7 @@ function PostForm() {
           <Button
             title="Gửi tin đăng"
             loading={busy}
+            disabled={processing || offline}
             onPress={() => void submit()}
           />
           <Text style={ui.small}>

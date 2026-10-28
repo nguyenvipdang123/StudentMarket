@@ -6,8 +6,10 @@ import { API_URL } from "../api/client";
 import { mediaUrl, priceLabel } from "../api/policy";
 import type { Product } from "../api/types";
 import { colors, ui } from "../theme";
+import { FavoriteButton } from "./FavoriteButton";
 export function ProductCard({ item }: { item: Product }) {
   return (
+    <View style={{ flex: 1, minWidth: 0, borderRadius: 18, borderWidth: 1, borderColor: colors.line, overflow: "hidden", backgroundColor: colors.paper }}>
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`Xem ${item.title}`}
@@ -17,10 +19,6 @@ export function ProductCard({ item }: { item: Product }) {
       style={({ pressed }) => ({
         flex: 1,
         minWidth: 0,
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: colors.line,
-        overflow: "hidden",
         backgroundColor: pressed ? colors.sage : colors.paper,
         opacity: pressed ? 0.85 : 1,
       })}
@@ -33,6 +31,7 @@ export function ProductCard({ item }: { item: Product }) {
           backgroundColor: colors.sage,
         }}
         contentFit="cover"
+        cachePolicy="memory-disk"
         transition={150}
         accessibilityLabel={item.title}
       />
@@ -70,5 +69,7 @@ export function ProductCard({ item }: { item: Product }) {
         )}
       </View>
     </Pressable>
+    <FavoriteButton item={item} compact />
+    </View>
   );
 }

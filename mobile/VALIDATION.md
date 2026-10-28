@@ -1,5 +1,15 @@
 # Kiểm tra bản mobile đầu tiên — 27/10/2026
 
+## MUST HAVE cho môn Mobile, kiểm thử source Expo — 28/10/2026
+
+- Đã triển khai đối chiếu trong [RUBRIC.md](RUBRIC.md): tìm kiếm/danh mục tính khi render từ catalogue gốc, state yêu thích/giỏ dùng chung lưu riêng theo tài khoản, catalogue offline, ảnh bắt buộc nén từ thư viện/camera và đăng xuất local ngay cả khi API lỗi.
+- TypeScript, ESLint không lỗi/cảnh báo; 33/33 kiểm thử mobile đạt. Bao phủ khôi phục cache sau restart, dữ liệu lỗi không thay thế bản tốt, hai subscriber yêu thích, tách tài khoản, phản hồi cũ, stock/availability, phí giao theo người bán, giá thay đổi, ảnh bắt buộc và logout khi mất mạng.
+- Bản xem thử Expo React Native Web 390 × 844 với API/tài khoản giả: gõ `sach` và lọc Học tập ra đúng món; lưu/bỏ lưu cập nhật ngay màn hình Đã lưu; bản catalogue vẫn tìm được khi chuyển trạng thái offline; tổng 50.000đ + giao 30.000đ = 80.000đ; tin vừa chuyển Sold bị chặn với lý do. Hai cảnh báo render phát hiện trong QA đã sửa và kiểm tra lại.
+- Chạy ImageManipulator thực trên bản web với ảnh local 4.000 × 3.000, 265.882 byte: JPEG kết quả 1.600 × 1.200, 27.897 byte. Đây là kiểm chứng pipeline nén; chưa xác minh camera hoặc hiệu năng nén trên Android thật.
+- Đọc API công khai production: 34 sản phẩm, tất cả hợp lệ với schema catalogue cache mới. Không tạo tài khoản/tin đăng/thanh toán hay lưu yêu thích của người dùng thật.
+- `expo export --platform android` thành công, bundle Hermes khoảng 3,2 MB. Xác nhận bundle dùng API production và không còn route/địa chỉ API giả. Không chạy Gradle hoặc tạo APK mới theo yêu cầu người dùng.
+- Trang kiểm thử giả đã xóa; server local 8085/18865 đã dừng, localhost:3000 vẫn tắt. Cần demo Expo Go trên Android/iOS thật cho SecureStore, camera, chọn ảnh/upload, khởi động lại và chế độ máy bay. Checkout là bảng chi phí dự kiến, chưa tạo đơn hay thu tiền.
+
 ## Bổ sung chat native — 28/10/2026
 
 - Thêm tab Tin nhắn, mở/tạo cuộc trò chuyện từ chi tiết sản phẩm, gửi văn bản, xem lịch sử/ảnh đính kèm và trạng thái đã xem. Dùng chung API và cookie phiên của app; không cần đăng nhập trình duyệt để chat.
