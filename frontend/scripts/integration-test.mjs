@@ -358,6 +358,10 @@ try{
   }
   assert.equal((await testDb.query("SELECT COUNT(*)::int AS count FROM promotion_orders WHERE payment_status='PAID'")).rows[0].count,0);
   check("client cannot activate paid promotion");
+  if (process.env.TEST_MOBILE_CHAT === "1") {
+    const { testMobileChat } = await import("./helpers/test-mobile-chat.mjs");
+    await testMobileChat({ db: testDb, req, users, cookies, check });
+  }
   // Start the actual Python transport and exercise signed tickets, spoofing and revocation.
   chat=launch(join(root,".venv/Scripts/python.exe"),["-m","uvicorn","fastapi_chat.main:app","--host","127.0.0.1","--port",String(chatPort),"--ws-max-size","20000","--no-access-log"],{cwd:root,env});
   await ready("http://127.0.0.1:"+chatPort+"/health",chat);

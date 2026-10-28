@@ -1,5 +1,14 @@
 # Kiểm tra bản mobile đầu tiên — 27/10/2026
 
+## Bổ sung chat native — 28/10/2026
+
+- Thêm tab Tin nhắn, mở/tạo cuộc trò chuyện từ chi tiết sản phẩm, gửi văn bản, xem lịch sử/ảnh đính kèm và trạng thái đã xem. Dùng chung API và cookie phiên của app; không cần đăng nhập trình duyệt để chat.
+- TypeScript, ESLint và 23/23 kiểm thử mobile đạt. Bao phủ danh tính người tham gia, payload không giả mạo người gửi, gộp lịch sử sau phản hồi chậm, giới hạn đường dẫn ảnh riêng tư, cập nhật nối tiếp và dừng khi rời màn hình/đưa app vào nền.
+- `npm --prefix mobile run test:chat-integration`: 39/39 nhóm kiểm thử tích hợp đạt với API Next.js thật và database local tạm. Xác nhận tạo phòng đồng thời không trùng, hai bên gửi/nhận và đã xem; người ngoài không được đọc/gửi hoặc xem ảnh, người chưa đăng nhập nhận 401. Không nhắn tin đến người dùng production.
+- Giao diện React Native Web ở kích thước 390 × 844 với API giả: gửi/nhận, đã xem, xóa ô soạn sau gửi thành công, giữ nội dung khi gửi lỗi. Route giả đã được gỡ trước khi build APK.
+- Phiên bản 1.0.2/versionCode 3. Chưa kiểm thử APK mới trên Android thật; kết quả xem thử trên web và kiểm thử API không thay thế kiểm thử bàn phím, cài đặt và chạy trên thiết bị.
+- APK release đã build và xác minh chữ ký v2/v3 bằng cùng chứng chỉ bản cũ, zipalign 16 KB đạt. Đọc manifest xác nhận package/version/ABIs, đọc bundle xác nhận có chat native và không có route/dữ liệu giả. Cổng local 3000 và 8085 đã dừng sau khi kiểm tra.
+
 ## Bổ sung bộ lọc trường — 28/10/2026
 
 - Bảng chọn trường trong Khám phá dùng cùng danh sách và alias với website; hỗ trợ tìm tên không dấu/mã trường, chọn và bỏ lọc.

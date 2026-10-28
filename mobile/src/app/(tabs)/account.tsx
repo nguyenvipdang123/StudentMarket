@@ -14,6 +14,7 @@ import { useSession } from "../../providers/Session";
 import { API_URL, message } from "../../api/client";
 import { Button, Notice } from "../../components/UI";
 import { colors, ui } from "../../theme";
+import appConfig from "../../../app.json";
 export default function Account() {
   const { user, ready, signOut } = useSession();
   const [error, setError] = useState(""),
@@ -100,9 +101,9 @@ export default function Account() {
             onPress={() => void Linking.openURL(API_URL + "/support")}
           />
           <Button
-            title="Tin nhắn trên website ↗"
+            title="Tin nhắn"
             soft
-            onPress={() => void Linking.openURL(API_URL + "/messages")}
+            onPress={() => router.push("/messages")}
           />
         </View>
         <Notice text={error} />
@@ -120,7 +121,7 @@ export default function Account() {
           />
         )}
         <Text style={[ui.small, { textAlign: "center" }]}>
-          SangTay Mobile · Phiên bản 1.0{"\n"}Trao đồ cũ, gửi niềm vui.
+          SangTay Mobile · Phiên bản {appConfig.expo.version}{"\n"}Trao đồ cũ, gửi niềm vui.
         </Text>
       </ScrollView>
     </SafeAreaView>

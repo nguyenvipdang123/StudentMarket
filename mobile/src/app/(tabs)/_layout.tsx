@@ -56,6 +56,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="messages"
+        options={{ title: "Tin nhắn", tabBarIcon: ({ color, size }) => <Ionicons name="chatbubbles-outline" color={typeof color === "string" ? color : colors.muted} size={size} /> }}
+      />
+      <Tabs.Screen
         name="account"
         options={{
           title: "Tài khoản",

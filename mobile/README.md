@@ -29,7 +29,9 @@ Trên máy khác, đặt `ANDROID_HOME` đến SDK của máy đó rồi chạy 
 - Khi API xác nhận phiên hết hạn (401 hoặc `/api/auth/me` trả `user: null`), app xóa cookie, bỏ trạng thái đăng nhập và mở màn hình đăng nhập một lần kèm thông báo. Lỗi mật khẩu sai, mất mạng hoặc lỗi server không tự xóa phiên hợp lệ; phản hồi cũ không làm mất phiên vừa đăng nhập lại.
 - Lưu/bỏ lưu sản phẩm, xem danh sách đã lưu và tin của tôi.
 - Sinh viên có thể tạo tin chờ duyệt, chọn tối đa 8 ảnh (JPG/PNG/WebP, 5 MB/ảnh), bán/trao đổi/tặng. Màn hình giữ dữ liệu khi API báo lỗi; chưa có bản nháp lưu qua lần đóng app.
-- Đăng ký, quên mật khẩu, Google, tin nhắn và hỗ trợ mở trên website, có thể cần đăng nhập riêng trên trình duyệt. Chưa có chat native, thanh toán native, AI, thông báo đẩy hoặc màn hình Admin.
+- Nhắn tin người bán ngay trong chi tiết sản phẩm; tab Tin nhắn có cả cuộc trò chuyện mua và bán, số tin chưa đọc, lịch sử và trạng thái đã xem dùng chung với website. Gửi văn bản ngay trong app và xem ảnh người dùng gửi từ website; chưa gửi ảnh từ app. Gửi lỗi giữ nội dung đang soạn, không tự gửi lại để tránh trùng tin.
+- Lịch sử chat cập nhật mỗi 5 giây, danh sách cuộc trò chuyện mỗi 15 giây khi màn hình đang mở; dừng khi chuyển màn hình hoặc đưa app vào nền. Chưa có thông báo đẩy khi đóng app.
+- Đăng ký, quên mật khẩu, Google và hỗ trợ mở trên website, có thể cần đăng nhập riêng trên trình duyệt. Chưa có thanh toán native, AI hoặc màn hình Admin.
 
 App và website dùng chung dữ liệu thật: đăng tin hoặc lưu sản phẩm trên app sẽ thay đổi tài khoản thật. Không cần sao chép database hay API key vào app.
 
@@ -52,6 +54,7 @@ src/app/          Expo Router: tabs, đăng nhập, chi tiết, tin của tôi
 src/api/          API client, DTO, kiểm tra URL/session và dữ liệu đầu vào
 src/components/   Thành phần giao diện dùng lại
 src/providers/    Phiên đăng nhập
+src/hooks/        Cập nhật chat theo trạng thái màn hình và ứng dụng
 src/theme.ts      Màu và typography SangTay
 assets/fonts/     Font dùng chung nhận diện với website và giấy phép
 scripts/          Khởi chạy Android và kiểm thử
@@ -63,6 +66,7 @@ scripts/          Khởi chạy Android và kiểm thử
 npm run typecheck
 npm run lint
 npm test
+npm run test:chat-integration
 npx expo-doctor
 npx expo export --platform android
 ```
@@ -70,3 +74,5 @@ npx expo export --platform android
 Lệnh export kiểm tra bundle JavaScript/assets, **không tạo APK**. Cần development/production build để tạo APK/AAB, cấu hình bằng `app.json` và Expo CNG/EAS; không sửa tay thư mục native được sinh. Android application ID: `shop.sangtay.mobile`.
 
 Tài liệu: [Expo SDK 58](https://docs.expo.dev/versions/v58.0.0/), [chạy Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/), [development builds](https://docs.expo.dev/develop/development-builds/introduction/).
+
+`test:chat-integration` cần PostgreSQL local cấu hình trong `frontend/.env.local` và bản build frontend hiện có. Script từ chối host database ngoài localhost, tạo database tạm, chạy API thật với tài khoản giả rồi dọn dữ liệu; không gửi tin nhắn tới người dùng production.

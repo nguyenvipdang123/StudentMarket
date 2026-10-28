@@ -26,7 +26,7 @@ Kiểm thử native với fixture: login, restoreSession, GET có cookie đều 
 
 - Admin/staff: dashboard, kiểm duyệt, tài khoản, giao dịch, phiếu hỗ trợ.
 - Đăng ký, Google, OTP và quên mật khẩu native: hiện hướng sang trình duyệt.
-- Chat native, thông báo đẩy và chatbot/AI góp ý tin.
+- Đã có chat văn bản native, lịch sử và trạng thái đã xem dùng chung website. Chưa gửi ảnh từ app, thông báo đẩy và chatbot/AI góp ý tin.
 - Quản lý tin: mới xem/tạo, chưa sửa/xóa/ẩn/đánh dấu đã bán; chưa đổi thứ tự ảnh, chọn ảnh bìa hoặc lưu nháp qua lần đóng app.
 - Gói đẩy tin, QR/thanh toán, thống kê hiệu quả đẩy tin.
 - Lịch hẹn, xác nhận giao dịch, đánh giá, báo cáo và yêu cầu hỗ trợ native.
@@ -43,4 +43,4 @@ Các màn hình mở bằng trình duyệt có phiên đăng nhập riêng; đă
 - Expo Doctor hiện 19/20: registry vừa có bản vá Expo `~58.0.20` và expo-router `~58.0.27`, trong repo là `58.0.19` / `58.0.26`. Đây là cảnh báo cập nhật patch, không phải bằng chứng app bị crash.
 - Máy ảo mất kết nối sau lượt kiểm thử client đầu tiên; chưa kiểm tra lại toàn bộ thao tác UI, chọn ảnh, gửi tin với tài khoản thật, thiết bị vật lý và iOS.
 
-Ba lỗi nêu trên đã được sửa. Ưu tiên tiếp theo là kiểm thử đăng tin có ảnh bằng tài khoản thật, thử APK trên điện thoại, rồi bổ sung Admin và chat theo phạm vi bài môn Mobile.
+Ba lỗi nêu trên đã được sửa; bộ lọc trường và chat native được bổ sung ngày 28/10. Ưu tiên tiếp theo là thử APK và đăng tin có ảnh trên điện thoại thật, rồi bổ sung Admin theo phạm vi bài môn Mobile.

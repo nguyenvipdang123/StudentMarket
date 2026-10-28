@@ -1,6 +1,6 @@
 {
   "name": "sangtay-mobile",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "index.ts",
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -36,6 +36,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
     "test": "node --experimental-strip-types --test scripts/*.test.mjs",
+    "test:chat-integration": "node scripts/chat-integration.mjs",
     "android:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-android.ps1",
     "apk:build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-apk.ps1"
   },

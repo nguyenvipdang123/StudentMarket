@@ -2,6 +2,7 @@ import * as SecureStore from "expo-secure-store";
 import { apiOrigin, sessionCookie } from "./policy";
 import { createSessionState } from "./session-state";
 import type { User } from "./types";
+import { chatImagePath } from "./chat";
 
 export const API_URL = apiOrigin(
   process.env.EXPO_PUBLIC_API_URL || "https://sangtay.shop",
@@ -32,6 +33,12 @@ export async function restoreSession() {
 }
 export async function clearSession() {
   await sessions.clear();
+}
+// Only attach the session to a validated image in this exact conversation.
+export function privateChatImageSource(content: string, conversationId: string) {
+  const path = chatImagePath(content, conversationId);
+  const cookie = sessions.snapshot().cookie;
+  return path && cookie ? { uri: API_URL + path, headers: { Cookie: cookie } } : undefined;
 }
 export async function request<T>(
   path: string,

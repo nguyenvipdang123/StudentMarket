@@ -46,6 +46,8 @@ export default function Layout() {
           options={{ title: "Tài khoản SangTay", presentation: "modal" }}
         />
         <Stack.Screen name="my-listings" options={{ title: "Tin của tôi" }} />
+        <Stack.Screen name="contact/[listingId]" options={{ title: "Liên hệ người bán" }} />
+        <Stack.Screen name="chat/[id]" options={{ title: "Trò chuyện" }} />
       </Stack>
       <SessionExpiryRedirect />
     </SessionProvider>

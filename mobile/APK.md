@@ -24,6 +24,14 @@ Nếu Gradle đã build xong và chỉ cần chạy lại bước ký, từ gố
 powershell -NoProfile -ExecutionPolicy Bypass -File mobile/scripts/build-apk.ps1 -SignOnly
 ```
 
+## Bản cập nhật 1.0.2 — 28/10/2026
+
+- File `SangTay-v1.0.2-3.apk`, versionCode 3, dùng cùng package và khóa phát hành để cài đè bản cũ.
+- Nhắn người bán ngay từ chi tiết món đồ và trả lời người mua trong tab Tin nhắn; gửi văn bản, đọc lịch sử/ảnh từ website và trạng thái đã xem. Chat cập nhật khi màn hình mở; chưa gửi ảnh native hoặc thông báo đẩy.
+- TypeScript, lint, 23/23 kiểm thử mobile và 39/39 nhóm tích hợp API với database local đạt. Đã kiểm tra giao diện bằng dữ liệu giả trên bản xem thử React Native Web.
+- Gradle release build, chữ ký v2/v3 và zipalign 16 KB đạt. APK 58.515.938 byte, arm64-v8a/x86_64, Android API 24 trở lên; bundle đã có chat và không chứa route/dữ liệu xem thử. SHA-256: `EED4C137F9F1585A0CF7F4037ABBD081464460FB8A9C9C183FBA8D7606FBDAD6`.
+- Chưa kiểm thử cài/mở bản APK mới trên thiết bị Android thật; xem [VALIDATION.md](VALIDATION.md) để phân biệt kết quả web/API và thiết bị.
+
 ## Bản cập nhật 1.0.1 — 28/10/2026
 
 - File `SangTay-v1.0.1-2.apk`, khoảng 56 MB; versionCode 2, cùng package và chứng chỉ ký với bản 1.0.0 nên cài đè để cập nhật, không cần gỡ app.
@@ -46,10 +54,10 @@ Chép APK sang điện thoại và mở file bằng trình quản lý tệp. And
 Với Pixel_7 đang mở trên máy phát triển:
 
 ```powershell
-F:\AndroidSdk\platform-tools\adb.exe install -r mobile\releases\SangTay-v1.0.1-2.apk
+F:\AndroidSdk\platform-tools\adb.exe install -r mobile\releases\SangTay-v1.0.2-3.apk
 ```
 
-App xuất hiện với tên **SangTay**, application ID `shop.sangtay.mobile`. Các chức năng native hiện có giống bản Expo Go; Admin, chat, thanh toán và AI chưa tự trở thành màn hình native chỉ vì xuất APK. Đăng ký/quên mật khẩu vẫn mở website.
+App xuất hiện với tên **SangTay**, application ID `shop.sangtay.mobile`. Đã có chat native; Admin, thanh toán và AI chưa có màn hình native. Đăng ký/quên mật khẩu vẫn mở website.
 
 ## Giữ khóa ký để cập nhật app
 

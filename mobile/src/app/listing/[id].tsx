@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Linking,
   Pressable,
   ScrollView,
   Text,
@@ -99,6 +98,7 @@ export default function Detail() {
       </View>
     );
   const images = item.images?.length ? item.images : [item.image];
+  const own = Boolean(user?.pgUserId && user.pgUserId === item.sellerId);
   return (
     <View style={ui.screen}>
       <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
@@ -196,15 +196,13 @@ export default function Detail() {
       >
         <Button
           title={
-            item.status === "Sold"
+            own ? "Xem tin nhắn của tôi" : item.status !== "Active"
               ? "Món đồ đã được sang tay"
-              : "Liên hệ người bán trên website ↗"
+              : "Nhắn tin người bán"
           }
-          disabled={item.status === "Sold"}
+          disabled={!own && item.status !== "Active"}
           onPress={() =>
-            void Linking.openURL(
-              API_URL + "/messages?listingId=" + encodeURIComponent(id),
-            )
+            own ? router.push("/messages") : router.push({ pathname: "/contact/[listingId]", params: { listingId: id } })
           }
         />
       </SafeAreaView>
