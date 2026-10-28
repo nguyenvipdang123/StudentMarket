@@ -27,9 +27,12 @@ Trên máy khác, đặt `ANDROID_HOME` đến SDK của máy đó rồi chạy 
 
 - Catalogue tải đủ trang từ API và lưu bản thành công gần nhất trên máy. Tìm từ khóa không dấu, lọc danh mục/trường và sắp xếp được tính trực tiếp khi render; không lưu danh sách lọc thành state. Offline vẫn xem/tìm/lọc bản lưu với banner; lần đầu chưa có dữ liệu luôn hiện hướng dẫn và nút thử lại.
 - Chi tiết sản phẩm, vuốt ảnh, thông tin người bán và hướng dẫn giao dịch an toàn.
+- Cùng tin hiển thị góc người bán khi tài khoản là chủ tin: trạng thái duyệt và thống kê, lối vào Tin của tôi/Tin nhắn. Người mua có nút lưu, thêm giỏ và liên hệ; không có nút mua tin của chính mình.
 - Đăng nhập email/mật khẩu bằng tài khoản đã xác minh trên website; lưu **cookie phiên** trong Expo SecureStore, không lưu mật khẩu. Khôi phục phiên khi mở app và đăng xuất qua API.
 - Khi API xác nhận phiên hết hạn (401 hoặc `/api/auth/me` trả `user: null`), app xóa cookie, bỏ trạng thái đăng nhập và mở màn hình đăng nhập một lần kèm thông báo. Lỗi mật khẩu sai, mất mạng hoặc lỗi server không tự xóa phiên hợp lệ; phản hồi cũ không làm mất phiên vừa đăng nhập lại.
 - Yêu thích dùng chung state ở Khám phá, Chi tiết và Đã lưu, lưu AsyncStorage riêng từng tài khoản và đồng bộ API. Đã lưu và giỏ khôi phục sau khi mở lại; không hiện dữ liệu của tài khoản trước sau đăng xuất/đổi tài khoản.
+- Đã lưu có tùy chọn thông báo cục bộ khi giá thay đổi, xin quyền khi bấm bật. Kiểm tra khoảng mỗi phút lúc app hoạt động, khi quay lại và khi kéo làm mới; không theo dõi khi app đóng. Cần Expo Go Android/iOS để thử banner hệ thống; bản web không hỗ trợ thông báo này.
+- Khám phá, Đã lưu, Tin của tôi và Chi tiết có kéo làm mới cùng thời điểm cập nhật API thành công; tải lỗi giữ giờ cũ.
 - Giỏ hàng từ biểu tượng ở Khám phá hoặc Tài khoản. Mỗi tin số lượng 1; checkout tính tạm tính/phí giao/tổng, kiểm tra lại giá/tình trạng từ API và chặn món đã bán/giữ chỗ/không xác minh được. Đây là bảng dự tính và liên hệ người bán, chưa tạo đơn hoặc thu tiền.
 - Sinh viên tạo tin chờ duyệt với ít nhất 1 và tối đa 8 ảnh từ thư viện/camera; ảnh được nén JPEG 72%, tối đa 1.600px và 5 MB trước khi gửi. Màn hình giữ dữ liệu khi API báo lỗi; chưa có bản nháp lưu qua lần đóng app.
 - Nhắn tin người bán ngay trong chi tiết sản phẩm; tab Tin nhắn có cả cuộc trò chuyện mua và bán, số tin chưa đọc, lịch sử và trạng thái đã xem dùng chung với website. Gửi văn bản ngay trong app và xem ảnh người dùng gửi từ website; chưa gửi ảnh từ app. Gửi lỗi giữ nội dung đang soạn, không tự gửi lại để tránh trùng tin.

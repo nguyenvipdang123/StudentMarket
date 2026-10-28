@@ -16,12 +16,13 @@ import { selectProducts } from "../../api/catalog";
 import { categories } from "../../api/types";
 import { useCatalogue, useAccountMarket } from "../../providers/Market";
 import { OfflineBanner } from "../../components/OfflineBanner";
+import { LastUpdated } from "../../components/LastUpdated";
 import { ProductCard } from "../../components/ProductCard";
 import { SchoolPicker } from "../../components/SchoolPicker";
 import { Button, Empty, Notice } from "../../components/UI";
 import { colors, ui } from "../../theme";
 export default function Explore() {
-  const { products, ready, busy, error, offline, stale, refresh } = useCatalogue();
+  const { products, ready, busy, error, offline, stale, savedAt, refresh } = useCatalogue();
   const { cart } = useAccountMarket();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Tất cả"), [school, setSchool] = useState(""), [sort, setSort] = useState("featured");
@@ -139,6 +140,7 @@ export default function Explore() {
               </View>
             </View>
             <View style={{ marginHorizontal: 20 }}><OfflineBanner /></View>
+            <View style={{ marginHorizontal: 20 }}><LastUpdated value={savedAt} busy={busy} /></View>
             <SchoolPicker value={school} onChange={value => { setSchool(value); setVisibleLimit(12); }} />
             <ScrollView
               horizontal

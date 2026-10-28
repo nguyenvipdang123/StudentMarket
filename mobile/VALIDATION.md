@@ -1,5 +1,14 @@
 # Kiểm tra bản mobile đầu tiên — 27/10/2026
 
+## Bổ sung ba yêu cầu Mobile — 28/10/2026
+
+- Góc người bán/người mua suy ra từ phiên và chủ tin, không dùng nút đổi vai trong app thật. Chủ tin có trạng thái duyệt/thống kê và lối vào quản lý; người mua có lưu/giỏ/liên hệ. Đổi tài khoản khởi tạo lại chi tiết để không giữ dữ liệu riêng của chủ tin.
+- Thêm expo-notifications tương thích SDK 58, opt-in riêng theo tài khoản, channel Android và xử lý quyền; thông báo giá cũ → mới sau lần refresh API thành công. Không đăng ký push token. Dừng polling lúc nền/offline, tiếp tục khi trở lại; giới hạn là app hoạt động, không phải giám sát khi đã đóng.
+- TypeScript/lint đạt và 41/41 kiểm thử tự động: ownership/role, tăng/giảm giá, baseline sau restart, không báo trùng, giờ cập nhật khi offline/HTTP lỗi, cấp/từ chối quyền, tắt thông báo và phản hồi cũ sau đổi tài khoản/đăng xuất. Device adapter được mock trong kiểm thử thông báo, chưa xác nhận OS notification tray trên máy thật.
+- UI Expo React Native Web 390 × 844 với cùng tin và hai phiên giả: người bán thấy 42 lượt xem/7 lưu/3 cuộc trò chuyện và hai nút quản lý, người mua chỉ có lưu/thêm giỏ/liên hệ; catalogue và chi tiết hiện giờ cập nhật. Không có lỗi render trong console. Route và export Context dùng riêng cho QA đã xóa trước khi xuất bundle.
+- Không tạo APK mới. Cần Expo Go Android/iOS thật để kiểm tra quyền, banner local, thao tác kéo làm mới bằng cảm ứng và đổi tài khoản thật.
+- Xuất bundle Expo Android thành công (Hermes khoảng 3,3 MB); kiểm tra có adapter thông báo native và API production, không còn route/địa chỉ API giả. Các server xem thử đã dừng, localhost:3000 vẫn tắt.
+
 ## MUST HAVE cho môn Mobile, kiểm thử source Expo — 28/10/2026
 
 - Đã triển khai đối chiếu trong [RUBRIC.md](RUBRIC.md): tìm kiếm/danh mục tính khi render từ catalogue gốc, state yêu thích/giỏ dùng chung lưu riêng theo tài khoản, catalogue offline, ảnh bắt buộc nén từ thư viện/camera và đăng xuất local ngay cả khi API lỗi.

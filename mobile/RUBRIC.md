@@ -31,3 +31,12 @@ Các thay đổi trong tài liệu này dành cho **source Expo**, chưa tạo A
 ## Kiểm chứng
 
 `npm run mobile:check` chạy TypeScript, lint và kiểm thử tự động, gồm lưu/khôi phục catalogue, favorites/giỏ, cô lập tài khoản, chống phản hồi cũ, công thức checkout, availability, ảnh bắt buộc và đăng xuất khi API lỗi. Kiểm thử đơn vị không thay thế demo camera, SecureStore, khởi động lại và chế độ máy bay trên Android/iOS thật.
+
+## Bổ sung: góc người bán/người mua, thông báo đổi giá và giờ làm mới
+
+- **Cùng một tin, hai giao diện:** `listingView(product, user)` so sánh `user.pgUserId` của phiên với `product.sellerId`. Sinh viên có thể là người bán tin mình và người mua tin khác; quyền admin không tự làm chủ tin. Chủ tin thấy trạng thái duyệt, lượt xem/lưu/cuộc trò chuyện, Tin của tôi và Tin nhắn; người mua thấy Lưu, Thêm giỏ, Liên hệ. Đổi tài khoản loại bỏ dữ liệu chi tiết riêng của phiên trước. Việc hiển thị UI không thay thế kiểm tra quyền trên API.
+- **Thông báo cục bộ:** trong Đã lưu bấm “Bật thông báo đổi giá”, cấp quyền hệ thống. Android tạo channel trước khi xin quyền; không lấy Expo/FCM push token. So sánh giá của các món đã tồn tại trong bản lưu với lần đọc API thành công mới; tăng hoặc giảm đều báo giá cũ → mới. Lần tải đầu, món mới thêm và giá không đổi không báo. Lưu baseline trước khi báo để tránh lặp sau restart; tắt/đăng xuất dọn thông báo theo tài khoản. Từ chối quyền hoặc lỗi thiết bị hiển thị lý do, không làm mất danh sách yêu thích.
+- **Khi nào phát hiện giá:** kiểm tra danh sách yêu thích khoảng mỗi 60 giây khi app hoạt động, khi quay lại app và khi kéo làm mới. Dừng khi app vào nền/offline; không cam kết theo dõi liên tục khi app đã đóng. Web preview không giả lập thông báo hệ thống. Local notifications dùng được trong Expo Go theo [tài liệu Expo SDK 58](https://docs.expo.dev/versions/v58.0.0/sdk/notifications/); cần kiểm thử quyền/banner trên Android/iOS thật.
+- **Kéo làm mới + giờ:** Khám phá, Đã lưu, Tin của tôi và Chi tiết có RefreshControl cùng thời điểm tải API thành công gần nhất. Catalogue và Đã lưu khôi phục giờ từ cache. Mất mạng/HTTP lỗi giữ dữ liệu và giờ cũ; không hiển thị giờ hiện tại như thể cập nhật thành công.
+
+Demo thêm: mở cùng tin bằng tài khoản chủ tin và tài khoản khác, đối chiếu các nút; bật thông báo ở tài khoản đã lưu tin, thay giá tin được phép kiểm thử từ website rồi kéo làm mới Đã lưu; kiểm tra chỉ có một thông báo và lần kéo tiếp theo không lặp. Thử từ chối quyền và đăng xuất. Không cần tạo APK; chạy source bằng Expo Go.

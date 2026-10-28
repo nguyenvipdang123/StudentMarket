@@ -13,11 +13,16 @@ import type { Product } from "../api/types";
 import { Empty, Notice, Button } from "./UI";
 import { ProductCard } from "./ProductCard";
 import { ui, colors } from "../theme";
+import { LastUpdated } from "./LastUpdated";
 export function PersonalProducts() {
+  const { user } = useSession();
+  return <MyProducts key={user?.pgUserId || user?.id || "guest"} />;
+}
+function MyProducts() {
   const { user, ready } = useSession();
   const [items, setItems] = useState<Product[]>([]),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useState(""), [lastUpdatedAt, setLastUpdatedAt] = useState("");
   const generation = useRef(0);
   const load = useCallback(() => {
     const run = ++generation.current;
@@ -30,8 +35,10 @@ export function PersonalProducts() {
     setError("");
     void request<{ listings: Product[] }>("/api/my-listings")
       .then((result) => {
-        if (run === generation.current)
+        if (run === generation.current) {
           setItems(result.listings || []);
+          setLastUpdatedAt(new Date().toISOString());
+        }
       })
       .catch((e) => {
         if (run === generation.current) setError(message(e));
@@ -89,6 +96,7 @@ export function PersonalProducts() {
             {items.length} món đồ · Kéo xuống để cập nhật
           </Text>
           <Notice text={error} />
+          <LastUpdated value={lastUpdatedAt} busy={busy} />
           {error && (
             <Button
               title="Thử lại"

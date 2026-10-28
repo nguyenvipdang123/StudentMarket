@@ -2,22 +2,23 @@ import type { Product } from "../api/types.ts";
 import { isProduct } from "./catalogue.ts";
 import { addCartItem } from "./commerce.ts";
 import { parseCache, writer, type Storage } from "./storage.ts";
+import { priceChanges, type PriceChange } from "./price-alerts.ts";
 type FavoritesApi = { read: () => Promise<Product[]>; toggle: (id: string) => Promise<boolean> };
-export function createAccountStore(storage: Storage, key: string, actorId: string | undefined, api: FavoritesApi) {
-  let state = { favorites: [] as Product[], cart: [] as Product[], ready: false, busy: false, error: "" };
+export function createAccountStore(storage: Storage, key: string, actorId: string | undefined, api: FavoritesApi, onPriceChanges?: (changes: PriceChange[], isCurrent: () => boolean) => Promise<void>) {
+  let state = { favorites: [] as Product[], cart: [] as Product[], ready: false, busy: false, error: "", lastUpdatedAt: "" };
   let disposed = false, revision = 0, mutating = false;
   const listeners = new Set<() => void>(), persist = writer(storage, key);
   const emit = (patch: Partial<typeof state>) => { if (!disposed) { state = { ...state, ...patch }; listeners.forEach(fn => fn()); } };
   const save = async () => {
-    if (disposed) return;
-    try { await persist({ version: 1, favorites: state.favorites, cart: state.cart }); }
-    catch { emit({ error: "Chưa lưu được thay đổi trên thiết bị. Bạn kiểm tra dung lượng trống nhé." }); }
+    if (disposed) return false;
+    try { await persist({ version: 1, favorites: state.favorites, cart: state.cart, lastUpdatedAt: state.lastUpdatedAt }); return true; }
+    catch { emit({ error: "Chưa lưu được thay đổi trên thiết bị. Bạn kiểm tra dung lượng trống nhé." }); return false; }
   };
   const hydrated = (async () => {
     if (actorId) try {
-      const cache = parseCache(await storage.getItem(key)) as { version?: number; favorites?: unknown[]; cart?: unknown[] } | null;
+      const cache = parseCache(await storage.getItem(key)) as { version?: number; favorites?: unknown[]; cart?: unknown[]; lastUpdatedAt?: string } | null;
       if (cache?.version === 1 && Array.isArray(cache.favorites) && Array.isArray(cache.cart) && cache.favorites.every(isProduct) && cache.cart.every(isProduct))
-        emit({ favorites: cache.favorites, cart: [...new Map(cache.cart.map(p => [p.id, p])).values()] });
+        emit({ favorites: cache.favorites, cart: [...new Map(cache.cart.map(p => [p.id, p])).values()], lastUpdatedAt: typeof cache.lastUpdatedAt === "string" ? cache.lastUpdatedAt : "" });
     } catch { emit({ error: "Không đọc được dữ liệu đã lưu." }); }
     emit({ ready: true });
   })();
@@ -30,7 +31,16 @@ export function createAccountStore(storage: Storage, key: string, actorId: strin
       if (!actorId || disposed || offline || mutating) return;
       const run = ++revision;
       emit({ busy: true });
-      try { const favorites = await api.read(); if (!disposed && run === revision) { emit({ favorites, error: "" }); await save(); } }
+      try {
+        const favorites = await api.read();
+        if (!favorites.every(isProduct)) throw Error("Dữ liệu Đã lưu không hợp lệ.");
+        if (!disposed && run === revision) {
+          const changes = priceChanges(state.favorites, favorites);
+          emit({ favorites, error: "", lastUpdatedAt: new Date().toISOString() });
+          const saved = await save();
+          if (saved && !disposed && run === revision) await onPriceChanges?.(changes, () => !disposed && run === revision);
+        }
+      }
       catch { if (run === revision) emit({ error: "Chưa đồng bộ được Đã lưu. Các món đã lưu trên thiết bị vẫn được giữ." }); }
       finally { if (run === revision) emit({ busy: false }); }
     },

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  RefreshControl,
   ScrollView,
   Text,
   View,
@@ -19,26 +20,31 @@ import { mediaUrl, priceLabel } from "../../api/policy";
 import { useSession } from "../../providers/Session";
 import { Button, Notice } from "../../components/UI";
 import { colors, ui } from "../../theme";
+import { listingView, listingStatus } from "../../state/listing-view";
+import { LastUpdated } from "../../components/LastUpdated";
 export default function Detail() {
+  const { user } = useSession();
+  return <DetailContent key={user?.pgUserId || user?.id || "guest"} />;
+}
+function DetailContent() {
   const { id } = useLocalSearchParams<{ id: string }>(),
     { width } = useWindowDimensions(),
     { user } = useSession();
   const [fetchedItem, setItem] = useState<Product | null>(null),
     [busy, setBusy] = useState(true),
     [error, setError] = useState(""),
-    [retry, setRetry] = useState(0);
+    [retry, setRetry] = useState(0), [lastUpdatedAt, setLastUpdatedAt] = useState("");
   // Reset the displayed item while synchronizing a new route with the remote API.
   useEffect(() => {
     let alive = true;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setBusy(true);
-    setItem(null);
     setError("");
     void request<{ product: Product }>(
       "/api/products/" + encodeURIComponent(id || ""),
     )
       .then((r) => {
-        if (alive) setItem(r.product);
+        if (alive) { setItem(r.product); setLastUpdatedAt(new Date().toISOString()); }
       })
       .catch((e) => {
         if (alive) setError(message(e));
@@ -79,10 +85,10 @@ export default function Detail() {
       </View>
     );
   const images = item.images?.length ? item.images : [item.image];
-  const own = Boolean(user?.pgUserId && user.pgUserId === item.sellerId);
+  const own = listingView(item, user) === "seller";
   return (
     <View style={ui.screen}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 20 }} refreshControl={<RefreshControl refreshing={busy} onRefresh={() => setRetry(n => n + 1)} tintColor={colors.green} />}>
         <ScrollView
           horizontal
           pagingEnabled
@@ -120,11 +126,13 @@ export default function Detail() {
         </ScrollView>
         <View style={ui.content}>
           <OfflineBanner />
+          <LastUpdated value={fetchedItem?.id === id ? lastUpdatedAt : ""} busy={busy} />
+          <View style={ui.badge}><Text style={ui.badgeText}>{own ? "Góc người bán · Tin của bạn" : "Góc người mua"}</Text></View>
           <View style={ui.between}>
             <View style={ui.badge}>
               <Text style={ui.badgeText}>{item.condition}</Text>
             </View>
-            <FavoriteButton item={item} />
+            {!own && <FavoriteButton item={item} />}
           </View>
           <Text style={ui.title}>{item.title}</Text>
           <Text
@@ -140,10 +148,17 @@ export default function Detail() {
             <Text style={ui.body}>{item.description}</Text>
           </View>
           <View style={ui.panel}>
-            <Text style={ui.eyebrow}>Người sang tay</Text>
+            <Text style={ui.eyebrow}>{own ? "Bạn là người đăng tin này" : "Người sang tay"}</Text>
             <Text style={ui.heading}>{item.seller}</Text>
             <Text style={ui.small}>{item.school}</Text>
           </View>
+          {own && <View style={[ui.panel, { backgroundColor: colors.sage }]}>
+            <Text style={ui.heading}>Hiệu quả & trạng thái tin</Text>
+            <Text style={ui.body}>{listingStatus(item)}</Text>
+            <Text style={ui.body}>{item.views ?? 0} lượt xem · {item.likes ?? 0} lượt lưu · {item.chats ?? 0} cuộc trò chuyện</Text>
+            {!!item.rejectionReason && <Notice text={item.rejectionReason} />}
+            <Text style={ui.small}>Bạn đang xem tin của mình. Người mua sẽ thấy các nút lưu, thêm giỏ và liên hệ.</Text>
+          </View>}
           <View style={[ui.panel, { backgroundColor: colors.sage }]}>
             <Text style={ui.body}>
               Hẹn ở nơi công cộng, xem kỹ món đồ trước khi thanh toán. Không
@@ -151,7 +166,7 @@ export default function Detail() {
             </Text>
           </View>
           <Notice text={error} />
-          {!!availability(item, user?.pgUserId) && <Notice text={availability(item, user?.pgUserId)} />}
+          {!own && !!availability(item, user?.pgUserId) && <Notice text={availability(item, user?.pgUserId)} />}
         </View>
       </ScrollView>
       <SafeAreaView
@@ -164,7 +179,7 @@ export default function Detail() {
           gap: 8,
         }}
       >
-        <Button title={cart.some(p => p.id === id) ? "Xem giỏ hàng" : "Thêm vào giỏ · Số lượng 1"} loading={adding} disabled={!cart.some(p => p.id === id) && !!availability(item, user?.pgUserId)} onPress={() => cart.some(p => p.id === id) ? router.push("/cart") : void addToCart()} />
+        {own ? <Button title="Xem tin của tôi" onPress={() => router.push("/my-listings")} /> : <Button title={cart.some(p => p.id === id) ? "Xem giỏ hàng" : "Thêm vào giỏ · Số lượng 1"} loading={adding} disabled={!cart.some(p => p.id === id) && !!availability(item, user?.pgUserId)} onPress={() => cart.some(p => p.id === id) ? router.push("/cart") : void addToCart()} />}
         <Button
           soft
           title={
