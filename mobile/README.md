@@ -1,8 +1,35 @@
 # SangTay Mobile
 
-Build bản cài Android độc lập bằng `npm run mobile:apk` từ gốc repo. Xem [hướng dẫn APK](APK.md) về file cài, công cụ build và khóa ký để cập nhật app.
-
 Hiện đang hoàn thiện **bằng Expo**, chưa tạo APK mới cho các yêu cầu môn học. Xem [đối chiếu MUST HAVE và kịch bản demo](RUBRIC.md).
+
+## Chạy từ máy sạch bằng Expo Go
+
+Yêu cầu Git, **Node.js ≥22.20.0** và npm, cùng Expo Go tương thích SDK 58 trên Android/iOS. Không cần cài database, Python, Android Studio hoặc chạy backend trên máy nếu dùng điện thoại với API mặc định.
+
+```sh
+git clone https://github.com/nguyenvipdang123/StudentMarket.git
+cd StudentMarket/mobile
+npm ci
+npm start
+```
+
+Điện thoại và máy tính cùng Wi-Fi; mở Expo Go và quét QR của Metro (iOS có thể dùng Camera). Cho phép Node trên mạng riêng nếu hệ điều hành hỏi firewall. Nếu SDK Expo Go không khớp, dùng bản tương thích theo tài liệu Expo hoặc development build; APK cũ không tự nhận các thay đổi source mới này.
+
+Không cần file `.env` để bắt đầu: API mặc định là `https://sangtay.shop`. Catalogue công khai xem được khi chưa đăng nhập. Tạo/lưu/chat dùng tài khoản sinh viên đã xác minh có sẵn trên website; source không cung cấp mật khẩu mẫu hoặc API secret. Chức năng ghi có tác động dữ liệu thật; không dùng tài khoản của người khác để demo.
+
+Kiểm tra không cần tài khoản/database thật, tại `mobile/`:
+
+```sh
+npm run typecheck
+npm run lint
+npm test
+```
+
+`npm test` chạy pure logic + component + luồng auth với API và SecureStore giả. Để kiểm tra bundle: `npx expo export --platform android`; lệnh này không tạo APK. Thử web bằng `npm run web` để xem layout/theme, nhưng camera/permission/notification/SecureStore cần kiểm chứng trên Expo Go native. Web không lưu cookie thay cho SecureStore.
+
+Đối chiếu [yêu cầu kỹ thuật](TECHNICAL.md), [phân công bốn thành viên](TEAM.md) và [nhật ký AI toàn nhóm](../AI_LOG.md). Source mobile dùng token màu duy nhất tại `src/tokens.ts`; Tài khoản → Giao diện cho phép Sáng/Tối/Theo thiết bị. Chưa có lịch sử commit hai tuần của đủ bốn người; cần đóng góp thực theo phân công.
+
+Nếu cần APK trong tương lai, xem [hướng dẫn APK](APK.md); không cần chạy lệnh build APK khi làm bài bằng Expo.
 
 Ứng dụng **React Native + Expo + TypeScript**, dùng chung API và dữ liệu của [sangtay.shop](https://sangtay.shop). Giao diện native được viết riêng cho điện thoại; website Next.js vẫn nằm ở `../frontend`.
 
@@ -62,7 +89,9 @@ src/components/   Thành phần giao diện dùng lại
 src/providers/    Phiên đăng nhập
 src/state/        Catalogue offline, yêu thích và giỏ dùng chung, quy tắc checkout
 src/hooks/        Cập nhật chat theo trạng thái màn hình và ứng dụng
-src/theme.ts      Màu và typography SangTay
+src/theme.ts      Theme context và typography SangTay
+src/tokens.ts     Toàn bộ token màu sáng/tối, kể cả config native
+tests/           Component và critical path bằng Jest/RNTL
 assets/fonts/     Font dùng chung nhận diện với website và giấy phép
 scripts/          Khởi chạy Android và kiểm thử
 ```
@@ -73,6 +102,8 @@ scripts/          Khởi chạy Android và kiểm thử
 npm run typecheck
 npm run lint
 npm test
+npm run test:logic
+npm run test:components
 npm run test:chat-integration
 npx expo-doctor
 npx expo export --platform android

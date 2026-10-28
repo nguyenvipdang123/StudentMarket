@@ -11,7 +11,7 @@ import { useAccountMarket, useCatalogue } from "../providers/Market";
 import { availability, checkCart, checkoutSummary, type Delivery } from "../state/commerce";
 import { Button, Chips, Empty, Notice } from "./UI";
 import { OfflineBanner } from "./OfflineBanner";
-import { colors, ui } from "../theme";
+import { useTheme } from "../theme";
 const money = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
 export function CartScreen({ checkout = false }: { checkout?: boolean }) {
   const { user } = useSession();
@@ -19,6 +19,7 @@ export function CartScreen({ checkout = false }: { checkout?: boolean }) {
   return <CartContent key={user?.pgUserId || user?.id || "guest"} checkout={checkout} />;
 }
 function CartContent({ checkout }: { checkout: boolean }) {
+  const { colors, ui } = useTheme();
   const { user } = useSession(), { cart, ready, store, error: storageError } = useAccountMarket(), { offline } = useCatalogue();
   const [delivery, setDelivery] = useState<Delivery>("pickup"), [busy, setBusy] = useState(false), [notice, setNotice] = useState("");
   const [issues, setIssues] = useState<Record<string, string>>({}), [verifiedAt, setVerifiedAt] = useState("");

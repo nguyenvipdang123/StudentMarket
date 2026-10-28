@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "../../api/query-cache";
 import {
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
   Text,
@@ -19,43 +20,27 @@ import type { Product } from "../../api/types";
 import { mediaUrl, priceLabel } from "../../api/policy";
 import { useSession } from "../../providers/Session";
 import { Button, Notice } from "../../components/UI";
-import { colors, ui } from "../../theme";
+import { useTheme } from "../../theme";
 import { listingView, listingStatus } from "../../state/listing-view";
 import { LastUpdated } from "../../components/LastUpdated";
+import { ScreenState } from "../../components/ScreenState";
 export default function Detail() {
   const { user } = useSession();
   return <DetailContent key={user?.pgUserId || user?.id || "guest"} />;
 }
 function DetailContent() {
+  const { colors, ui } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>(),
     { width } = useWindowDimensions(),
     { user } = useSession();
-  const [fetchedItem, setItem] = useState<Product | null>(null),
-    [busy, setBusy] = useState(true),
-    [error, setError] = useState(""),
-    [retry, setRetry] = useState(0), [lastUpdatedAt, setLastUpdatedAt] = useState("");
-  // Reset the displayed item while synchronizing a new route with the remote API.
-  useEffect(() => {
-    let alive = true;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setBusy(true);
-    setError("");
-    void request<{ product: Product }>(
-      "/api/products/" + encodeURIComponent(id || ""),
-    )
-      .then((r) => {
-        if (alive) { setItem(r.product); setLastUpdatedAt(new Date().toISOString()); }
-      })
-      .catch((e) => {
-        if (alive) setError(message(e));
-      })
-      .finally(() => {
-        if (alive) setBusy(false);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [id, retry]);
+  const [actionError, setError] = useState("");
+  const queryKey = ["listing", user?.pgUserId || user?.id || "guest", id];
+  const query = useQuery({ queryKey, queryFn: () => request<{ product: Product }>("/api/products/" + encodeURIComponent(id || "")), enabled: !!id, retry: false, refetchOnMount: "always" });
+  const fetchedItem = query.data?.product;
+  const busy = query.isFetching;
+  const error = actionError || (query.error ? message(query.error) : "");
+  const lastUpdatedAt = query.dataUpdatedAt ? new Date(query.dataUpdatedAt).toISOString() : "";
+  const reload = () => { setError(""); void query.refetch(); };
   const { products, offline } = useCatalogue();
   const { favorites, cart, store } = useAccountMarket();
   const cached = products.find(p => p.id === id) || favorites.find(p => p.id === id) || cart.find(p => p.id === id);
@@ -67,28 +52,25 @@ function DetailContent() {
     setAdding(true); setError("");
     try {
       const result = await request<{ product: Product }>("/api/products/" + encodeURIComponent(id));
-      await store.add(result.product); setItem(result.product);
+      await store.add(result.product); queryClient.setQueryData(queryKey, result);
       router.push("/cart");
     } catch (e) { setError(message(e)); } finally { setAdding(false); }
   }
   if (busy && !item)
     return (
       <View style={[ui.screen, { justifyContent: "center" }]}>
-        <ActivityIndicator color={colors.green} />
+        <ScreenState loading onRetry={reload} />
       </View>
     );
   if (!item)
     return (
-      <View style={ui.content}>
-        <Notice text={error} />
-        <Button title="Thử lại" onPress={() => setRetry((r) => r + 1)} />
-      </View>
+      <ScreenState error={error} empty emptyTitle="Không tìm thấy món đồ" emptyDetail="Tin có thể đã được ẩn hoặc gỡ." onRetry={reload} />
     );
   const images = item.images?.length ? item.images : [item.image];
   const own = listingView(item, user) === "seller";
   return (
     <View style={ui.screen}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 20 }} refreshControl={<RefreshControl refreshing={busy} onRefresh={() => setRetry(n => n + 1)} tintColor={colors.green} />}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 20 }} refreshControl={<RefreshControl refreshing={busy} onRefresh={reload} tintColor={colors.green} />}>
         <ScrollView
           horizontal
           pagingEnabled
@@ -166,6 +148,7 @@ function DetailContent() {
             </Text>
           </View>
           <Notice text={error} />
+          {!!error && <Button title="Tải lại chi tiết" soft onPress={reload} />}
           {!own && !!availability(item, user?.pgUserId) && <Notice text={availability(item, user?.pgUserId)} />}
         </View>
       </ScrollView>

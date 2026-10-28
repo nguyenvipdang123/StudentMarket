@@ -13,6 +13,7 @@ import {
   restoreSession,
   onSessionExpired,
   ApiError,
+  message,
 } from "../api/client";
 import type { User } from "../api/types";
 import { completeSignOut } from "../api/logout";
@@ -21,6 +22,7 @@ type Session = {
   ready: boolean;
   expired: boolean;
   expiryId: number;
+  error: string;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -30,11 +32,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null),
     [ready, setReady] = useState(false),
     [expired, setExpired] = useState(false),
-    [expiryId, setExpiryId] = useState(0);
+    [expiryId, setExpiryId] = useState(0), [error, setError] = useState("");
   const refresh = async () => {
-    const result = await request<{ user: User | null }>("/api/auth/me");
-    setUser(result.user);
-    if (!result.user) await clearSession();
+    setReady(false); setError("");
+    try {
+      const result = await request<{ user: User | null }>("/api/auth/me");
+      setUser(result.user);
+      if (!result.user) await clearSession();
+    } catch (e) { setError(message(e)); }
+    finally { setReady(true); }
   };
   useEffect(() => {
     let active = true;
@@ -54,7 +60,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (active) setUser(result.user);
         if (!result.user) await clearSession();
       })
-      .catch(() => {})
+      .catch(e => { if (active) setError(e instanceof ApiError ? message(e) : "Chưa khôi phục được phiên an toàn. Vui lòng thử lại."); })
       .finally(() => {
         if (active) setReady(true);
       });
@@ -70,10 +76,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         ready,
         expired,
         expiryId,
+        error,
         refresh,
         signIn: async (email, password) => {
           setUser(await apiLogin(email, password));
           setExpired(false);
+          setError("");
         },
         signOut: async () => {
           await completeSignOut(async () => {

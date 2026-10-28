@@ -1,8 +1,9 @@
 import { Text, View } from "react-native";
 import { usePriceAlerts } from "../providers/Market";
 import { Button, Notice } from "./UI";
-import { ui } from "../theme";
+import { useTheme } from "../theme";
 export function PriceAlertSettings() {
+  const { ui } = useTheme();
   const { enabled, ready, busy, error, supported, store } = usePriceAlerts();
   return <View style={ui.panel}>
     <Text style={ui.heading}>Báo khi món đã lưu đổi giá</Text>

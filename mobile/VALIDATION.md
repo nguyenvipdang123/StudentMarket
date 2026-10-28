@@ -1,5 +1,15 @@
 # Kiểm tra bản mobile đầu tiên — 27/10/2026
 
+## TECHNICAL REQUIREMENTS — source Expo, 28/10/2026
+
+- Expo 58 + TS strict + Router: bổ sung `+not-found` và ErrorBoundary retry; giữ dynamic routes, login modal và function components. Bảng đối chiếu từng yêu cầu/trạng thái ở [TECHNICAL.md](TECHNICAL.md).
+- Light/dark từ `src/tokens.ts`, ThemeProvider hỗ trợ hệ thống hoặc Sáng/Tối trong Tài khoản; splash/icon config lấy cùng token, không còn colour literal ở module source khác. Body/secondary/heading/brand/button/error được kiểm tra tương phản ≥4,5:1 với các nền sử dụng ở cả hai palette.
+- Thêm TanStack Query cho server GET cache/dedupe theo phiên/API/path; chi tiết dùng useQuery, mutation làm stale cache, logout/expired clear cache. Store có selectors cho yêu thích và giỏ. Cookie chỉ SecureStore native; bản web không fallback lưu secret vào localStorage.
+- `npm run mobile:check`: TypeScript/lint sạch; **45/45 pure-logic/static checks + 5/5 Jest tests** đạt. Có component disabled/target/theme, bốn trạng thái và nút retry; critical path sai mật khẩu→retry→SecureStore→khôi phục sau remount→logout thật trong SessionProvider với API giả; cache server có kiểm thử dedupe/isolation/no auto retry.
+- Expo web 390×844: hai theme hiển thị đúng; màn hình tài khoản đo mọi button/tab đều ≥44×44; route không tồn tại hiện fallback và nút Về Khám phá hoạt động. API catalogue trên bản web chưa tải thành công trong lần thử này; error/empty/banner vẫn hiển thị và Thử lại chuyển trở về loading. Không suy ra kết quả API Android từ giới hạn bản xem thử web.
+- `expo export --platform android` thành công (Hermes khoảng 3,4 MB); `expo config --type public` giải quyết config/token thành công; `npm ci --ignore-scripts --dry-run` xác nhận lockfile cài nhất quán. Không tạo APK, không gửi OTP/tin đăng/giao dịch thật. Localhost 3000/8085 đã tắt.
+- Cần thiết bị Android/iOS để kiểm tra TalkBack/VoiceOver, tăng cỡ chữ, camera, notification tray và cảm ứng. Chưa được chứng minh yêu cầu commit cả bốn thành viên xuyên hai tuần: audit từ 15–28/10 trước đợt này có 27 commit của một tác giả. Đã ghi phân công tương lai tại [TEAM.md](TEAM.md) và nhật ký AI chung ở root; không đổi author/backdate.
+
 ## Bổ sung ba yêu cầu Mobile — 28/10/2026
 
 - Góc người bán/người mua suy ra từ phiên và chủ tin, không dùng nút đổi vai trong app thật. Chủ tin có trạng thái duyệt/thống kê và lối vào quản lý; người mua có lưu/giỏ/liên hệ. Đổi tài khoản khởi tạo lại chi tiết để không giữ dữ liệu riêng của chủ tin.

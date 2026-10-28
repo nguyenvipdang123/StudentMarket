@@ -1,8 +1,9 @@
 # StudentMarket / SangTay
 
-## Ứng dụng mobile React Native
+## Bài Lập trình Mobile (Expo)
 
-App Expo + TypeScript nằm ở [mobile](mobile/README.md), dùng chung API của `https://sangtay.shop`. Chạy `npm --prefix mobile ci` rồi `npm run mobile:android` để mở trên Android emulator. Website và app mobile có dependencies, giao diện và lệnh chạy riêng.
+Ứng dụng mobile nằm ở `mobile/`. Trên máy sạch: cài Node.js ≥22.20.0, chạy `npm --prefix mobile ci`, rồi `npm run mobile` và mở bằng Expo Go SDK 58. Không cần chạy website localhost:3000. Xem [README mobile](mobile/README.md), [rubric kỹ thuật](mobile/TECHNICAL.md), [phân công nhóm](mobile/TEAM.md) và [AI_LOG toàn nhóm](AI_LOG.md).
+
 
 Build APK cài độc lập bằng `npm run mobile:apk`; kiểm tra TypeScript, lint và các kiểm thử mobile bằng `npm run mobile:check`. Xem [hướng dẫn APK và khóa ký](mobile/APK.md). Không đưa `node_modules`, APK, cache build hoặc thư mục khóa ký lên GitHub; máy mới cài lại thư viện bằng `npm --prefix frontend ci` và `npm --prefix mobile ci`.
 

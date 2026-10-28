@@ -20,8 +20,9 @@ import { LastUpdated } from "../../components/LastUpdated";
 import { ProductCard } from "../../components/ProductCard";
 import { SchoolPicker } from "../../components/SchoolPicker";
 import { Button, Empty, Notice } from "../../components/UI";
-import { colors, ui } from "../../theme";
+import { useTheme } from "../../theme";
 export default function Explore() {
+  const { colors, ui } = useTheme();
   const { products, ready, busy, error, offline, stale, savedAt, refresh } = useCatalogue();
   const { cart } = useAccountMarket();
   const [query, setQuery] = useState("");
@@ -60,13 +61,16 @@ export default function Explore() {
               <Text
                 style={{ fontFamily: "Bold", fontSize: 25, color: colors.dark }}
               >
-                sang<Text style={{ color: "#D5935B" }}>tay.</Text>
+                sang<Text style={{ color: colors.brand }}>tay.</Text>
               </Text>
               <Pressable
+                accessibilityRole="button"
                 accessibilityLabel={`Mở giỏ hàng, ${cart.length} món`}
                 onPress={() => router.push("/cart")}
                 style={{
                   padding: 10,
+                  minHeight: 44,
+                  minWidth: 44,
                   borderRadius: 16,
                   backgroundColor: colors.sage,
                 }}
@@ -112,6 +116,7 @@ export default function Explore() {
                   color={colors.green}
                 />
                 <TextInput
+                  role="searchbox"
                   accessibilityLabel="Tìm kiếm món đồ"
                   placeholder="Bạn đang tìm món gì?"
                   placeholderTextColor={colors.muted}
@@ -127,9 +132,10 @@ export default function Explore() {
                   }}
                 />
                 <Pressable
+                  accessibilityRole="button"
                   accessibilityLabel="Tìm kiếm"
                   onPress={() => setVisibleLimit(12)}
-                  style={{ padding: 14 }}
+                  style={{ padding: 14, minWidth: 44, minHeight: 44 }}
                 >
                   <Ionicons
                     name="arrow-forward"
@@ -152,9 +158,12 @@ export default function Explore() {
                   key={c}
                   accessibilityRole="button"
                   accessibilityState={{ selected: c === category }}
+                  accessibilityLabel={c}
                   onPress={() => { setCategory(c); setVisibleLimit(12); }}
                   style={{
                     padding: 12,
+                    minHeight: 44,
+                    minWidth: 44,
                     borderRadius: 13,
                     backgroundColor:
                       c === category ? colors.green : colors.paper,
@@ -166,7 +175,7 @@ export default function Explore() {
                     style={{
                       fontFamily: "Semi",
                       fontSize: 12,
-                      color: c === category ? "white" : colors.green,
+                      color: c === category ? colors.onAccent : colors.green,
                     }}
                   >
                     {c}
@@ -187,6 +196,7 @@ export default function Explore() {
               </View>
               <Pressable
                 accessibilityLabel="Đổi sắp xếp sản phẩm"
+                accessibilityRole="button"
                 onPress={() =>
                   setSort((s) =>
                     s === "featured"
@@ -196,7 +206,7 @@ export default function Explore() {
                         : "featured",
                   )
                 }
-                style={{ padding: 10 }}
+                style={{ padding: 10, minWidth: 44, minHeight: 44 }}
               >
                 <Ionicons name="swap-vertical" size={18} color={colors.green} />
                 <Text style={[ui.small, { fontSize: 10 }]}>

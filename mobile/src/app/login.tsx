@@ -11,8 +11,10 @@ import { router } from "expo-router";
 import { API_URL, message, expiredSessionMessage } from "../api/client";
 import { useSession } from "../providers/Session";
 import { Button, Field, Notice } from "../components/UI";
-import { ui, colors } from "../theme";
+import { useTheme } from "../theme";
+import { SessionNotice } from "../components/SessionNotice";
 export default function Login() {
+  const { colors, ui } = useTheme();
   const { signIn, ready, expired } = useSession();
   const [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
@@ -55,6 +57,7 @@ export default function Login() {
       >
         <Text style={ui.eyebrow}>Cộng đồng sinh viên SangTay</Text>
         <Text style={ui.title}>Chào mừng trở lại.</Text>
+        <SessionNotice />
         <Text style={ui.body}>
           Dùng tài khoản đã đăng ký trên website để lưu món đồ và đăng tin ngay
           trên điện thoại.
@@ -83,6 +86,7 @@ export default function Login() {
             onSubmitEditing={() => void submit()}
           />
           <Notice text={error} />
+          {!!error && <Button title="Thử đăng nhập lại" soft disabled={busy || !ready} onPress={() => void submit()} />}
           {!ready && (
             <Text style={ui.small}>Đang khôi phục phiên đăng nhập…</Text>
           )}

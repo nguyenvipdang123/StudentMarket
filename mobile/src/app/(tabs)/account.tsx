@@ -12,11 +12,13 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSession } from "../../providers/Session";
 import { API_URL, message } from "../../api/client";
-import { Button, Notice } from "../../components/UI";
-import { colors, ui } from "../../theme";
+import { Button, Chips, Notice } from "../../components/UI";
+import { useTheme } from "../../theme";
 import appConfig from "../../../app.json";
+import { SessionNotice } from "../../components/SessionNotice";
 export default function Account() {
-  const { user, ready, signOut } = useSession();
+  const { colors, ui, mode, setMode } = useTheme();
+  const { user, ready, signOut, refresh } = useSession();
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   async function logout() {
@@ -34,6 +36,11 @@ export default function Account() {
       <ScrollView contentContainerStyle={ui.content}>
         <Text style={ui.eyebrow}>Góc nhỏ của bạn</Text>
         <Text style={ui.title}>Tài khoản</Text>
+        <SessionNotice />
+        <View style={ui.panel}>
+          <Text style={ui.heading}>Giao diện</Text>
+          <Chips values={["Theo thiết bị", "Sáng", "Tối"]} value={mode === "system" ? "Theo thiết bị" : mode === "light" ? "Sáng" : "Tối"} onChange={value => setMode(value === "Sáng" ? "light" : value === "Tối" ? "dark" : "system")} />
+        </View>
         {!ready ? (
           <ActivityIndicator color={colors.green} />
         ) : user ? (
@@ -99,7 +106,7 @@ export default function Account() {
           <Button
             title="Trung tâm hỗ trợ trên website ↗"
             soft
-            onPress={() => void Linking.openURL(API_URL + "/support")}
+            onPress={() => { void Linking.openURL(API_URL + "/support").catch(() => setError("Chưa mở được trang hỗ trợ. Bấm lại nút để thử.")); }}
           />
           <Button
             title="Tin nhắn"
@@ -108,6 +115,7 @@ export default function Account() {
           />
         </View>
         <Notice text={error} />
+        {!!error && <Button title="Thử lại" onPress={() => { setError(""); void refresh(); }} />}
         {user && (
           <Button
             title="Đăng xuất"

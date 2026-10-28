@@ -1,8 +1,10 @@
 import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 import { apiOrigin, sessionCookie } from "./policy";
 import { createSessionState } from "./session-state";
 import type { User } from "./types";
 import { chatImagePath } from "./chat";
+import { fetchServerData, queryClient } from "./query-cache";
 
 export const API_URL = apiOrigin(
   process.env.EXPO_PUBLIC_API_URL || "https://sangtay.shop",
@@ -10,16 +12,17 @@ export const API_URL = apiOrigin(
 // Keep production, local HTTP and different development ports in separate stores.
 const storeKey = `sangtay.session.${API_URL.replace(/[^a-z0-9.-]/gi, "_")}`;
 const sessions = createSessionState({
-  read: () => SecureStore.getItemAsync(storeKey),
+  read: () => Platform.OS === "web" ? Promise.resolve(null) : SecureStore.getItemAsync(storeKey),
   write: (cookie) =>
-    SecureStore.setItemAsync(storeKey, cookie, {
+    Platform.OS === "web" ? Promise.reject(Error("Dùng Expo Go trên Android/iOS để lưu phiên an toàn bằng SecureStore.")) : SecureStore.setItemAsync(storeKey, cookie, {
       keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
     }),
-  remove: () => SecureStore.deleteItemAsync(storeKey),
+  remove: () => Platform.OS === "web" ? Promise.resolve() : SecureStore.deleteItemAsync(storeKey),
 });
 export const expiredSessionMessage =
   "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
 export const onSessionExpired = sessions.subscribe;
+sessions.subscribe(() => queryClient.clear());
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -32,6 +35,7 @@ export async function restoreSession() {
   return sessions.restore();
 }
 export async function clearSession() {
+  queryClient.clear();
   await sessions.clear();
 }
 // Only attach the session to a validated image in this exact conversation.
@@ -45,6 +49,13 @@ export async function request<T>(
   options: RequestInit = {},
   timeout = 20000,
 ): Promise<T> {
+  if ((options.method || "GET").toUpperCase() === "GET")
+    return fetchServerData(sessions.snapshot().revision, API_URL, path, () => transport<T>(path, options, timeout));
+  const result = await transport<T>(path, options, timeout);
+  await queryClient.invalidateQueries({ queryKey: ["api"], refetchType: "none" });
+  return result;
+}
+async function transport<T>(path: string, options: RequestInit, timeout: number): Promise<T> {
   if (!path.startsWith("/api/")) throw Error("Đường dẫn API không hợp lệ.");
   const headers = new Headers(options.headers);
   const session = sessions.snapshot();

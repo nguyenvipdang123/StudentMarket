@@ -7,7 +7,7 @@ import {
   type TextInputProps,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, ui } from "../theme";
+import { useTheme } from "../theme";
 export function Button({
   title,
   onPress,
@@ -21,6 +21,7 @@ export function Button({
   soft?: boolean;
   disabled?: boolean;
 }) {
+  const { colors } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
@@ -30,6 +31,7 @@ export function Button({
       onPress={onPress}
       style={({ pressed }) => ({
         minHeight: 50,
+        minWidth: 44,
         padding: 14,
         borderRadius: 15,
         alignItems: "center",
@@ -39,13 +41,13 @@ export function Button({
       })}
     >
       {loading ? (
-        <ActivityIndicator color={soft ? colors.green : "white"} />
+        <ActivityIndicator color={soft ? colors.green : colors.onAccent} />
       ) : (
         <Text
           style={{
             fontFamily: "Bold",
             fontSize: 13,
-            color: soft ? colors.green : "white",
+            color: soft ? colors.green : colors.onAccent,
           }}
         >
           {title}
@@ -55,6 +57,7 @@ export function Button({
   );
 }
 export function Field({ label, ...props }: TextInputProps & { label: string }) {
+  const { colors, ui } = useTheme();
   return (
     <View>
       <Text style={ui.label}>{label}</Text>
@@ -71,10 +74,12 @@ export function Field({ label, ...props }: TextInputProps & { label: string }) {
   );
 }
 export function Notice({ text }: { text: string }) {
+  const { colors, ui } = useTheme();
   return text ? (
     <View
+      accessible
       accessibilityRole="alert"
-      style={{ padding: 14, borderRadius: 14, backgroundColor: "#FFF0E9" }}
+      style={{ padding: 14, borderRadius: 14, backgroundColor: colors.errorBackground }}
     >
       <Text style={[ui.small, { color: colors.error }]}>{text}</Text>
     </View>
@@ -91,6 +96,7 @@ export function Empty({
   action?: string;
   onPress?: () => void;
 }) {
+  const { colors, ui } = useTheme();
   return (
     <View style={[ui.panel, { alignItems: "center", paddingVertical: 32 }]}>
       <Ionicons name="leaf-outline" size={34} color={colors.green} />
@@ -109,16 +115,21 @@ export function Chips({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const { colors } = useTheme();
   return (
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
       {values.map((item) => (
         <Pressable
           key={item}
           accessibilityRole="button"
+          accessibilityLabel={item}
           accessibilityState={{ selected: item === value }}
           onPress={() => onChange(item)}
           style={{
             paddingHorizontal: 13,
+            minHeight: 44,
+            minWidth: 44,
+            justifyContent: "center",
             paddingVertical: 11,
             borderRadius: 12,
             borderWidth: 1,
@@ -130,7 +141,7 @@ export function Chips({
             style={{
               fontFamily: "Semi",
               fontSize: 12,
-              color: item === value ? "white" : colors.green,
+              color: item === value ? colors.onAccent : colors.green,
             }}
           >
             {item}

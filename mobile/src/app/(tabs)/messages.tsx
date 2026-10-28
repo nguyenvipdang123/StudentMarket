@@ -10,9 +10,11 @@ import { chatPeer, chatPreview, type ChatInbox } from "../../api/chat";
 import { mediaUrl } from "../../api/policy";
 import { useChatPolling } from "../../hooks/useChatPolling";
 import { Button, Empty, Notice } from "../../components/UI";
-import { colors, ui } from "../../theme";
+import { useTheme } from "../../theme";
+import { ScreenState } from "../../components/ScreenState";
 
 export default function Messages() {
+  const { colors, ui } = useTheme();
   const { user, ready } = useSession();
   return <SafeAreaView style={ui.screen} edges={["top"]}>
     {!ready ? <ActivityIndicator color={colors.green} /> : !user ? (
@@ -21,6 +23,7 @@ export default function Messages() {
   </SafeAreaView>;
 }
 function Inbox() {
+  const { colors, ui } = useTheme();
   const [data, setData] = useState<ChatInbox | null>(null);
   const [busy, setBusy] = useState(true), [error, setError] = useState("");
   const load = useCallback(async (isCurrent: () => boolean) => {
@@ -52,9 +55,9 @@ function Inbox() {
           <Text style={ui.small} numberOfLines={2}>{chatPreview(item.lastMessage)}</Text>
           <Text style={[ui.small, { fontSize: 10 }]}>{peer.buying ? "Bạn đang mua" : "Bạn đang bán"}</Text>
         </View>
-        {!!item.unreadCount && <View style={[ui.badge, { backgroundColor: colors.green }]}><Text style={[ui.badgeText, { color: "white" }]}>{item.unreadCount > 99 ? "99+" : item.unreadCount}</Text></View>}
+        {!!item.unreadCount && <View style={[ui.badge, { backgroundColor: colors.green }]}><Text style={[ui.badgeText, { color: colors.onAccent }]}>{item.unreadCount > 99 ? "99+" : item.unreadCount}</Text></View>}
       </Pressable>;
     }}
-    ListEmptyComponent={!busy && !error ? <Empty title="Chưa có cuộc trò chuyện" detail="Mở một món đồ rồi bấm Nhắn tin người bán để bắt đầu." action="Khám phá món đồ" onPress={() => router.push("/")} /> : undefined}
+    ListEmptyComponent={busy ? <ScreenState loading onRetry={() => refresh()} /> : !error ? <Empty title="Chưa có cuộc trò chuyện" detail="Mở một món đồ rồi bấm Nhắn tin người bán để bắt đầu." action="Khám phá món đồ" onPress={() => router.push("/")} /> : undefined}
   />;
 }

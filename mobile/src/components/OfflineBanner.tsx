@@ -1,7 +1,8 @@
 import { Text, View } from "react-native";
 import { useCatalogue } from "../providers/Market";
-import { colors, ui } from "../theme";
+import { useTheme } from "../theme";
 export function OfflineBanner() {
+  const { colors, ui } = useTheme();
   const { offline, stale, savedAt } = useCatalogue();
   if (!offline && !stale) return null;
   return <View accessibilityRole="alert" style={{ backgroundColor: colors.sage, padding: 12, borderRadius: 12, gap: 4 }}>

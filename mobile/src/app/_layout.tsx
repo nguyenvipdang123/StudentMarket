@@ -1,12 +1,22 @@
-import { Stack } from "expo-router";
+import { Stack, type ErrorBoundaryProps } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import { ActivityIndicator, View } from "react-native";
 import { SessionProvider } from "../providers/Session";
 import { MarketProvider } from "../providers/Market";
 import { SessionExpiryRedirect } from "../components/SessionExpiryRedirect";
-import { colors } from "../theme";
+import { ThemeProvider, useTheme } from "../theme";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "../api/query-cache";
+import { ScreenState } from "../components/ScreenState";
+export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
+  return <ThemeProvider><ScreenState error="Màn hình gặp lỗi. Bạn có thể thử tải lại." onRetry={() => { void retry(); }} /></ThemeProvider>;
+}
 export default function Layout() {
+  return <ThemeProvider><QueryClientProvider client={queryClient}><AppLayout /></QueryClientProvider></ThemeProvider>;
+}
+function AppLayout() {
+  const { colors, scheme } = useTheme();
   const [fonts, error] = useFonts({
     Regular: require("../../assets/fonts/plus-jakarta-400.ttf"),
     Semi: require("../../assets/fonts/plus-jakarta-600.ttf"),
@@ -28,7 +38,7 @@ export default function Layout() {
   return (
     <SessionProvider>
       <MarketProvider>
-      <StatusBar style="dark" />
+      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: colors.cream },
@@ -52,6 +62,7 @@ export default function Layout() {
         <Stack.Screen name="chat/[id]" options={{ title: "Trò chuyện" }} />
         <Stack.Screen name="cart" options={{ title: "Giỏ hàng" }} />
         <Stack.Screen name="checkout" options={{ title: "Tóm tắt thanh toán" }} />
+        <Stack.Screen name="+not-found" options={{ title: "Không tìm thấy" }} />
       </Stack>
       <SessionExpiryRedirect />
       </MarketProvider>

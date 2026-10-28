@@ -51,10 +51,11 @@ export function useCatalogue() {
   const refresh = useCallback(() => ctx.store.refresh(ctx.offline), [ctx.store, ctx.offline]);
   return { ...state, offline: ctx.offline, refresh };
 }
-export function useAccountMarket() {
+export function useAccountMarket<T = ReturnType<AccountStore["getSnapshot"]>>(selector: (state: ReturnType<AccountStore["getSnapshot"]>) => T = state => state as T) {
   const store = useContext(AccountContext);
   if (!store) throw Error("Account market provider missing");
-  return { ...useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot), store };
+  const state = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+  return { ...state, selected: selector(state), store };
 }
 export function usePriceAlerts() {
   const store = useContext(PriceAlertsContext);

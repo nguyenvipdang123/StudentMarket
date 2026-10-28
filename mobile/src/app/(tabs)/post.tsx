@@ -22,7 +22,7 @@ import { validatePhotos, type CompressedPhoto } from "../../api/photos-policy";
 import { useCatalogue } from "../../providers/Market";
 import { OfflineBanner } from "../../components/OfflineBanner";
 import { Button, Chips, Empty, Field, Notice } from "../../components/UI";
-import { colors, ui } from "../../theme";
+import { useTheme } from "../../theme";
 const initial = {
   title: "",
   description: "",
@@ -38,6 +38,7 @@ export default function Post() {
   return <PostForm key={user?.pgUserId || user?.id || "guest"} />;
 }
 function PostForm() {
+  const { colors, ui } = useTheme();
   const { user } = useSession();
   const { offline } = useCatalogue();
   const [draft, setDraft] = useState(initial),
@@ -172,6 +173,7 @@ function PostForm() {
                   />
                   <Text style={[ui.small, { fontSize: 10 }]}>{Math.round(photo.fileSize / 1024)} KB · Đã nén</Text>
                   <Pressable
+                    accessibilityRole="button"
                     disabled={busy || processing}
                     accessibilityLabel={`Xóa ảnh ${i + 1}`}
                     onPress={() =>
@@ -181,8 +183,12 @@ function PostForm() {
                       position: "absolute",
                       right: 2,
                       top: 2,
-                      backgroundColor: "white",
+                      backgroundColor: colors.onAccent,
                       padding: 8,
+                      minWidth: 44,
+                      minHeight: 44,
+                      alignItems: "center",
+                      justifyContent: "center",
                       borderRadius: 20,
                     }}
                   >
@@ -277,6 +283,7 @@ function PostForm() {
             />
           </View>
           <Notice text={error} />
+          {!!error && <Button title="Thử gửi lại" soft disabled={busy || processing} onPress={() => void submit()} />}
           <Button
             title="Gửi tin đăng"
             loading={busy}

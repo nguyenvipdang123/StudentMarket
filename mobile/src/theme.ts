@@ -1,17 +1,8 @@
-import { StyleSheet } from "react-native";
-export const colors = {
-  cream: "#F7F5EC",
-  paper: "#FFFEFA",
-  green: "#235E46",
-  dark: "#163D2D",
-  sage: "#E8F0E2",
-  line: "#DDE5D7",
-  muted: "#738276",
-  ink: "#243D32",
-  peach: "#F6E3D2",
-  error: "#A34736",
-};
-export const ui = StyleSheet.create({
+import { createContext, createElement, useContext, useMemo, useState, type ReactNode } from "react";
+import { StyleSheet, useColorScheme } from "react-native";
+import { palettes, type Palette } from "./tokens";
+export type ThemeMode = "system" | "light" | "dark";
+export const createUi = (colors: Palette) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.cream },
   content: { padding: 20, gap: 18, paddingBottom: 40 },
   title: {
@@ -81,3 +72,18 @@ export const ui = StyleSheet.create({
   },
   badgeText: { fontFamily: "Semi", fontSize: 10, color: colors.green },
 });
+
+type Theme = { colors: Palette; ui: ReturnType<typeof createUi>; scheme: "light" | "dark"; mode: ThemeMode; setMode: (mode: ThemeMode) => void };
+const ThemeContext = createContext<Theme | null>(null);
+export function ThemeProvider({ children, initialMode = "system" }: { children: ReactNode; initialMode?: ThemeMode }) {
+  const device = useColorScheme();
+  const [mode, setMode] = useState<ThemeMode>(initialMode);
+  const scheme = mode === "system" ? device === "dark" ? "dark" : "light" : mode;
+  const value = useMemo(() => ({ colors: palettes[scheme], ui: createUi(palettes[scheme]), scheme, mode, setMode }), [scheme, mode]);
+  return createElement(ThemeContext.Provider, { value }, children);
+}
+export function useTheme() {
+  const theme = useContext(ThemeContext);
+  if (!theme) throw Error("ThemeProvider missing");
+  return theme;
+}

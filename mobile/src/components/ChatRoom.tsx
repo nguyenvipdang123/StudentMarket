@@ -11,9 +11,10 @@ import { chatImagePath, chatMessageBody, chatPeer, mergeChatMessages, validChatI
 import { mediaUrl } from "../api/policy";
 import { useChatPolling } from "../hooks/useChatPolling";
 import { Button, Notice } from "../components/UI";
-import { colors, ui } from "../theme";
+import { useTheme } from "../theme";
 
 export function ChatRoom({ id, api = chatApi }: { id: string; api?: Pick<typeof chatApi, "history" | "send"> }) {
+  const { colors, ui } = useTheme();
   const headerHeight = useHeaderHeight();
   const [data, setData] = useState<ChatHistory | null>(null);
   const [busy, setBusy] = useState(true), [error, setError] = useState(""), [sendError, setSendError] = useState("");
@@ -63,7 +64,7 @@ export function ChatRoom({ id, api = chatApi }: { id: string; api?: Pick<typeof 
       <Ionicons name="chevron-forward" size={18} color={colors.green} />
     </Pressable>
     <Text style={[ui.small, { paddingHorizontal: 16, paddingVertical: 8, fontSize: 10 }]}>Không chia sẻ OTP hoặc chuyển cọc khi chưa xác minh. Tin nhắn tự cập nhật khi mở màn hình.</Text>
-    {!!error && <View style={{ paddingHorizontal: 12 }}><Notice text={error} /></View>}
+    {!!error && <View style={{ paddingHorizontal: 12 }}><Notice text={error} /><Button title="Tải lại trò chuyện" soft onPress={() => { setBusy(true); refresh(); }} /></View>}
     <FlatList
       ref={list}
       data={data.messages}
@@ -84,7 +85,7 @@ export function ChatRoom({ id, api = chatApi }: { id: string; api?: Pick<typeof 
       <View style={[ui.row, { alignItems: "flex-end" }]}>
         <TextInput accessibilityLabel="Nội dung tin nhắn" placeholder="Nhắn người bán…" placeholderTextColor={colors.muted} value={draft} onChangeText={setDraft} editable={!sending} multiline maxLength={5000} style={[ui.input, { flex: 1, maxHeight: 120, minHeight: 48 }]} />
         <Pressable accessibilityRole="button" accessibilityLabel="Gửi tin nhắn" accessibilityState={{ disabled: sending || !draft.trim(), busy: sending }} disabled={sending || !draft.trim()} onPress={() => void send()} style={{ backgroundColor: colors.green, borderRadius: 15, width: 50, height: 50, justifyContent: "center", alignItems: "center", opacity: sending || !draft.trim() ? 0.5 : 1 }}>
-          {sending ? <ActivityIndicator color="white" /> : <Ionicons name="send-outline" size={23} color="white" />}
+          {sending ? <ActivityIndicator color={colors.onAccent} /> : <Ionicons name="send-outline" size={23} color={colors.onAccent} />}
         </Pressable>
       </View>
       {draft.length > 4500 && <Text style={ui.small}>{draft.length}/5.000 ký tự</Text>}
@@ -92,6 +93,7 @@ export function ChatRoom({ id, api = chatApi }: { id: string; api?: Pick<typeof 
   </KeyboardAvoidingView>;
 }
 function MessageBubble({ item, actorId, conversationId }: { item: ChatMessage; actorId: string; conversationId: string }) {
+  const { colors, ui } = useTheme();
   const mine = item.senderId === actorId;
   const path = chatImagePath(item.content, conversationId);
   const [imageError, setImageError] = useState(false);
@@ -99,7 +101,7 @@ function MessageBubble({ item, actorId, conversationId }: { item: ChatMessage; a
   const date = new Date(item.sentAt);
   return <View style={{ alignSelf: mine ? "flex-end" : "flex-start", maxWidth: "85%", gap: 4 }}>
     <View style={{ borderRadius: 18, padding: 12, backgroundColor: mine ? colors.green : colors.sage }}>
-      {source && !imageError ? <Image source={source} cachePolicy="none" recyclingKey={`${actorId}:${item.id}`} accessibilityLabel="Ảnh đính kèm trong cuộc trò chuyện" contentFit="contain" style={{ width: 210, maxWidth: "100%", height: 170, borderRadius: 10 }} onError={() => setImageError(true)} /> : path ? <Pressable accessibilityRole="button" accessibilityLabel="Tải lại ảnh đính kèm" onPress={() => setImageError(false)}><Text style={[ui.body, { color: mine ? "white" : colors.ink }]}>Ảnh chưa tải được. Chạm để thử lại.</Text></Pressable> : <Text selectable style={[ui.body, { color: mine ? "white" : colors.ink }]}>{item.content}</Text>}
+      {source && !imageError ? <Image source={source} cachePolicy="none" recyclingKey={`${actorId}:${item.id}`} accessibilityLabel="Ảnh đính kèm trong cuộc trò chuyện" contentFit="contain" style={{ width: 210, maxWidth: "100%", height: 170, borderRadius: 10 }} onError={() => setImageError(true)} /> : path ? <Pressable accessibilityRole="button" accessibilityLabel="Tải lại ảnh đính kèm" style={{ minWidth: 44, minHeight: 44, justifyContent: "center" }} onPress={() => setImageError(false)}><Text style={[ui.body, { color: mine ? colors.onAccent : colors.ink }]}>Ảnh chưa tải được. Chạm để thử lại.</Text></Pressable> : <Text selectable style={[ui.body, { color: mine ? colors.onAccent : colors.ink }]}>{item.content}</Text>}
     </View>
     <Text style={[ui.small, { fontSize: 10, textAlign: mine ? "right" : "left" }]}>{Number.isNaN(date.getTime()) ? "" : date.toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}{mine ? item.isRead ? " · Đã xem" : " · Đã gửi" : ""}</Text>
   </View>;

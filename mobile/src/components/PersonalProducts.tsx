@@ -12,13 +12,14 @@ import { request, message } from "../api/client";
 import type { Product } from "../api/types";
 import { Empty, Notice, Button } from "./UI";
 import { ProductCard } from "./ProductCard";
-import { ui, colors } from "../theme";
+import { useTheme } from "../theme";
 import { LastUpdated } from "./LastUpdated";
 export function PersonalProducts() {
   const { user } = useSession();
   return <MyProducts key={user?.pgUserId || user?.id || "guest"} />;
 }
 function MyProducts() {
+  const { colors, ui } = useTheme();
   const { user, ready } = useSession();
   const [items, setItems] = useState<Product[]>([]),
     [busy, setBusy] = useState(false),
@@ -50,7 +51,6 @@ function MyProducts() {
   useFocusEffect(
     useCallback(() => {
       const counter = generation;
-      setItems([]);
       load();
       return () => {
         counter.current++;

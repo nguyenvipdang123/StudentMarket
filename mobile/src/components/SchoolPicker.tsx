@@ -12,12 +12,13 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { SOUTHERN_UNIVERSITIES, universityMatchesQuery } from "../data/universities";
-import { colors, ui } from "../theme";
+import { useTheme } from "../theme";
 
 export function SchoolPicker({ value, onChange }: {
   value: string;
   onChange: (school: string) => void;
 }) {
+  const { colors, ui } = useTheme();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const insets = useSafeAreaInsets();
@@ -54,8 +55,8 @@ export function SchoolPicker({ value, onChange }: {
         ) : null}
       </View>
       <Modal visible={open} transparent animationType="fade" onRequestClose={close}>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(22,61,45,0.45)" }}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Đóng chọn trường" onPress={close} style={{ flex: 1 }} />
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1, justifyContent: "flex-end", backgroundColor: colors.overlay }}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Đóng chọn trường" onPress={close} style={{ flex: 1, minWidth: 44, minHeight: 44 }} />
           <View accessibilityViewIsModal style={{ maxHeight: "85%", flexShrink: 1, backgroundColor: colors.paper, borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: 20, paddingBottom: Math.max(insets.bottom, 16), gap: 14 }}>
             <View style={ui.between}>
               <View style={{ flex: 1 }}>
@@ -67,6 +68,7 @@ export function SchoolPicker({ value, onChange }: {
               </Pressable>
             </View>
             <TextInput
+              role="searchbox"
               accessibilityLabel="Tìm tên hoặc mã trường"
               placeholder="Tên trường hoặc mã, ví dụ DNTU"
               placeholderTextColor={colors.muted}
@@ -77,7 +79,7 @@ export function SchoolPicker({ value, onChange }: {
               returnKeyType="search"
               style={ui.input}
             />
-            <Pressable accessibilityRole="button" accessibilityState={{ selected: !value }} onPress={() => select("")} style={[ui.row, { padding: 14, backgroundColor: colors.sage, borderRadius: 14 }]}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Tất cả trường" accessibilityState={{ selected: !value }} onPress={() => select("")} style={[ui.row, { padding: 14, minWidth: 44, minHeight: 44, backgroundColor: colors.sage, borderRadius: 14 }]}>
               <Ionicons name="earth-outline" size={21} color={colors.green} />
               <Text style={[ui.body, { flex: 1, fontFamily: "Semi" }]}>Tất cả trường</Text>
               {!value && <Ionicons name="checkmark-circle" size={22} color={colors.green} />}
