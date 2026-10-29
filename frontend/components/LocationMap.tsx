@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { googleMapsEmbedUrl, googleMapsLinks, mapQuery } from "@/lib/google-maps";
 import Icon from "./FigmaIcon";
 import styles from "./LocationMap.module.css";
 
-export default function LocationMap({ location, school = "", preview = false }: {
+export default function LocationMap({ location, school = "" }: {
   location: string;
   school?: string;
   preview?: boolean;
@@ -13,10 +12,11 @@ export default function LocationMap({ location, school = "", preview = false }: 
   const query = mapQuery(location, school);
   const links = googleMapsLinks(query);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY || "";
-  const [previewQuery, setPreviewQuery] = useState("");
   if (!links) return null;
   const embedUrl = googleMapsEmbedUrl(query, apiKey);
-  const showMap = Boolean(embedUrl && (!preview || previewQuery === query));
+  // In the listing form, show the current location immediately. Previously the
+  // preview required a click, which made the map appear to be missing.
+  const showMap = Boolean(embedUrl);
 
   return <section className={styles.card} aria-label="Bản đồ địa điểm hẹn gặp">
     <div className={styles.heading}><Icon name="pin" /><strong>Địa điểm hẹn gặp</strong></div>
@@ -32,8 +32,7 @@ export default function LocationMap({ location, school = "", preview = false }: 
       referrerPolicy="strict-origin-when-cross-origin"
     /> : <div className={styles.placeholder}>
       <Icon name="pin" size={28} />
-      <p>{embedUrl ? "Xem trước điểm hẹn trên bản đồ trước khi xác nhận." : "Mở Google Maps để xem địa điểm và chọn đường đi."}</p>
-      {embedUrl && preview && <button type="button" className="figma-button" onClick={() => setPreviewQuery(query)}>Xem bản đồ</button>}
+      <p>{embedUrl ? "Bản đồ không tải được. Bạn vẫn có thể mở Google Maps để xem địa điểm." : "Bản đồ nhúng chưa được cấu hình. Hãy thêm NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY để xem bản đồ ngay tại đây."}</p>
     </div>}
     <div className={styles.actions}>
       <a className="figma-button" href={links.search} target="_blank" rel="noopener noreferrer"><Icon name="arrowUp" />Mở Google Maps</a>
