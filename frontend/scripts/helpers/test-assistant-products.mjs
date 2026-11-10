@@ -36,6 +36,22 @@ export async function testAssistantProducts({ db, origin, sellerId, mock, check 
     assert.equal(mock.calls.length, initialCalls);
     check("assistant retrieves four live approved products from PostgreSQL even while Gemini/PDF upstream is offline; private fields stay excluded");
 
+    const desk = (await db.query(`INSERT INTO products(id,user_id,seller_id,category_id,title,description,price,condition,type,status,location,university,view_count,created_at,updated_at,moderation_status)
+      VALUES(gen_random_uuid(),$1,$1,3,'Bàn học ChatTest','Bàn gỗ',250000,'Tốt','Sell','Active','Thư viện DNTU','Đại học Công nghệ Đồng Nai',0,NOW(),NOW(),'APPROVED') RETURNING id`, [sellerId])).rows[0];
+    ids.push(desk.id);
+    const casual = await ask("có bàn học sinh ko", { school: "DNTU" });
+    assert.equal(casual.status, 200);
+    assert.equal(casual.event.event, "assistant/products");
+    assert.equal(new URL(casual.event.data.searchUrl, origin).searchParams.get("q"), "ban hoc");
+    assert.ok(casual.event.data.products.some(product => product.id === desk.id), casual.text);
+    const otherSchool = await ask("Có bàn học sinh dưới 500k ở UEH ko?");
+    assert.equal(otherSchool.event.data.products.length, 0);
+    assert.match(otherSchool.event.data.text, /Tất cả trường/);
+    const allSchools = await ask("Tất cả trường", { cookie: otherSchool.cookie });
+    assert.ok(allSchools.event.data.products.some(product => product.id === desk.id));
+    assert.equal(new URL(allSchools.event.data.searchUrl, origin).searchParams.get("maxPrice"), "499999");
+    check("assistant finds a real desk from casual Vietnamese and widens an empty school search only on request");
+
     const next = await ask("Xem thêm", { cookie: first.cookie });
     assert.equal(next.status, 200); assert.equal(next.event.data.products.length, 4); assert.equal(next.event.data.hasMore, false);
     assert.equal(next.event.data.products.some(p => firstData.products.some(q => q.id === p.id)), false);

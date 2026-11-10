@@ -20,9 +20,12 @@ export async function findAssistantProducts(search: AssistantSearch, more: boole
   const description = [effective.q ? `“${effective.q}”` : "món đồ", effective.school ? `tại ${effective.school}` : "", effective.minPrice ? `từ ${Number(effective.minPrice).toLocaleString("vi-VN")}đ` : "", effective.maxPrice ? `tối đa ${Number(effective.maxPrice).toLocaleString("vi-VN")}đ` : ""].filter(Boolean).join(" ");
   const ended = more && effective.page > result.pagination.page;
   const products = ended ? [] : result.products.map(product => ({ id: product.id, title: product.title, price: product.price, image: product.image, school: product.school || "", location: product.location || "", condition: product.condition || "", freeGift: product.price === 0 && product.description.startsWith("Tặng miễn phí.") }));
+  const emptySuggestion = effective.school
+    ? "Bạn có thể hỏi “Tất cả trường” để tìm rộng hơn."
+    : "Bạn thử đổi tên món đồ hoặc khoảng giá nhé.";
   const text = ended ? "Bạn đã xem hết các tin phù hợp hiện tại. Bạn có thể đổi trường, khoảng giá hoặc tên món đồ để tìm tiếp."
     : result.pagination.total ? `Mình tìm thấy ${result.pagination.total} tin ${description} đang hiển thị. ${more ? "Đây là các tin tiếp theo." : "Bạn có thể mở từng tin để xem chi tiết và liên hệ người bán."}`
-      : `Hiện chưa tìm thấy tin ${description} phù hợp đang hiển thị. Bạn thử đổi tên món đồ, khoảng giá hoặc trường nhé.`;
+      : `Hiện chưa tìm thấy tin ${description} phù hợp đang hiển thị. ${emptySuggestion}`;
   return {
     answer: { text, products, searchUrl, hasMore: !ended && result.pagination.hasNext },
     context: { search: { ...effective, page: result.pagination.page }, minimumPrice: result.products.length ? Math.min(...result.products.map(product => product.price)) : null },

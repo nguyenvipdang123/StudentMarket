@@ -19,9 +19,17 @@ const universityAliases = SOUTHERN_UNIVERSITIES.flatMap(university => [...new Se
 }))].map(alias => ({ alias, name: university.name }))).sort((a, b) => b.alias.length - a.alias.length);
 const itemWords = /\b(laptop|macbook|may tinh|dien thoai|iphone|samsung|ipad|tablet|sach|giao trinh|ban hoc|ban go|ghe|den ban|tai nghe|balo|ba lo|xe dap|xe dien|tu lanh|may giat|quat|quan ao|giay|dep|may anh|man hinh|ban phim|chuot|casio|dell|asus|acer|lenovo|hp|do hoc tap|noi that|do cong nghe|do phong tro)\b/;
 
+function normalizeQuestionEnding(text: string) {
+  return text.trim().replace(/([a-z])[,.:]+$/, "$1")
+    .replace(/ (?:ko|khg|hok)(?=(?: (?:a|nhe|voi))*$)/, " khong")
+    // Keep "k" after a number so budgets like "500 k" still mean 500,000đ.
+    .replace(/(?<!\d) k(?=(?: (?:a|nhe|voi))*$)/, " khong");
+}
+
 /** A fast, bounded interpreter; it never asks a model to invent SQL or product facts. */
 export function productIntent(message: string, previous?: ProductContext, preferredSchool = ""): ProductIntent {
-  let text = normalizeSearch(message).replace(/[?!;]+/g, " ").replace(/\s+/g, " ").trim();
+  let text = normalizeQuestionEnding(normalizeSearch(message).replace(/[?!;]+/g, " ").replace(/\s+/g, " ")
+    .replace(/^(?:(?:ban oi|cho (?:toi|minh|em) hoi|ben (?:ban|minh))[,: ]+)+/, ""));
   if (/\b(cach|lam sao|huong dan|dang tin|ban do|toi muon ban|minh muon ban|dang ky|dang nhap|mat khau|thanh toan|sepay|bao cao|kiem duyet|phi dang)\b/.test(text)
     || /^(?:(?:toi|minh|em) )?(?:(?:muon|can) )?dang ban\b/.test(text)
     || /^(?:co the (?:trao doi do|tang do)(?: khong)?|tim (?:san pham|do) o dau)$/.test(text)) return null;
@@ -82,7 +90,8 @@ export function productIntent(message: string, previous?: ProductContext, prefer
     const pattern = new RegExp("\\b(?:" + phrase + ")\\b", "g");
     if (pattern.test(text)) { search.category = category; text = text.replace(pattern, " "); break; }
   }
-  text = text.replace(/\bmay tinh xach tay\b/g, "laptop").replace(/\bheadphones?\b/g, "tai nghe");
+  text = normalizeQuestionEnding(text).replace(/\bmay tinh xach tay\b/g, "laptop").replace(/\bheadphones?\b/g, "tai nghe")
+    .replace(/\bban hoc (?:sinh(?: vien)?|cho (?:hoc sinh|sinh vien))\b/g, "ban hoc");
   text = text.replace(/^(?:hien tai|hien)\s+/, "");
   let old;
   do {

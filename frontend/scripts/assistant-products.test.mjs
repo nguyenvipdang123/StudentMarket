@@ -20,6 +20,23 @@ test("product intent extracts Vietnamese item, precise money bounds and schools 
   assert.equal(search("Tìm sách ở Trường Đại học Kinh tế Thành phố Hồ Chí Minh").school, "ĐH Kinh tế TP.HCM");
   assert.equal(search("Tìm sách ở ĐH Kinh tế TPHCM").q, "sach");
 });
+test("casual Vietnamese availability questions search for the item and preserve explicit filters", () => {
+  for (const question of [
+    "có bàn học sinh ko",
+    "Còn bàn học cho học sinh không?",
+    "Bạn ơi, có bàn học hok ạ?",
+    "Cho mình hỏi: có bàn học sinh viên k?",
+  ]) assert.equal(search(question).q, "ban hoc", question);
+
+  const result = search("Có bàn học sinh dưới 500 k ở DNTU ko?");
+  assert.equal(result.q, "ban hoc");
+  assert.equal(result.maxPrice, "499999");
+  assert.equal(result.school, "ĐH Công nghệ Đồng Nai");
+  assert.equal(search("Tìm sách học sinh").q, "sach hoc sinh");
+  assert.equal(search("Tìm áo hồng").q, "ao hong");
+  assert.equal(search("Có laptop dưới 500 k").maxPrice, "499999");
+});
+
 test("free exchange, category, condition and sorting are expressed as validated catalogue filters", () => {
   const free = search("Có đồ trao đổi miễn phí không?"); assert.equal(free.kind, "exchange"); assert.equal(free.q, "");
   const item = search("Tìm laptop như mới giá thấp đến cao"); assert.equal(item.condition, "Như mới"); assert.equal(item.sort, "price-asc"); assert.equal(item.q, "laptop");
