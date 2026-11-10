@@ -2,11 +2,11 @@ import type { Category } from "./types";
 import type { ListingKindFilter, ListingSort } from "./listing-search";
 
 export type ExploreFilters = {
-  category: Category; search: string; sort: ListingSort; kind: ListingKindFilter;
+  category: Category; search: string; match: "all" | "title"; sort: ListingSort; kind: ListingKindFilter;
   condition: string; school: string; minPrice: string; maxPrice: string; page: number;
 };
 export const defaultExploreFilters: ExploreFilters = {
-  category: "Tất cả", search: "", sort: "featured", kind: "all", condition: "", school: "", minPrice: "", maxPrice: "", page: 1,
+  category: "Tất cả", search: "", match: "all", sort: "featured", kind: "all", condition: "", school: "", minPrice: "", maxPrice: "", page: 1,
 };
 
 export function readExploreFilters(params: URLSearchParams, savedSchool = ""): ExploreFilters {
@@ -22,6 +22,7 @@ export function readExploreFilters(params: URLSearchParams, savedSchool = ""): E
   return {
     category: choice("category", ["Tất cả", "Học tập", "Công nghệ", "Nội thất", "Thời trang", "Khác"], "Tất cả"),
     search: search.length <= 200 ? search : "",
+    match: search && search.length <= 200 && params.get("match") === "title" ? "title" : "all",
     sort: choice("sort", ["featured", "newest", "price-asc", "price-desc"], "featured"),
     kind: choice("kind", ["all", "sell", "exchange"], "all"),
     condition: choice("condition", ["", "Mới 100%", "Như mới", "Tốt", "Đã qua sử dụng"], ""),
@@ -33,7 +34,7 @@ export function readExploreFilters(params: URLSearchParams, savedSchool = ""): E
 export function writeExploreFilters(filters: ExploreFilters, existing: URLSearchParams) {
   const params = new URLSearchParams(existing);
   for (const [key, value, fallback] of [
-    ["q", filters.search, ""], ["category", filters.category, "Tất cả"], ["sort", filters.sort, "featured"],
+    ["q", filters.search, ""], ["match", filters.match, "all"], ["category", filters.category, "Tất cả"], ["sort", filters.sort, "featured"],
     ["kind", filters.kind, "all"], ["condition", filters.condition, ""], ["minPrice", filters.minPrice, ""],
     ["maxPrice", filters.maxPrice, ""], ["page", String(filters.page), "1"],
   ]) { if (value === fallback) params.delete(key); else params.set(key, value); }

@@ -52,6 +52,32 @@ export async function testAssistantProducts({ db, origin, sellerId, mock, check 
     assert.equal(new URL(allSchools.event.data.searchUrl, origin).searchParams.get("maxPrice"), "499999");
     check("assistant finds a real desk from casual Vietnamese and widens an empty school search only on request");
 
+    const furniture = {};
+    for (const [key, title, description, price] of [
+      ["chair", "Ghế xoay văn phòng", "Tựa lưng lưới", 220000],
+      ["cheapChair", "Ghế gấp", "Gấp gọn", 90000],
+      ["deskSet", "Bàn học kèm ghế gỗ", "Bàn và ghế bán chung", 80000],
+      ["desk", "Bàn học gỗ", "Có thể dùng chung với ghế xoay", 80000],
+      ["ac", "Điều hòa di động", "Công nghệ tiết kiệm điện", 80000],
+    ]) {
+      const { rows: [product] } = await db.query(`INSERT INTO products(id,user_id,seller_id,category_id,title,description,price,condition,type,status,location,university,view_count,created_at,updated_at,moderation_status)
+        VALUES(gen_random_uuid(),$1,$1,3,$2,$3,$4,'Tốt','Sell','Active','Thư viện DNTU','Đại học Công nghệ Đồng Nai',0,NOW(),NOW(),'APPROVED') RETURNING id`, [sellerId, title, description, price]);
+      ids.push(product.id);
+      furniture[key] = product.id;
+    }
+    const chairs = await ask("tôi muốn có ghế", { school: "DNTU" });
+    assert.equal(chairs.status, 200);
+    assert.deepEqual(new Set(chairs.event.data.products.map(p => p.id)), new Set([furniture.chair, furniture.cheapChair]));
+    const chairFilters = new URL(chairs.event.data.searchUrl, origin).searchParams;
+    assert.equal(chairFilters.get("match"), "title");
+    const chairCatalogue = await (await fetch(origin + "/api/products?" + chairFilters)).json();
+    assert.equal(chairCatalogue.pagination.total, 2);
+    const cheaperChairs = await ask("Dưới 100k", { cookie: chairs.cookie });
+    assert.deepEqual(cheaperChairs.event.data.products.map(p => p.id), [furniture.cheapChair]);
+    const bundle = await ask("Tìm bàn học kèm ghế");
+    assert.deepEqual(bundle.event.data.products.map(p => p.id), [furniture.deskSet]);
+    check("assistant and Explore find chairs by whole words in the main title, excluding unrelated descriptions and bundled chairs unless requested");
+
     const next = await ask("Xem thêm", { cookie: first.cookie });
     assert.equal(next.status, 200); assert.equal(next.event.data.products.length, 4); assert.equal(next.event.data.hasMore, false);
     assert.equal(next.event.data.products.some(p => firstData.products.some(q => q.id === p.id)), false);

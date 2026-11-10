@@ -66,7 +66,7 @@ export default function ExplorePage() {
   const [filters, setFilters] = useState<ExploreFilters>(defaultExploreFilters);
   const currentFilters = useRef<ExploreFilters>(defaultExploreFilters);
   const writtenQuery = useRef<string | null>(null);
-  const { category, search, sort, kind, condition, school, minPrice, maxPrice, page } = filters;
+  const { category, search, match, sort, kind, condition, school, minPrice, maxPrice, page } = filters;
   function updateFilters(patch: Partial<ExploreFilters>, push = false) {
     const next = { ...currentFilters.current, ...patch, page: patch.page ?? 1 };
     currentFilters.current = next;
@@ -79,7 +79,7 @@ export default function ExplorePage() {
     }
   }
   const setCategory = (category: Category) => updateFilters({ category });
-  const setSearch = (search: string) => updateFilters({ search });
+  const setSearch = (search: string) => updateFilters({ search, match: search && search === currentFilters.current.search ? currentFilters.current.match : "all" });
   const setSort = (sort: ListingSort) => updateFilters({ sort });
   const setKind = (kind: ListingKindFilter) => updateFilters({ kind });
   const setCondition = (condition: string) => updateFilters({ condition });
@@ -99,7 +99,7 @@ export default function ExplorePage() {
   const [viewer, setViewer] = useState<Viewer | null>(null);
   const [toast, setToast] = useState("");
   const [locationQuery, setLocationQuery] = useState<string | null>(null);
-  const filterParameters = new URLSearchParams({ category, q: search, sort, kind, condition, school, minPrice, maxPrice }).toString();
+  const filterParameters = new URLSearchParams({ category, q: search, match, sort, kind, condition, school, minPrice, maxPrice }).toString();
   const invalidPriceRange = minPrice !== "" && maxPrice !== "" && Number(minPrice) > Number(maxPrice);
   const { products: visibleListings, pagination, loading: isLoading, error: loadError, retry: retryListings } = useProductSearch(invalidPriceRange ? null : filterParameters + "&page=" + page);
 

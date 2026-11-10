@@ -111,7 +111,9 @@ export function productIntent(message: string, previous?: ProductContext, prefer
   return { type: "search", search, more: false };
 }
 export function assistantSearchParameters(search: AssistantSearch) {
-  return new URLSearchParams({ q: search.q, category: search.category, sort: search.sort, kind: search.kind, condition: search.condition, school: search.school, minPrice: search.minPrice, maxPrice: search.maxPrice });
+  const params = new URLSearchParams({ q: search.q, category: search.category, sort: search.sort, kind: search.kind, condition: search.condition, school: search.school, minPrice: search.minPrice, maxPrice: search.maxPrice });
+  if (search.q) params.set("match", "title");
+  return params;
 }
 export function assistantSearchFilters(search: AssistantSearch) {
   const params = assistantSearchParameters(search); params.set("page", String(search.page)); params.set("pageSize", "4");
