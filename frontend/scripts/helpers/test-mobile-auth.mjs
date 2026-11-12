@@ -57,4 +57,61 @@ export async function testMobileAuth({ db, req, origin, google, check }) {
   assert.equal(web.status, 200); assert.ok(web.cookie?.startsWith('sangtay_session='));
   assert.equal((await req('/api/auth/google/complete', { method: 'POST', cookie: `sangtay_google_pending=${webToken}`, body: { fullName: 'Web Google', studentId: 'WEB-GOOGLE-TEST', university: 'DNTU' } })).status, 401);
   check('existing website Google profile flow still works and cannot reuse onboarding credentials');
+
+  const email = 'linked-student@school.edu.vn';
+  const subject = 'linked-workspace-student';
+  const { rows: [legacy] } = await db.query(`INSERT INTO auth_identities
+    (full_name,email,student_id,university,password_hash,status,verified_at)
+    VALUES('Existing student',$1,'WEB-GOOGLE-LINK','DNTU','legacy-password-hash','verified',$2)
+    RETURNING id`, [email, Date.now()]);
+  async function webCallback(claims = {}) {
+    const start = await fetch(origin + '/api/auth/google/start', { redirect: 'manual' });
+    assert.equal(start.status, 307);
+    const url = new URL(start.headers.get('location'));
+    const code = google.issue({
+      sub: subject, email, email_verified: true, hd: 'school.edu.vn',
+      nonce: url.searchParams.get('nonce'), ...claims,
+    }, url.searchParams.get('code_challenge'));
+    const result = await fetch(origin + '/api/auth/google/callback?' + new URLSearchParams({
+      code, state: url.searchParams.get('state'),
+    }), { headers: { Cookie: start.headers.get('set-cookie').split(';')[0] }, redirect: 'manual' });
+    assert.equal(result.status, 307);
+    return {
+      params: new URL(result.headers.get('location')).searchParams,
+      session: result.headers.getSetCookie().find(value => value.startsWith('sangtay_session='))?.split(';')[0],
+    };
+  }
+  const untrusted = await webCallback({ hd: null });
+  assert.equal(untrusted.params.get('authError'), 'school_google');
+  assert.equal(untrusted.session, undefined);
+  const linked = await webCallback({ email: email.toUpperCase() });
+  assert.equal(linked.params.get('google'), 'success');
+  assert.ok(linked.session);
+  const identity = await req('/api/auth/me', { cookie: linked.session });
+  assert.equal(Number(identity.data.user.id), Number(legacy.id));
+  const { rows: [stored] } = await db.query('SELECT google_sub,password_hash FROM users WHERE auth_id=$1', [legacy.id]);
+  assert.deepEqual(stored, { google_sub: subject, password_hash: 'legacy-password-hash' });
+  const differentGoogle = await webCallback({ sub: 'different-workspace-student' });
+  assert.equal(differentGoogle.params.get('authError'), 'email_exists');
+  assert.equal(differentGoogle.session, undefined);
+  const app = await begin();
+  await callback(app, { sub: subject, email });
+  const appLogin = await claim(app);
+  assert.equal(appLogin.data.status, 'authenticated');
+  assert.equal(Number(appLogin.data.user.id), Number(legacy.id));
+  await db.query("UPDATE auth_identities SET status='locked' WHERE id=$1", [legacy.id]);
+  const locked = await webCallback();
+  assert.equal(locked.params.get('authError'), 'account_status');
+  assert.equal(locked.session, undefined);
+  const { rows: [pending] } = await db.query(`INSERT INTO auth_identities
+    (full_name,email,student_id,university,password_hash,status)
+    VALUES('Pending student','pending-link@school.edu.vn','WEB-GOOGLE-PENDING','DNTU','legacy-password-hash','pending_email')
+    RETURNING id`);
+  const pendingLogin = await webCallback({ sub: 'pending-workspace-student', email: 'pending-link@school.edu.vn' });
+  assert.equal(pendingLogin.params.get('authError'), 'account_status');
+  assert.equal(pendingLogin.session, undefined);
+  const { rows: [pendingStored] } = await db.query('SELECT google_sub FROM users WHERE auth_id=$1', [pending.id]);
+  assert.equal(pendingStored.google_sub, null);
+  await db.query('DELETE FROM auth_identities WHERE id IN ($1,$2)', [legacy.id, pending.id]);
+  check('verified school Google links the existing student once for web and mobile, preserving credentials and rejecting pending, locked or conflicting identities');
 }

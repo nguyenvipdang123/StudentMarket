@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { appOrigin, digest, getDb, isEducationEmail, oauthCookie, pendingGoogleCookie, randomToken, setSession } from "@/lib/auth";
+import { query } from "@/lib/db";
 import { isEducationDomain } from "@/lib/education-email";
 import { finishMobileGoogle, validMobileCallback } from "@/lib/mobile-google";
 
@@ -31,6 +32,12 @@ export async function GET(request: NextRequest) {
   if (flow.state !== state || !flow.nonce || !flow.verifier) return finish(request, "authError", "google");
   if (flow.mobileFlow && !await validMobileCallback(flow.mobileFlow, state)) return finish(request, "authError", "google");
   const fail = (reason: string) => flow.mobileFlow ? finishMobileGoogle(flow.mobileFlow, state, { status: "error", error: reason }) : finish(request, "authError", reason);
+  const signIn = async (accountId: number) => {
+    if (flow.mobileFlow) return finishMobileGoogle(flow.mobileFlow, state, { status: "authorized", accountId });
+    const response = finish(request, "google", "success");
+    await setSession(response, accountId);
+    return response;
+  };
   if (!clientId || !clientSecret || !code) return fail("google");
 
   try {
@@ -56,16 +63,31 @@ export async function GET(request: NextRequest) {
       return fail("school_google");
     }
     const db = getDb();
-    const account = await db.prepare("SELECT id, status FROM auth_identities WHERE google_sub = ?")
-      .get(payload.sub) as { id: number; status: string } | undefined;
+    const [account] = await query<{ id: number; status: string; role: string }>(
+      "SELECT id, status, role FROM auth_identities WHERE google_sub = $1", [payload.sub],
+    );
     if (account) {
-      if (account.status !== "verified") return fail("account_status");
-      if (flow.mobileFlow) return finishMobileGoogle(flow.mobileFlow, state, { status: "authorized", accountId: account.id });
-      const response = finish(request, "google", "success");
-      await setSession(response, account.id);
-      return response;
+      if (account.role !== "student" || account.status !== "verified") return fail("account_status");
+      return await signIn(account.id);
     }
-    if (await db.prepare("SELECT id FROM auth_identities WHERE LOWER(email) = LOWER(?)").get(email)) return fail("email_exists");
+    const [existing] = await query<{ id: number; status: string; role: string }>(
+      "SELECT id, status, role FROM auth_identities WHERE LOWER(email) = $1", [email],
+    );
+    if (existing) {
+      if (existing.role !== "student") return fail("email_exists");
+      if (existing.status !== "verified") return fail("account_status");
+
+      // Google has verified the exact school mailbox above. Bind its stable subject once.
+      const [linked] = await query<{ id: number }>(
+        `UPDATE users SET google_sub = $3, updated_at = NOW()
+         WHERE auth_id = $1 AND LOWER(email) = $2 AND auth_status = 'verified'
+           AND (google_sub IS NULL OR google_sub = $3)
+         RETURNING auth_id AS id`,
+        [existing.id, email, payload.sub],
+      );
+      if (!linked) return fail("email_exists");
+      return await signIn(linked.id);
+    }
     if (flow.mobileFlow) return finishMobileGoogle(flow.mobileFlow, state, { status: "onboarding", sub: payload.sub, email, fullName: String(payload.name || "").trim() });
     const pendingToken = randomToken();
     await db.prepare("INSERT INTO google_onboarding (token_hash, google_sub, full_name, email, expires_at) VALUES (?, ?, ?, ?, ?)")

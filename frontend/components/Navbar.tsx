@@ -11,7 +11,7 @@ const authErrors: Record<string, string> = {
   google_config: "Đăng nhập Google chưa được cấu hình trên máy chủ. Vui lòng đăng nhập bằng email hoặc liên hệ quản trị viên.",
   google: "Không thể hoàn tất đăng nhập Google. Vui lòng thử lại và cho phép truy cập email trường.",
   school_google: "Vui lòng dùng tài khoản Google Workspace của trường có email .edu hoặc .edu.vn. Gmail cá nhân không được hỗ trợ.",
-  email_exists: "Email này đã được đăng ký. Vui lòng đăng nhập bằng mật khẩu hoặc chọn Quên mật khẩu; tài khoản chưa được liên kết với Google.",
+  email_exists: "Email này đã có tài khoản. Hãy chọn đúng tài khoản Google đã liên kết hoặc đăng nhập bằng mật khẩu.",
   account_status: "Tài khoản chưa được duyệt hoặc đang bị khóa. Vui lòng liên hệ quản trị viên.",
   admin_access: "Vui lòng đăng nhập bằng tài khoản có quyền quản trị.",
   verification: "Liên kết xác thực không hợp lệ hoặc đã hết hạn. Vui lòng nhận lại mã xác thực email.",
